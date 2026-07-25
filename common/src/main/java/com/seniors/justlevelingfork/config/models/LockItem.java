@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import net.minecraft.resources.ResourceLocation;
 
 public class LockItem {
     private static final String DROPPABLE_MARKER = "<droppable>";
@@ -80,12 +79,27 @@ public class LockItem {
         if (itemId == null || itemId.isBlank()) {
             return false;
         }
-        try {
-            new ResourceLocation(itemId);
-            return true;
-        } catch (IllegalArgumentException exception) {
+        int separator = itemId.indexOf(':');
+        if (separator != itemId.lastIndexOf(':')) {
             return false;
         }
+        String namespace = separator < 0 ? "minecraft" : itemId.substring(0, separator);
+        String path = separator < 0 ? itemId : itemId.substring(separator + 1);
+        return !namespace.isEmpty()
+                && !path.isEmpty()
+                && namespace.chars().allMatch(character ->
+                        character >= 'a' && character <= 'z'
+                                || character >= '0' && character <= '9'
+                                || character == '_'
+                                || character == '.'
+                                || character == '-')
+                && path.chars().allMatch(character ->
+                        character >= 'a' && character <= 'z'
+                                || character >= '0' && character <= '9'
+                                || character == '_'
+                                || character == '.'
+                                || character == '-'
+                                || character == '/');
     }
 
     private static LockItem formatString(String value) {

@@ -28,6 +28,7 @@ public final class RegisterItemCommand {
         dispatcher.register(Commands.literal("registeritem")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("aptitude", AptitudeArgument.getArgument())
+                        .suggests(AptitudeArgument::listSuggestions)
                         .then(Commands.argument("level", IntegerArgumentType.integer(0))
                                 .executes(context -> execute(context, lockItemStore, sync)))));
     }
@@ -45,7 +46,7 @@ public final class RegisterItemCommand {
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        String aptitudeName = context.getArgument("aptitude", String.class);
+        String aptitudeName = AptitudeArgument.getAptitude(context, "aptitude");
         int level = IntegerArgumentType.getInteger(context, "level");
         if (level == 1) {
             context.getSource().sendFailure(Component.literal(

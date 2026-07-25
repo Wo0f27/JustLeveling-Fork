@@ -25,31 +25,32 @@ public final class AptitudeLevelCommand {
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("player", EntityArgument.player())
                         .then(Commands.argument("aptitude", AptitudeArgument.getArgument())
+                                .suggests(AptitudeArgument::listSuggestions)
                                 .then(Commands.literal("get")
                                         .executes(context -> getAptitude(
                                                 context,
                                                 EntityArgument.getPlayer(context, "player"),
-                                                context.getArgument("aptitude", String.class))))
+                                                AptitudeArgument.getAptitude(context, "aptitude"))))
                                 .then(Commands.literal("set")
                                         .then(Commands.argument("level", IntegerArgumentType.integer(1))
                                                 .executes(context -> setAptitude(
                                                         context,
                                                         EntityArgument.getPlayer(context, "player"),
-                                                        context.getArgument("aptitude", String.class),
+                                                        AptitudeArgument.getAptitude(context, "aptitude"),
                                                         IntegerArgumentType.getInteger(context, "level")))))
                                 .then(Commands.literal("add")
                                         .then(Commands.argument("level", IntegerArgumentType.integer(1))
                                                 .executes(context -> addAptitude(
                                                         context,
                                                         EntityArgument.getPlayer(context, "player"),
-                                                        context.getArgument("aptitude", String.class),
+                                                        AptitudeArgument.getAptitude(context, "aptitude"),
                                                         IntegerArgumentType.getInteger(context, "level")))))
                                 .then(Commands.literal("subtract")
                                         .then(Commands.argument("level", IntegerArgumentType.integer(1))
                                                 .executes(context -> subtractAptitude(
                                                         context,
                                                         EntityArgument.getPlayer(context, "player"),
-                                                        context.getArgument("aptitude", String.class),
+                                                        AptitudeArgument.getAptitude(context, "aptitude"),
                                                         IntegerArgumentType.getInteger(context, "level"))))))));
     }
 

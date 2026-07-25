@@ -18,10 +18,10 @@ publishMods {
 
     changelog = envOrDefault(
             'CHANGELOG',
-            '''- Fixed the Building requirement for Break Speed rank 5 (32 instead of 3)
-- Fixed Forge targeting compatibility with Better Combat Reach Fix
-- Added allowLockedItemsInInventory so locked items can be kept without enabling their use
-- Fixed Forge publishing so release uploads always use the reobfuscated production JAR''').get()
+            '''- Fixed Forge world joins failing while synchronizing aptitude commands
+- Fixed /aptitudesreload clearing the item restriction registry
+- Corrected the default Nether Wart restriction ID
+- Hardened lock-item reloads so malformed entries are skipped without discarding valid entries''').get()
     displayName = envOrDefault(
             'RELEASE_NAME',
             "${mod_name} ${releaseVersion} for Minecraft ${minecraft_version}").get()
