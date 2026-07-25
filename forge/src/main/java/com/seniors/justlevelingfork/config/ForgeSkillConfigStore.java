@@ -38,10 +38,11 @@ public final class ForgeSkillConfigStore {
         try (Reader reader = Files.newBufferedReader(PATH)) {
             Map<String, SkillConfig> loaded = GSON.fromJson(reader, SKILL_CONFIG_MAP);
             skillConfigs = SkillConfigService.sanitize(loaded == null ? SkillConfigService.defaultConfigs() : loaded);
-        } catch (IOException exception) {
+        } catch (IOException | RuntimeException exception) {
             Constants.LOG.warn("Failed to read Forge skill config {}, using defaults", PATH, exception);
             skillConfigs = SkillConfigService.defaultConfigs();
         }
+        save();
     }
 
     private static void save() {

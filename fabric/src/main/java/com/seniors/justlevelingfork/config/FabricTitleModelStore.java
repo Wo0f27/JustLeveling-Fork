@@ -44,13 +44,15 @@ public final class FabricTitleModelStore {
 
         try (Reader reader = Files.newBufferedReader(PATH)) {
             List<TitleModel> loaded = GSON.fromJson(reader, TITLE_MODEL_LIST);
-            titleModels = loaded == null || loaded.isEmpty()
-                    ? new ArrayList<>(RegistryTitles.defaultModels())
-                    : new ArrayList<>(loaded);
-        } catch (IOException exception) {
+            titleModels = new ArrayList<>(TitleModel.sanitizedList(loaded));
+            if (titleModels.isEmpty()) {
+                titleModels = new ArrayList<>(RegistryTitles.defaultModels());
+            }
+        } catch (IOException | RuntimeException exception) {
             Constants.LOG.warn("Failed to read Fabric title config {}, using defaults", PATH, exception);
             titleModels = new ArrayList<>(RegistryTitles.defaultModels());
         }
+        save();
     }
 
     private static void save() {

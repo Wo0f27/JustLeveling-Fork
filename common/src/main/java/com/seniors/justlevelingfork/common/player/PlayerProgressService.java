@@ -63,6 +63,7 @@ public final class PlayerProgressService {
                     if (refreshTitles) {
                         refreshUnlockedTitles(player, progress);
                     }
+                    normalizeSelectedTitle(player, progress);
                     changeListener.accept(player, progress);
                     syncHandler.accept(player, progress);
                     return true;
@@ -74,6 +75,7 @@ public final class PlayerProgressService {
         return get(player)
                 .map(progress -> {
                     refreshUnlockedTitles(player, progress);
+                    normalizeSelectedTitle(player, progress);
                     changeListener.accept(player, progress);
                     syncHandler.accept(player, progress);
                     return true;
@@ -114,7 +116,7 @@ public final class PlayerProgressService {
 
         return update(player, progress -> {
             progress.setPlayerTitle(title);
-            player.setCustomName(Component.translatable(title.getKey()));
+            player.setCustomName(title == RegistryTitles.TITLELESS ? null : Component.translatable(title.getKey()));
         });
     }
 
@@ -126,6 +128,7 @@ public final class PlayerProgressService {
         return update(player, progress -> {
             boolean wasUnlocked = progress.getLockTitle(title);
             progress.setUnlockTitle(title, unlocked);
+            normalizeSelectedTitle(player, progress);
             if (unlocked && !wasUnlocked) {
                 TitleUnlockService.send(player, title.getName());
             }
@@ -230,6 +233,7 @@ public final class PlayerProgressService {
                     RegistryPassives.values().forEach(passive ->
                             RegistryAttributes.applyPassiveModifier(player, passive, progress.getPassiveLevel(passive)));
                     refreshUnlockedTitles(player, progress);
+                    normalizeSelectedTitle(player, progress);
                     changeListener.accept(player, progress);
                     syncHandler.accept(player, progress);
                     return true;
@@ -254,6 +258,15 @@ public final class PlayerProgressService {
         if (!progress.getLockTitle(admin) && player.hasPermissions(2)) {
             progress.setUnlockTitle(admin, true);
             TitleUnlockService.send(player, admin.getName());
+        }
+    }
+
+    private static void normalizeSelectedTitle(ServerPlayer player, PlayerProgress progress) {
+        Title selectedTitle = RegistryTitles.getTitle(progress.playerTitle);
+        if (selectedTitle == null || !progress.getLockTitle(selectedTitle)) {
+            selectedTitle = RegistryTitles.TITLELESS;
+            progress.setPlayerTitle(selectedTitle);
+            player.setCustomName(null);
         }
     }
 }

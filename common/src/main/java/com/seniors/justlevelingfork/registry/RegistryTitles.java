@@ -22,6 +22,7 @@ public final class RegistryTitles {
     public static final Title ADMIN = register("administrator", false);
 
     private static final Map<String, Title> TITLES_BY_NAME = new LinkedHashMap<>();
+    private static Collection<TitleModel> clientTitleModels;
 
     private RegistryTitles() {
     }
@@ -34,6 +35,18 @@ public final class RegistryTitles {
     public static void reload() {
         TITLES_BY_NAME.clear();
         ensureLoaded();
+    }
+
+    public static void setClientTitleModels(Collection<TitleModel> models) {
+        clientTitleModels = TitleModel.sanitizedList(models);
+        reload();
+    }
+
+    public static void clearClientTitleModels() {
+        if (clientTitleModels != null) {
+            clientTitleModels = null;
+            reload();
+        }
     }
 
     public static Title getTitle(String titleName) {
@@ -112,7 +125,8 @@ public final class RegistryTitles {
 
         put(TITLELESS);
         put(ADMIN);
-        TitleConfigService.titleModels().forEach(model -> put(model.createTitle()));
+        Collection<TitleModel> models = clientTitleModels == null ? TitleConfigService.titleModels() : clientTitleModels;
+        models.forEach(model -> put(model.createTitle()));
     }
 
     private static void put(Title title) {

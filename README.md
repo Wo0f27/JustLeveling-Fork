@@ -1,24 +1,60 @@
-# MultiLoader Template
+# JustLevelingFork 1.20.1
 
-This project provides a Gradle project template that can compile mods for both Forge and Fabric using a common sourceset. This project does not require any third party libraries or dependencies. If you have any questions or want to discuss the project join our [Discord](https://discord.myceliummod.network).
+JustLevelingFork is a server-authoritative RPG progression mod for Minecraft 1.20.1. This branch builds matching Fabric and Forge artifacts from a shared codebase.
 
-## Getting Started
+## Requirements
 
-## IntelliJ IDEA
-This guide will show how to import the MultiLoader Template into IntelliJ IDEA. The setup process is roughly equivalent to setting up Forge and Fabric independently and should be very familiar to anyone who has worked with their MDKs.
+- Java 17
+- Minecraft 1.20.1
+- Fabric Loader + Fabric API, or Forge 47.4.x
 
-1. Clone or download this repository to your computer.
-2. Configure the project by editing the `group`, `mod_name`, `mod_author`, and `mod_id` properties in the `gradle.properties` file. You will also need to change the `rootProject.name`  property in `settings.gradle`, this should match the folder name of your project, or else IDEA may complain.
-3. Open the template's root folder as a new project in IDEA. This is the folder that contains this README file and the gradlew executable.
-4. If your default JVM/JDK is not Java 17 you will encounter an error when opening the project. This error is fixed by going to `File > Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM`and changing the value to a valid Java 17 JVM. You will also need to set the Project SDK to Java 17. This can be done by going to `File > Project Structure > Project SDK`. Once both have been set open the Gradle tab in IDEA and click the refresh button to reload the project.
-5. Open the Gradle tab in IDEA if it has not already been opened. Navigate to `Your Project > Common > Tasks > vanilla gradle > decompile`. Run this task to decompile Minecraft.
-6. Open your Run/Debug Configurations. Under the Application category there should now be options to run Forge and Fabric projects. Select one of the client options and try to run it.
-7. Assuming you were able to run the game in step 7 your workspace should now be set up.
+Optional integrations include Mod Menu, Trinkets/Curios, KubeJS, FTB Quests, Questlog, Better Combat, TACZ, Scorched Guns 2, and Iron's Spells 'n Spellbooks.
 
-### Eclipse
-While it is possible to use this template in Eclipse it is not recommended. During the development of this template multiple critical bugs and quirks related to Eclipse were found at nearly every level of the required build tools. While we continue to work with these tools to report and resolve issues support for projects like these are not there yet. For now Eclipse is considered unsupported by this project. The development cycle for build tools is notoriously slow so there are no ETAs available.
+## Building
 
-## Development Guide
-When using this template the majority of your mod is developed in the Common project. The Common project is compiled against the vanilla game and is used to hold code that is shared between the different loader-specific versions of your mod. The Common project has no knowledge or access to ModLoader specific code, apis, or concepts. Code that requires something from a specific loader must be done through the project that is specific to that loader, such as the Forge or Fabric project.
+On Windows:
 
-Loader specific projects such as the Forge and Fabric project are used to load the Common project into the game. These projects also define code that is specific to that loader. Loader specific projects can access all of the code in the Common project. It is important to remember that the Common project can not access code from loader specific projects.
+```powershell
+$env:JAVA_HOME = "C:\path\to\jdk-17"
+.\gradlew.bat clean build
+```
+
+On Linux or macOS:
+
+```bash
+JAVA_HOME=/path/to/jdk-17 ./gradlew clean build
+```
+
+Release jars are written to `fabric/build/libs` and `forge/build/libs`.
+
+## Configuration
+
+The common settings control aptitude limits and costs, item-drop behavior, UI preferences, and Treasure Hunter/Convergence item lists.
+
+- Fabric: `config/justlevelingfork.json`
+- Forge: `config/justlevelingfork.toml`
+- Skills: `config/justlevelingfork.skills.json`
+- Passives: `config/justlevelingfork.passives.json`
+- Titles: `config/justlevelingfork.titles.json`
+- Item restrictions: `config/justlevelingfork.lock_items.json`
+
+Malformed JSON files recover to validated defaults instead of preventing startup. Server-owned gameplay settings, item restrictions, and title definitions are synchronized to connected clients.
+
+## Operator commands
+
+All administrative commands require permission level 2.
+
+- `/aptitudes <player> <aptitude> get`
+- `/aptitudes <player> <aptitude> set <level>`
+- `/aptitudes <player> <aptitude> add <levels>`
+- `/aptitudes <player> <aptitude> subtract <levels>`
+- `/titles <player> <title> set <true|false>`
+- `/registeritem <aptitude> <level>` — registers the held item; use level `0` to remove that aptitude requirement.
+- `/aptitudesreload` — reloads item restrictions and synchronizes connected players.
+- `/titlesreload` — reloads title definitions and synchronizes connected players.
+- `/updateaptitudelevel <level>` — changes the per-aptitude maximum.
+- `/globallimit <level>` — changes the maximum combined aptitude level.
+
+## License
+
+CC0 1.0 Universal. See [LICENSE](LICENSE).

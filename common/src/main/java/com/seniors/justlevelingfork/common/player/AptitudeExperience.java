@@ -11,16 +11,17 @@ public final class AptitudeExperience {
     }
 
     public static int requiredExperienceLevels(int aptitudeLevel, int firstCostLevel) {
-        return aptitudeLevel + firstCostLevel - 1;
+        return clampToInt((long) aptitudeLevel + firstCostLevel - 1L);
     }
 
     public static int getPlayerXP(Player player) {
-        return (int) (getExperienceForLevel(player.experienceLevel)
-                + player.experienceProgress * player.getXpNeededForNextLevel());
+        long wholeLevels = getExperienceForLevel(player.experienceLevel);
+        long progress = (long) (player.experienceProgress * player.getXpNeededForNextLevel());
+        return clampToInt(wholeLevels + progress);
     }
 
     public static void addPlayerXP(Player player, int amount) {
-        int experience = Math.max(0, getPlayerXP(player) + amount);
+        int experience = clampToInt(Math.max(0L, (long) getPlayerXP(player) + amount));
         player.totalExperience = experience;
         player.experienceLevel = getLevelForExperience(experience);
         int expForLevel = getExperienceForLevel(player.experienceLevel);
@@ -40,21 +41,21 @@ public final class AptitudeExperience {
     }
 
     public static int getExperienceForLevel(int level) {
-        if (level == 0) {
+        if (level <= 0) {
             return 0;
         }
         if (level <= 15) {
             return sum(level, 7, 2);
         }
         if (level <= 30) {
-            return 315 + sum(level - 15, 37, 5);
+            return clampToInt(315L + sum(level - 15, 37, 5));
         }
-        return 1395 + sum(level - 30, 112, 9);
+        return clampToInt(1395L + sum(level - 30, 112, 9));
     }
 
     public static int xpBarCap(int level) {
         if (level >= 30) {
-            return 112 + (level - 30) * 9;
+            return clampToInt(112L + (long) (level - 30) * 9L);
         }
         if (level >= 15) {
             return 37 + (level - 15) * 5;
@@ -63,6 +64,10 @@ public final class AptitudeExperience {
     }
 
     private static int sum(int n, int a0, int d) {
-        return n * (2 * a0 + (n - 1) * d) / 2;
+        return clampToInt((long) n * (2L * a0 + (long) (n - 1) * d) / 2L);
+    }
+
+    private static int clampToInt(long value) {
+        return (int) Math.min(Integer.MAX_VALUE, Math.max(0L, value));
     }
 }

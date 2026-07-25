@@ -4,15 +4,14 @@ import com.seniors.justlevelingfork.config.models.LockItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.resources.ResourceLocation;
 
 public final class LockItemRegistration {
     private LockItemRegistration() {
     }
 
-    public static Result apply(List<LockItem> lockItems, ResourceLocation itemId, String aptitudeName, int level) {
+    public static Result apply(List<LockItem> lockItems, String itemId, String aptitudeName, int level) {
         Optional<LockItem> optionalLockItem = lockItems.stream()
-                .filter(lockItem -> lockItem.Item.equalsIgnoreCase(itemId.toString()))
+                .filter(lockItem -> lockItem.Item.equalsIgnoreCase(itemId))
                 .findFirst();
 
         if (optionalLockItem.isPresent()) {
@@ -21,15 +20,17 @@ public final class LockItemRegistration {
             lockItem.Aptitudes = new ArrayList<>(lockItem.Aptitudes);
 
             if (level < 1) {
-                if (lockItem.Aptitudes.size() <= 1) {
+                boolean removed = lockItem.Aptitudes.removeIf(aptitude ->
+                        aptitude.Aptitude.toString().equalsIgnoreCase(aptitudeName));
+                if (!removed) {
+                    return Result.NO_MATCHING_APTITUDE;
+                }
+                if (lockItem.Aptitudes.isEmpty()) {
                     lockItems.remove(index);
                     return Result.REMOVED_ITEM;
                 }
-
-                boolean removed = lockItem.Aptitudes.removeIf(aptitude ->
-                        aptitude.Aptitude.toString().equalsIgnoreCase(aptitudeName));
                 lockItems.set(index, lockItem);
-                return removed ? Result.REMOVED_APTITUDE : Result.NO_MATCHING_APTITUDE;
+                return Result.REMOVED_APTITUDE;
             }
 
             lockItem.Aptitudes.removeIf(aptitude ->
@@ -43,7 +44,7 @@ public final class LockItemRegistration {
             return Result.NO_MATCHING_ITEM;
         }
 
-        LockItem lockItem = new LockItem(itemId.toString());
+        LockItem lockItem = new LockItem(itemId);
         lockItem.Aptitudes = new ArrayList<>();
         lockItem.Aptitudes.add(new LockItem.Aptitude(aptitudeName, level));
         lockItems.add(lockItem);

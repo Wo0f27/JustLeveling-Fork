@@ -1,6 +1,8 @@
 package com.seniors.justlevelingfork.common.player;
 
+import com.seniors.justlevelingfork.common.config.CommonConfigService;
 import com.seniors.justlevelingfork.registry.RegistryAptitudes;
+import com.seniors.justlevelingfork.registry.RegistryPassives;
 import com.seniors.justlevelingfork.registry.RegistryTitles;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import com.seniors.justlevelingfork.registry.passive.Passive;
@@ -14,6 +16,7 @@ import java.util.function.IntUnaryOperator;
 import net.minecraft.nbt.CompoundTag;
 
 public class PlayerProgress {
+    private static final int MAX_PERSISTED_APTITUDE_LEVEL = 1000;
     private final Collection<String> passiveNames;
     private final Collection<String> skillNames;
     private final Collection<Title> titles;
@@ -137,30 +140,44 @@ public class PlayerProgress {
         passiveNames.forEach(passiveName -> tag.putInt("passive." + passiveName, passiveLevel.getOrDefault(passiveName, 0)));
         skillNames.forEach(skillName -> tag.putBoolean("skill." + skillName, toggleSkill.getOrDefault(skillName, false)));
         RegistryTitles.defaults().forEach(title -> tag.putBoolean("title." + title.getName(), getLockTitle(title)));
-        tag.putInt("counterAttackTimer", counterAttackTimer);
-        tag.putFloat("counterAttackDamage", counterAttackDamage);
-        tag.putBoolean("counterAttack", counterAttack);
         tag.putString("playerTitle", playerTitle);
-        tag.putDouble("betterCombatEntityRange", betterCombatEntityRange);
         return tag;
     }
 
     public void deserializeNBT(CompoundTag tag) {
-        RegistryAptitudes.values().forEach(aptitude ->
-                aptitudeLevel.put(aptitude.getName(), readInt(tag, "aptitude." + aptitude.getName(), 1)));
-        passiveNames.forEach(passiveName ->
-                passiveLevel.put(passiveName, readInt(tag, "passive." + passiveName, 0)));
-        skillNames.forEach(skillName -> toggleSkill.put(skillName, tag.getBoolean("skill." + skillName)));
-        RegistryTitles.defaults().forEach(title -> unlockTitle.put(title.getName(), tag.getBoolean("title." + title.getName())));
+        resetMaps();
+        if (tag == null) {
+            clearTransientState();
+            return;
+        }
 
-        counterAttackTimer = tag.getInt("counterAttackTimer");
-        counterAttackDamage = tag.getFloat("counterAttackDamage");
-        counterAttack = tag.getBoolean("counterAttack");
-        playerTitle = tag.contains("playerTitle") ? tag.getString("playerTitle") : RegistryTitles.TITLELESS.getName();
-        betterCombatEntityRange = tag.getDouble("betterCombatEntityRange");
+        RegistryAptitudes.values().forEach(aptitude -> aptitudeLevel.put(
+                aptitude.getName(),
+                clamp(
+                        readInt(tag, "aptitude." + aptitude.getName(), 1),
+                        1,
+                        Math.min(MAX_PERSISTED_APTITUDE_LEVEL, CommonConfigService.aptitudeMaxLevel()))));
+        passiveNames.forEach(passiveName -> {
+            Passive passive = RegistryPassives.getPassive(passiveName);
+            int maximum = passive == null ? 0 : passive.getMaxLevel();
+            passiveLevel.put(passiveName, clamp(readInt(tag, "passive." + passiveName, 0), 0, maximum));
+        });
+        skillNames.forEach(skillName -> toggleSkill.put(skillName, tag.getBoolean("skill." + skillName)));
+        RegistryTitles.defaults().forEach(title -> {
+            String key = "title." + title.getName();
+            unlockTitle.put(title.getName(), tag.contains(key) ? tag.getBoolean(key) : title.Requirement);
+        });
+
+        playerTitle = validPlayerTitle(tag.contains("playerTitle") ? tag.getString("playerTitle") : null);
+        clearTransientState();
     }
 
     public void copyFrom(PlayerProgress source) {
+        if (source == this) {
+            clearTransientState();
+            return;
+        }
+
         aptitudeLevel.clear();
         aptitudeLevel.putAll(source.aptitudeLevel);
         passiveLevel.clear();
@@ -169,11 +186,8 @@ public class PlayerProgress {
         toggleSkill.putAll(source.toggleSkill);
         unlockTitle.clear();
         unlockTitle.putAll(source.unlockTitle);
-        counterAttackTimer = source.counterAttackTimer;
-        counterAttackDamage = source.counterAttackDamage;
-        counterAttack = source.counterAttack;
-        playerTitle = source.playerTitle;
-        betterCombatEntityRange = source.betterCombatEntityRange;
+        playerTitle = validPlayerTitle(source.playerTitle);
+        clearTransientState();
     }
 
     private void resetMaps() {
@@ -189,5 +203,21 @@ public class PlayerProgress {
 
     private static int readInt(CompoundTag tag, String key, int defaultValue) {
         return tag.contains(key) ? tag.getInt(key) : defaultValue;
+    }
+
+    private static int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(value, Math.max(minimum, maximum)));
+    }
+
+    private String validPlayerTitle(String titleName) {
+        Title title = RegistryTitles.getTitle(titleName);
+        return title != null && getLockTitle(title) ? title.getName() : RegistryTitles.TITLELESS.getName();
+    }
+
+    private void clearTransientState() {
+        counterAttackTimer = 0;
+        counterAttackDamage = 0.0F;
+        counterAttack = false;
+        betterCombatEntityRange = 0.0D;
     }
 }

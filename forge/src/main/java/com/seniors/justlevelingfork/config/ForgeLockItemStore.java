@@ -74,12 +74,13 @@ public final class ForgeLockItemStore implements RegisterItemCommand.LockItemSto
 
         try (Reader reader = Files.newBufferedReader(path)) {
             List<LockItem> loaded = GSON.fromJson(reader, LOCK_ITEM_LIST);
-            lockItems = loaded == null ? new ArrayList<>() : new ArrayList<>(loaded);
+            lockItems = new ArrayList<>(LockItem.sanitizedList(loaded));
             HandlerAptitude.updateLockItems(lockItems);
-        } catch (IOException exception) {
+        } catch (IOException | RuntimeException exception) {
             Constants.LOG.warn("Failed to read Forge lock-item config {}, using empty list", path, exception);
             lockItems = new ArrayList<>();
             HandlerAptitude.updateLockItems(lockItems);
         }
+        save();
     }
 }

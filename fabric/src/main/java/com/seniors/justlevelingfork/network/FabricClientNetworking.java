@@ -6,6 +6,9 @@ import com.seniors.justlevelingfork.common.player.PlayerProgressClientState;
 import com.seniors.justlevelingfork.client.gui.ClientOverlayState;
 import com.seniors.justlevelingfork.network.CommonConfigSyncPayload;
 import com.seniors.justlevelingfork.network.LockItemSyncPayload;
+import com.seniors.justlevelingfork.network.TitleDefinitionsSyncPayload;
+import com.seniors.justlevelingfork.registry.RegistryTitles;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.nbt.CompoundTag;
@@ -47,6 +50,12 @@ public final class FabricClientNetworking {
             CommonConfigSyncPayload payload = CommonConfigSyncPayload.read(buffer);
             client.execute(payload::apply);
         });
+        ClientPlayNetworking.registerGlobalReceiver(PlayerProgressNetwork.TITLE_DEFINITIONS_SYNC, (client, handler, buffer, responseSender) -> {
+            TitleDefinitionsSyncPayload payload = TitleDefinitionsSyncPayload.read(buffer);
+            client.execute(payload::apply);
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
+                client.execute(RegistryTitles::clearClientTitleModels));
 
         PlayerProgressClientRequests.setAptitudeLevelUpSender(aptitudeName ->
                 sendString(PlayerProgressNetwork.APTITUDE_LEVEL_UP, aptitudeName));

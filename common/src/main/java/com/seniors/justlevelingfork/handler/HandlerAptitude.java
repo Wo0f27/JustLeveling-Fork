@@ -143,9 +143,13 @@ public final class HandlerAptitude {
         Map<String, List<Aptitudes>> aptitudeMap = new HashMap<>();
 
         for (LockItem lockItem : lockItems) {
+            if (lockItem == null || lockItem.Item == null || lockItem.Item.isBlank() || lockItem.Aptitudes == null) {
+                Constants.LOG.warn("Ignoring malformed lock-item config entry.");
+                continue;
+            }
             List<Aptitudes> aptitudesList = new ArrayList<>();
             for (LockItem.Aptitude aptitude : lockItem.Aptitudes) {
-                if (aptitude.Aptitude == null) {
+                if (aptitude == null || aptitude.Aptitude == null) {
                     Constants.LOG.warn("Item {} with wrong aptitude (APTITUDE NOT FOUND), skipping...", lockItem.Item);
                     continue;
                 }

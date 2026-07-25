@@ -3,13 +3,12 @@ package com.seniors.justlevelingfork.common.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.seniors.justlevelingfork.common.command.arguments.AptitudeArgument;
+import com.seniors.justlevelingfork.common.config.CommonConfigService;
 import com.seniors.justlevelingfork.config.models.LockItem;
-import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import java.util.List;
-import java.util.Locale;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,44 +21,53 @@ public final class RegisterItemCommand {
     private RegisterItemCommand() {
     }
 
-    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, LockItemStore lockItemStore) {
+    public static void register(
+            CommandDispatcher<CommandSourceStack> dispatcher,
+            LockItemStore lockItemStore,
+            CommandSync sync) {
         dispatcher.register(Commands.literal("registeritem")
                 .requires(source -> source.hasPermission(2))
-                .then(Commands.argument("aptitude", StringArgumentType.word())
-                        .suggests((context, builder) -> {
-                            String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
-                            RegistryAptitudes.values().stream()
-                                    .map(aptitude -> capitalize(aptitude.getName()))
-                                    .filter(name -> remaining.isEmpty()
-                                            || name.toLowerCase(Locale.ROOT).contains(remaining))
-                                    .forEach(builder::suggest);
-                            return builder.buildFuture();
-                        })
-                        .then(Commands.argument("level", IntegerArgumentType.integer())
-                                .executes(context -> execute(context, lockItemStore)))));
+                .then(Commands.argument("aptitude", AptitudeArgument.getArgument())
+                        .then(Commands.argument("level", IntegerArgumentType.integer(0))
+                                .executes(context -> execute(context, lockItemStore, sync)))));
     }
 
-    private static String capitalize(String value) {
-        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
-    }
-
-    private static int execute(CommandContext<CommandSourceStack> context, LockItemStore lockItemStore)
+    private static int execute(
+            CommandContext<CommandSourceStack> context,
+            LockItemStore lockItemStore,
+            CommandSync sync)
             throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ItemStack stack = player.getMainHandItem();
         if (stack.isEmpty()) {
-            player.sendSystemMessage(Component.literal("No item detected in main hand!"));
-            return Command.SINGLE_SUCCESS;
+            context.getSource().sendFailure(Component.literal("No item detected in main hand."));
+            return 0;
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
         String aptitudeName = context.getArgument("aptitude", String.class);
         int level = IntegerArgumentType.getInteger(context, "level");
+        if (level == 1) {
+            context.getSource().sendFailure(Component.literal(
+                    "Item requirements must be at least level 2, or 0 to remove a requirement."));
+            return 0;
+        }
+        if (level > CommonConfigService.aptitudeMaxLevel()) {
+            context.getSource().sendFailure(Component.literal(
+                    "Item requirements cannot exceed the configured aptitude maximum of "
+                            + CommonConfigService.aptitudeMaxLevel()
+                            + "."));
+            return 0;
+        }
         LockItemRegistration.Result result =
-                LockItemRegistration.apply(lockItemStore.lockItems(), itemId, aptitudeName, level);
+                LockItemRegistration.apply(lockItemStore.lockItems(), itemId.toString(), aptitudeName, level);
 
         if (result.changed()) {
             lockItemStore.save();
+            sync.sync(context.getSource());
+        } else {
+            context.getSource().sendFailure(Component.literal(result.message()));
+            return 0;
         }
 
         player.sendSystemMessage(Component.literal(result.message()));
@@ -70,5 +78,10 @@ public final class RegisterItemCommand {
         List<LockItem> lockItems();
 
         void save();
+    }
+
+    @FunctionalInterface
+    public interface CommandSync {
+        void sync(CommandSourceStack source);
     }
 }

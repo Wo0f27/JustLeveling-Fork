@@ -7,11 +7,13 @@ import com.seniors.justlevelingfork.client.screen.CommonConfigScreen;
 import com.seniors.justlevelingfork.config.ForgeCommonConfig;
 import com.seniors.justlevelingfork.integration.L2TabsIntegration;
 import com.seniors.justlevelingfork.registry.ForgeRegistryItems;
+import com.seniors.justlevelingfork.registry.RegistryTitles;
 import dev.xkmc.l2tabs.tabs.core.TabRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
@@ -66,6 +68,11 @@ public final class ForgeClientEvents {
             ClientOverlayState.tick();
             ClientKeyMappings.handleClientTick(net.minecraft.client.Minecraft.getInstance());
         }
+    }
+
+    @SubscribeEvent
+    public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        RegistryTitles.clearClientTitleModels();
     }
 
     private static final class ForgeConfigSaver implements CommonConfigScreen.ConfigSaver {

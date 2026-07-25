@@ -38,10 +38,11 @@ public final class ForgePassiveConfigStore {
         try (Reader reader = Files.newBufferedReader(PATH)) {
             Map<String, PassiveConfig> loaded = GSON.fromJson(reader, PASSIVE_CONFIG_MAP);
             passiveConfigs = PassiveConfigService.sanitize(loaded == null ? PassiveConfigService.defaultConfigs() : loaded);
-        } catch (IOException exception) {
+        } catch (IOException | RuntimeException exception) {
             Constants.LOG.warn("Failed to read Forge passive config {}, using defaults", PATH, exception);
             passiveConfigs = PassiveConfigService.defaultConfigs();
         }
+        save();
     }
 
     private static void save() {

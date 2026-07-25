@@ -14,6 +14,7 @@ import com.seniors.justlevelingfork.network.packet.client.ForgeLockItemSyncPacke
 import com.seniors.justlevelingfork.network.packet.client.ForgePlayerProgressSyncPacket;
 import com.seniors.justlevelingfork.network.packet.client.ForgeSkillMessagePacket;
 import com.seniors.justlevelingfork.network.packet.client.ForgeTitleUnlockPacket;
+import com.seniors.justlevelingfork.network.packet.client.ForgeTitleDefinitionsSyncPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeAptitudeLevelUpPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeOpenEnderChestPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgePassiveLevelDownPacket;
@@ -22,6 +23,7 @@ import com.seniors.justlevelingfork.network.packet.common.ForgeSetPlayerTitlePac
 import com.seniors.justlevelingfork.network.packet.common.ForgeToggleSkillPacket;
 import java.util.List;
 import java.util.Optional;
+import com.seniors.justlevelingfork.network.TitleDefinitionsSyncPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -29,7 +31,9 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ForgeServerNetworking {
-    private static final String PROTOCOL_VERSION = "1";
+    // Version 2 adds the server-authoritative title-definition packet. Keeping
+    // the old version would let 1.2.5 clients connect with incompatible packet ids.
+    private static final String PROTOCOL_VERSION = "2";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -85,6 +89,13 @@ public final class ForgeServerNetworking {
                 ForgeCommonConfigSyncPacket::toBytes,
                 ForgeCommonConfigSyncPacket::new,
                 ForgeCommonConfigSyncPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeTitleDefinitionsSyncPacket.class,
+                ForgeTitleDefinitionsSyncPacket::toBytes,
+                ForgeTitleDefinitionsSyncPacket::new,
+                ForgeTitleDefinitionsSyncPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
@@ -160,6 +171,12 @@ public final class ForgeServerNetworking {
 
     public static void syncCommonConfig(ServerPlayer player) {
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeCommonConfigSyncPacket(CommonConfigSyncPayload.current()));
+    }
+
+    public static void syncTitleDefinitions(ServerPlayer player) {
+        channel.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new ForgeTitleDefinitionsSyncPacket(TitleDefinitionsSyncPayload.current()));
     }
 
     private static void sendSkillMessage(ServerPlayer player, SkillMessage message) {

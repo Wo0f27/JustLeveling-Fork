@@ -5,6 +5,7 @@ import com.seniors.justlevelingfork.config.FabricLockItemStore;
 import com.seniors.justlevelingfork.network.CommonConfigSyncPayload;
 import com.seniors.justlevelingfork.network.LockItemSyncPayload;
 import com.seniors.justlevelingfork.network.PlayerProgressNetwork;
+import com.seniors.justlevelingfork.network.TitleDefinitionsSyncPayload;
 import com.seniors.justlevelingfork.registry.RegistryPassives;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
 import com.seniors.justlevelingfork.registry.RegistryTitles;
@@ -44,6 +45,7 @@ public final class FabricPlayerProgressStore {
                         })));
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             PlayerProgressService.refreshPassiveModifiers(handler.player);
+            syncTitleDefinitions(handler.player);
             PlayerProgressService.sync(handler.player);
             syncLockItems(handler.player);
             syncCommonConfig(handler.player);
@@ -56,8 +58,11 @@ public final class FabricPlayerProgressStore {
         }
 
         FabricPlayerProgressData data = data(player);
+        boolean existed = data.contains(player.getUUID());
         PlayerProgress progress = data.getOrCreate(player.getUUID());
-        data.setDirty();
+        if (!existed) {
+            data.setDirty();
+        }
         return Optional.of(progress);
     }
 
@@ -87,7 +92,17 @@ public final class FabricPlayerProgressStore {
         ServerPlayNetworking.send(player, PlayerProgressNetwork.LOCK_ITEM_SYNC, buffer);
     }
 
-    private static void syncCommonConfig(ServerPlayer player) {
+    public static void syncTitleDefinitions(ServerPlayer player) {
+        if (!ServerPlayNetworking.canSend(player, PlayerProgressNetwork.TITLE_DEFINITIONS_SYNC)) {
+            return;
+        }
+
+        FriendlyByteBuf buffer = PacketByteBufs.create();
+        TitleDefinitionsSyncPayload.current().write(buffer);
+        ServerPlayNetworking.send(player, PlayerProgressNetwork.TITLE_DEFINITIONS_SYNC, buffer);
+    }
+
+    public static void syncCommonConfig(ServerPlayer player) {
         if (!ServerPlayNetworking.canSend(player, PlayerProgressNetwork.COMMON_CONFIG_SYNC)) {
             return;
         }
@@ -156,6 +171,10 @@ public final class FabricPlayerProgressStore {
 
         private PlayerProgress getOrCreate(UUID playerId) {
             return progressByPlayer.computeIfAbsent(playerId, ignored -> createProgress());
+        }
+
+        private boolean contains(UUID playerId) {
+            return progressByPlayer.containsKey(playerId);
         }
 
         @Override

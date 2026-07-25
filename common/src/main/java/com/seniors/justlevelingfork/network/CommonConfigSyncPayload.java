@@ -21,6 +21,11 @@ public record CommonConfigSyncPayload(
         List<String> convergenceItems,
         Map<String, PassiveConfig> passiveConfigs,
         Map<String, SkillConfig> skillConfigs) {
+    private static final int MAX_ITEM_ENTRIES = 4096;
+    private static final int MAX_CONFIG_ENTRIES = 256;
+    private static final int MAX_LEVELS_PER_PASSIVE = 256;
+    private static final int MAX_VALUES_PER_SKILL = 64;
+    private static final int MAX_ENTRY_LENGTH = 8192;
     public static CommonConfigSyncPayload current() {
         return new CommonConfigSyncPayload(
                 CommonConfigService.aptitudeMaxLevel(),
@@ -45,8 +50,8 @@ public record CommonConfigSyncPayload(
                 buffer.readBoolean(),
                 buffer.readBoolean(),
                 buffer.readBoolean(),
-                buffer.readList(FriendlyByteBuf::readUtf),
-                buffer.readList(FriendlyByteBuf::readUtf),
+                readStringList(buffer, "treasure hunter items"),
+                readStringList(buffer, "convergence items"),
                 readPassiveConfigs(buffer),
                 readSkillConfigs(buffer));
     }
@@ -81,11 +86,13 @@ public record CommonConfigSyncPayload(
 
     private static Map<String, PassiveConfig> readPassiveConfigs(FriendlyByteBuf buffer) {
         int size = buffer.readInt();
+        requireCount(size, MAX_CONFIG_ENTRIES, "passive configs");
         Map<String, PassiveConfig> configs = new java.util.LinkedHashMap<>();
         for (int index = 0; index < size; index++) {
-            String name = buffer.readUtf();
+            String name = buffer.readUtf(MAX_ENTRY_LENGTH);
             double value = buffer.readDouble();
             int levelCount = buffer.readInt();
+            requireCount(levelCount, MAX_LEVELS_PER_PASSIVE, "passive levels");
             int[] levels = new int[levelCount];
             for (int levelIndex = 0; levelIndex < levelCount; levelIndex++) {
                 levels[levelIndex] = buffer.readInt();
@@ -111,11 +118,13 @@ public record CommonConfigSyncPayload(
 
     private static Map<String, SkillConfig> readSkillConfigs(FriendlyByteBuf buffer) {
         int size = buffer.readInt();
+        requireCount(size, MAX_CONFIG_ENTRIES, "skill configs");
         Map<String, SkillConfig> configs = new java.util.LinkedHashMap<>();
         for (int index = 0; index < size; index++) {
-            String name = buffer.readUtf();
+            String name = buffer.readUtf(MAX_ENTRY_LENGTH);
             int requiredLevel = buffer.readInt();
             int valueCount = buffer.readInt();
+            requireCount(valueCount, MAX_VALUES_PER_SKILL, "skill values");
             double[] values = new double[valueCount];
             for (int valueIndex = 0; valueIndex < valueCount; valueIndex++) {
                 values[valueIndex] = buffer.readDouble();
@@ -137,5 +146,21 @@ public record CommonConfigSyncPayload(
                 buffer.writeDouble(value);
             }
         });
+    }
+
+    private static List<String> readStringList(FriendlyByteBuf buffer, String description) {
+        int size = buffer.readVarInt();
+        requireCount(size, MAX_ITEM_ENTRIES, description);
+        List<String> entries = new java.util.ArrayList<>(size);
+        for (int index = 0; index < size; index++) {
+            entries.add(buffer.readUtf(MAX_ENTRY_LENGTH));
+        }
+        return entries;
+    }
+
+    private static void requireCount(int count, int maximum, String description) {
+        if (count < 0 || count > maximum) {
+            throw new IllegalArgumentException("Invalid " + description + " count: " + count);
+        }
     }
 }

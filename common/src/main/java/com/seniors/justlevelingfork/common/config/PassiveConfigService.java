@@ -58,10 +58,12 @@ public final class PassiveConfigService {
     }
 
     public static Map<String, PassiveConfig> sanitize(Map<String, PassiveConfig> configs) {
-        Map<String, PassiveConfig> sanitized = new LinkedHashMap<>(defaultConfigs());
+        Map<String, PassiveConfig> defaults = defaultConfigs();
+        Map<String, PassiveConfig> sanitized = new LinkedHashMap<>(defaults);
         configs.forEach((name, config) -> {
-            if (name != null && config != null) {
-                sanitized.put(name, config.sanitized(sanitized.get(name)));
+            PassiveConfig fallback = defaults.get(name);
+            if (fallback != null && config != null) {
+                sanitized.put(name, config.sanitized(fallback));
             }
         });
         return sanitized;
@@ -77,10 +79,13 @@ public final class PassiveConfigService {
 
     public record PassiveConfig(double value, int[] levels) {
         public PassiveConfig sanitized(PassiveConfig fallback) {
-            double sanitizedValue = Math.max(0.0D, value);
+            double sanitizedValue = Double.isFinite(value) ? Math.max(0.0D, value) : fallback == null ? 0.0D : fallback.value();
             int[] sanitizedLevels = levels == null || levels.length == 0
                     ? fallback == null ? new int[] {8, 14, 20, 26, 32} : fallback.levels()
-                    : Arrays.stream(levels).map(level -> Math.max(1, level)).toArray();
+                    : Arrays.stream(levels)
+                            .limit(64)
+                            .map(level -> Math.min(CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(1, level)))
+                            .toArray();
             return new PassiveConfig(sanitizedValue, sanitizedLevels);
         }
 

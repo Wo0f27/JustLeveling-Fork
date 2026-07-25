@@ -37,14 +37,21 @@ public final class ForgeRegistryCommonEvents {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        RegisterItemCommand.register(event.getDispatcher(), ForgeLockItemStore.instance());
+        RegisterItemCommand.register(
+                event.getDispatcher(),
+                ForgeLockItemStore.instance(),
+                source -> source.getServer().getPlayerList().getPlayers().forEach(player ->
+                        ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems())));
         AptitudesReloadCommand.register(
                 event.getDispatcher(),
                 ForgeLockItemStore.instance()::reload,
                 player -> ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems()));
         AptitudeLevelCommand.register(event.getDispatcher());
         TitleCommand.register(event.getDispatcher());
-        TitleConfigReloadCommand.register(event.getDispatcher(), ForgeTitleModelStore::reload);
+        TitleConfigReloadCommand.register(
+                event.getDispatcher(),
+                ForgeTitleModelStore::reload,
+                ForgeServerNetworking::syncTitleDefinitions);
         ConfigLimitCommands.register(event.getDispatcher(), new ConfigLimitCommands.ConfigLimitStore() {
             @Override
             public void setAptitudeMaxLevel(int level) {
@@ -54,6 +61,11 @@ public final class ForgeRegistryCommonEvents {
             @Override
             public void setPlayersMaxGlobalLevel(int level) {
                 ForgeCommonConfig.setPlayersMaxGlobalLevel(level);
+            }
+
+            @Override
+            public void sync(net.minecraft.commands.CommandSourceStack source) {
+                source.getServer().getPlayerList().getPlayers().forEach(ForgeServerNetworking::syncCommonConfig);
             }
         });
     }

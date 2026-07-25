@@ -121,17 +121,18 @@ public final class ForgeCommonConfig {
     }
 
     public static void setAptitudeMaxLevel(int level) {
-        APTITUDE_MAX_LEVEL.set(Math.max(2, level));
+        APTITUDE_MAX_LEVEL.set(Math.min(CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(2, level)));
         SPEC.save();
     }
 
     public static void setPlayersMaxGlobalLevel(int level) {
-        PLAYERS_MAX_GLOBAL_LEVEL.set(Math.max(32, level));
+        PLAYERS_MAX_GLOBAL_LEVEL.set(Math.min(CommonConfigService.MAX_GLOBAL_LEVEL, Math.max(32, level)));
         SPEC.save();
     }
 
     public static void setAptitudeFirstCostLevel(int level) {
-        APTITUDE_FIRST_COST_LEVEL.set(Math.max(1, level));
+        APTITUDE_FIRST_COST_LEVEL.set(
+                Math.min(CommonConfigService.MAX_FIRST_COST_LEVEL, Math.max(1, level)));
         SPEC.save();
     }
 

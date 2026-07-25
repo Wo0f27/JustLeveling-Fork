@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import net.minecraft.resources.ResourceLocation;
 
 public class LockItem {
     private static final String DROPPABLE_MARKER = "<droppable>";
@@ -36,6 +37,57 @@ public class LockItem {
         }
     }
 
+    /**
+     * Returns a copy of the usable lock-item entries in a user-supplied config.
+     * JSON configs are edited by hand, so never let a partial entry reach the
+     * runtime restriction map.
+     */
+    public static List<LockItem> sanitizedList(List<LockItem> lockItems) {
+        List<LockItem> sanitized = new ArrayList<>();
+        if (lockItems == null) {
+            return sanitized;
+        }
+
+        for (LockItem lockItem : lockItems) {
+            if (lockItem == null || !isValidItemId(lockItem.Item) || lockItem.Aptitudes == null) {
+                continue;
+            }
+
+            List<Aptitude> aptitudes = new ArrayList<>();
+            for (Aptitude aptitude : lockItem.Aptitudes) {
+                if (aptitude == null || aptitude.Aptitude == null || aptitude.Level < 2 || aptitude.Level > 1000) {
+                    continue;
+                }
+                Aptitude copy = new Aptitude();
+                copy.Aptitude = aptitude.Aptitude;
+                copy.Level = aptitude.Level;
+                aptitudes.add(copy);
+            }
+
+            if (aptitudes.isEmpty()) {
+                continue;
+            }
+
+            LockItem copy = new LockItem(lockItem.Item);
+            copy.Droppable = lockItem.Droppable;
+            copy.Aptitudes = aptitudes;
+            sanitized.add(copy);
+        }
+        return sanitized;
+    }
+
+    private static boolean isValidItemId(String itemId) {
+        if (itemId == null || itemId.isBlank()) {
+            return false;
+        }
+        try {
+            new ResourceLocation(itemId);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
     private static LockItem formatString(String value) {
         String[] initialSplit = value.split("#");
         LockItem lockItem = new LockItem(initialSplit[0]);
@@ -59,12 +111,13 @@ public class LockItem {
 
     @Override
     public String toString() {
-        if (Aptitudes.stream().anyMatch(Objects::isNull)) {
+        List<Aptitude> aptitudes = Aptitudes == null ? List.of() : Aptitudes;
+        if (aptitudes.stream().anyMatch(Objects::isNull)) {
             Constants.LOG.info(">> Found null aptitude at item {}", this.Item);
         }
         List<String> strings = new ArrayList<>();
         try {
-            strings = Aptitudes.stream().map(Aptitude::toString).toList();
+            strings = aptitudes.stream().filter(Objects::nonNull).map(Aptitude::toString).toList();
         } catch (NullPointerException e) {
             Constants.LOG.info(">> Found null aptitude at item {}", this.Item);
         }

@@ -69,6 +69,7 @@ public final class ForgeRegistryCapabilities {
     public static void refreshOnLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             PlayerProgressService.refreshPassiveModifiers(serverPlayer);
+            ForgeServerNetworking.syncTitleDefinitions(serverPlayer);
             PlayerProgressService.sync(serverPlayer);
             ForgeServerNetworking.syncLockItems(serverPlayer, ForgeLockItemStore.instance().lockItems());
             ForgeServerNetworking.syncCommonConfig(serverPlayer);

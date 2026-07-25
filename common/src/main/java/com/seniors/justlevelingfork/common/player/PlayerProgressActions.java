@@ -9,6 +9,7 @@ import com.seniors.justlevelingfork.registry.RegistrySkills;
 import com.seniors.justlevelingfork.registry.RegistryTitles;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import com.seniors.justlevelingfork.registry.passive.Passive;
+import com.seniors.justlevelingfork.registry.skills.Skill;
 import com.seniors.justlevelingfork.registry.title.Title;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,13 +29,17 @@ public final class PlayerProgressActions {
         return PlayerProgressService.get(player)
                 .map(progress -> {
                     int aptitudeLevel = progress.getAptitudeLevel(aptitude);
+                    int aptitudeMaxLevel = CommonConfigService.aptitudeMaxLevel();
+                    if (aptitudeLevel >= aptitudeMaxLevel) {
+                        Constants.LOG.info(
+                                "Received level up request at or above the configured aptitude level limit, skipping request...");
+                        return false;
+                    }
+
                     int requiredPoints = AptitudeExperience.requiredPoints(
                             aptitudeLevel, CommonConfigService.aptitudeFirstCostLevel());
-                    int requiredExperienceLevels = AptitudeExperience.requiredExperienceLevels(
-                            aptitudeLevel, CommonConfigService.aptitudeFirstCostLevel());
                     boolean canLevelUp = player.isCreative()
-                            || requiredPoints <= player.totalExperience
-                            || requiredExperienceLevels <= player.experienceLevel;
+                            || requiredPoints <= AptitudeExperience.getPlayerXP(player);
 
                     if (!canLevelUp) {
                         Constants.LOG.info(
@@ -51,7 +56,7 @@ public final class PlayerProgressActions {
                     }
 
                     boolean changed = PlayerProgressService.addAptitudeLevel(
-                            player, aptitude, 1, CommonConfigService.aptitudeMaxLevel());
+                            player, aptitude, 1, aptitudeMaxLevel);
                     if (changed && !player.isCreative()) {
                         AptitudeExperience.addPlayerXP(player, -requiredPoints);
                     }
@@ -70,7 +75,21 @@ public final class PlayerProgressActions {
     }
 
     public static boolean levelUpPassive(ServerPlayer player, Passive passive) {
-        return PlayerProgressService.addPassiveLevel(player, passive, 1);
+        if (player == null || passive == null || RegistryPassives.getPassive(passive.getName()) != passive) {
+            return false;
+        }
+
+        return PlayerProgressService.get(player)
+                .map(progress -> {
+                    int passiveLevel = progress.getPassiveLevel(passive);
+                    if (passiveLevel >= passive.getMaxLevel()
+                            || progress.getAptitudeLevel(passive.aptitude) < passive.getNextLevelUp(passiveLevel)) {
+                        return false;
+                    }
+
+                    return PlayerProgressService.addPassiveLevel(player, passive, 1);
+                })
+                .orElse(false);
     }
 
     public static boolean levelUpPassive(ServerPlayer player, String passiveName) {
@@ -96,7 +115,14 @@ public final class PlayerProgressActions {
     }
 
     public static boolean setPlayerTitle(ServerPlayer player, Title title) {
-        return PlayerProgressService.setPlayerTitle(player, title);
+        if (player == null || title == null) {
+            return false;
+        }
+
+        return PlayerProgressService.get(player)
+                .filter(progress -> progress.getLockTitle(title))
+                .map(progress -> PlayerProgressService.setPlayerTitle(player, title))
+                .orElse(false);
     }
 
     public static boolean setPlayerTitle(ServerPlayer player, String titleName) {
@@ -109,19 +135,19 @@ public final class PlayerProgressActions {
     }
 
     public static boolean setToggleSkill(ServerPlayer player, String skillName, boolean enabled) {
-        if (skillName == null || skillName.isBlank()) {
-            Constants.LOG.warn("Received skill toggle request with no skill name, skipping request...");
+        Skill skill = eligibleSkill(player, skillName);
+        if (skill == null) {
             return false;
         }
-        return PlayerProgressService.setToggleSkill(player, skillName, enabled);
+        return PlayerProgressService.setToggleSkill(player, skill.getName(), enabled);
     }
 
     public static boolean toggleSkill(ServerPlayer player, String skillName) {
-        if (skillName == null || skillName.isBlank()) {
-            Constants.LOG.warn("Received skill toggle request with no skill name, skipping request...");
+        Skill skill = eligibleSkill(player, skillName);
+        if (skill == null) {
             return false;
         }
-        return PlayerProgressService.toggleSkill(player, skillName);
+        return PlayerProgressService.toggleSkill(player, skill.getName());
     }
 
     public static boolean openEnderChest(ServerPlayer player) {
@@ -134,5 +160,23 @@ public final class PlayerProgressActions {
                 (id, inventory, ignored) -> ChestMenu.threeRows(id, inventory, enderChest),
                 Component.translatable(RegistrySkills.WORMHOLE_STORAGE.getKey())));
         return true;
+    }
+
+    private static Skill eligibleSkill(ServerPlayer player, String skillName) {
+        if (player == null || skillName == null || skillName.isBlank()) {
+            Constants.LOG.warn("Received skill toggle request with no skill name, skipping request...");
+            return null;
+        }
+
+        Skill skill = RegistrySkills.getSkill(skillName);
+        if (skill == null) {
+            Constants.LOG.warn("Received skill toggle request for unknown skill '{}', skipping request...", skillName);
+            return null;
+        }
+
+        boolean canToggle = PlayerProgressService.get(player)
+                .map(progress -> skill.canToggleAtLevel(progress.getAptitudeLevel(skill.aptitude)))
+                .orElse(false);
+        return canToggle ? skill : null;
     }
 }

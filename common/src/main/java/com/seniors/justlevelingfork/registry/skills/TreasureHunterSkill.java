@@ -1,6 +1,5 @@
 package com.seniors.justlevelingfork.registry.skills;
 
-import com.google.gson.JsonSyntaxException;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.seniors.justlevelingfork.common.config.CommonConfigService;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
@@ -21,16 +20,11 @@ public final class TreasureHunterSkill {
     public static ItemStack drop() {
         int chance = Math.max(1, (int) RegistrySkills.TREASURE_HUNTER.getValue()[0]);
         List<List<BlockDrop>> dropLists = getItems();
-        if (dropLists.isEmpty()) {
+        if (dropLists.isEmpty() || ThreadLocalRandom.current().nextInt(chance) != 0) {
             return ItemStack.EMPTY;
         }
 
-        int listIndex = ThreadLocalRandom.current().nextInt(chance);
-        if (listIndex >= dropLists.size()) {
-            return ItemStack.EMPTY;
-        }
-
-        List<BlockDrop> drops = dropLists.get(listIndex);
+        List<BlockDrop> drops = dropLists.get(ThreadLocalRandom.current().nextInt(dropLists.size()));
         if (drops.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -43,7 +37,12 @@ public final class TreasureHunterSkill {
 
     public static List<List<BlockDrop>> getItems() {
         List<List<BlockDrop>> dropList = new ArrayList<>();
-        for (String entry : CommonConfigService.treasureHunterItems()) {
+        List<String> entries = CommonConfigService.treasureHunterItems();
+        if (entries == null) {
+            return dropList;
+        }
+
+        for (String entry : entries) {
             List<BlockDrop> drops = parseEntry(entry);
             if (!drops.isEmpty()) {
                 dropList.add(drops);
@@ -83,11 +82,16 @@ public final class TreasureHunterSkill {
             try {
                 tag = TagParser.parseTag(entry.substring(nbtStart));
             } catch (CommandSyntaxException exception) {
-                throw new JsonSyntaxException("Invalid NBT Entry: " + exception);
+                return java.util.Optional.empty();
             }
         }
 
-        Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(itemId));
+        Item item;
+        try {
+            item = BuiltInRegistries.ITEM.get(new ResourceLocation(itemId));
+        } catch (IllegalArgumentException exception) {
+            return java.util.Optional.empty();
+        }
         return item == net.minecraft.world.item.Items.AIR
                 ? java.util.Optional.empty()
                 : java.util.Optional.of(new BlockDrop(item, tag));

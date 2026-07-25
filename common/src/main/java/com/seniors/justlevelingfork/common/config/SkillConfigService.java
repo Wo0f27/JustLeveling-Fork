@@ -61,10 +61,12 @@ public final class SkillConfigService {
     }
 
     public static Map<String, SkillConfig> sanitize(Map<String, SkillConfig> configs) {
-        Map<String, SkillConfig> sanitized = new LinkedHashMap<>(defaultConfigs());
+        Map<String, SkillConfig> defaults = defaultConfigs();
+        Map<String, SkillConfig> sanitized = new LinkedHashMap<>(defaults);
         configs.forEach((name, config) -> {
-            if (name != null && config != null) {
-                sanitized.put(name, config.sanitized(sanitized.get(name)));
+            SkillConfig fallback = defaults.get(name);
+            if (fallback != null && config != null) {
+                sanitized.put(name, config.sanitized(fallback));
             }
         });
         return sanitized;
@@ -72,10 +74,14 @@ public final class SkillConfigService {
 
     public record SkillConfig(int requiredLevel, double[] values) {
         public SkillConfig sanitized(SkillConfig fallback) {
-            int sanitizedRequiredLevel = Math.max(0, requiredLevel);
+            int sanitizedRequiredLevel = Math.min(
+                    CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(0, requiredLevel));
             double[] sanitizedValues = values == null
                     ? fallback == null ? new double[0] : fallback.values()
-                    : Arrays.stream(values).map(value -> Math.max(0.0D, value)).toArray();
+                    : Arrays.stream(values)
+                            .limit(fallback == null ? 0 : fallback.values().length)
+                            .map(value -> Double.isFinite(value) ? Math.max(0.0D, value) : 0.0D)
+                            .toArray();
             return new SkillConfig(sanitizedRequiredLevel, sanitizedValues);
         }
 

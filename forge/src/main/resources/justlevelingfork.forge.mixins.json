@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "MixAbstractArrow",
+    "MixBlockBehaviour",
     "MixCraftingMenu",
     "MixHorseInventoryMenu",
     "MixItemStack",
@@ -18,7 +19,6 @@
     "MixVillager"
   ],
   "client": [
-    "MixBetterCombatTargetFinder",
     "MixForgeGui",
     "MixInventoryScreen",
     "MixMultiPlayerGameMode",

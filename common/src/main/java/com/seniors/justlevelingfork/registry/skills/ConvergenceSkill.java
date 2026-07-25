@@ -43,7 +43,12 @@ public final class ConvergenceSkill {
 
     public static List<ItemDrop> getItems() {
         List<ItemDrop> drops = new ArrayList<>();
-        for (String entry : CommonConfigService.convergenceItems()) {
+        List<String> entries = CommonConfigService.convergenceItems();
+        if (entries == null) {
+            return drops;
+        }
+
+        for (String entry : entries) {
             parseEntry(entry).ifPresent(drops::add);
         }
         return drops;
@@ -51,7 +56,7 @@ public final class ConvergenceSkill {
 
     private static boolean passesChance() {
         int chance = Math.max(1, (int) RegistrySkills.CONVERGENCE.getValue()[0]);
-        return chance >= 100 || ThreadLocalRandom.current().nextInt(chance) == 1;
+        return ThreadLocalRandom.current().nextInt(chance) == 0;
     }
 
     private static Optional<ItemDrop> parseEntry(String entry) {
@@ -60,8 +65,14 @@ public final class ConvergenceSkill {
         }
 
         String[] parts = entry.split("#", 2);
-        Item craftingItem = BuiltInRegistries.ITEM.get(new ResourceLocation(parts[0]));
-        Item convergenceItem = BuiltInRegistries.ITEM.get(new ResourceLocation(parts[1]));
+        Item craftingItem;
+        Item convergenceItem;
+        try {
+            craftingItem = BuiltInRegistries.ITEM.get(new ResourceLocation(parts[0].trim()));
+            convergenceItem = BuiltInRegistries.ITEM.get(new ResourceLocation(parts[1].trim()));
+        } catch (IllegalArgumentException exception) {
+            return Optional.empty();
+        }
         if (craftingItem == Items.AIR || convergenceItem == Items.AIR) {
             return Optional.empty();
         }

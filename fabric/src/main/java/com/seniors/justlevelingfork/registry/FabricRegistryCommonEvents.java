@@ -34,14 +34,21 @@ public final class FabricRegistryCommonEvents {
     public static void load() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 {
-                    RegisterItemCommand.register(dispatcher, FabricLockItemStore.instance());
+                    RegisterItemCommand.register(
+                            dispatcher,
+                            FabricLockItemStore.instance(),
+                            source -> source.getServer().getPlayerList().getPlayers()
+                                    .forEach(FabricPlayerProgressStore::syncLockItems));
                     AptitudesReloadCommand.register(
                             dispatcher,
                             FabricLockItemStore.instance()::reload,
                             FabricPlayerProgressStore::syncLockItems);
                     AptitudeLevelCommand.register(dispatcher);
                     TitleCommand.register(dispatcher);
-                    TitleConfigReloadCommand.register(dispatcher, FabricTitleModelStore::reload);
+                    TitleConfigReloadCommand.register(
+                            dispatcher,
+                            FabricTitleModelStore::reload,
+                            FabricPlayerProgressStore::syncTitleDefinitions);
                     ConfigLimitCommands.register(dispatcher, new ConfigLimitCommands.ConfigLimitStore() {
                         @Override
                         public void setAptitudeMaxLevel(int level) {
@@ -51,6 +58,12 @@ public final class FabricRegistryCommonEvents {
                         @Override
                         public void setPlayersMaxGlobalLevel(int level) {
                             FabricCommonConfig.setPlayersMaxGlobalLevel(level);
+                        }
+
+                        @Override
+                        public void sync(net.minecraft.commands.CommandSourceStack source) {
+                            source.getServer().getPlayerList().getPlayers()
+                                    .forEach(FabricPlayerProgressStore::syncCommonConfig);
                         }
                     });
                 });

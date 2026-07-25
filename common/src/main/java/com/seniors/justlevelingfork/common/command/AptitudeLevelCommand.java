@@ -3,13 +3,12 @@ package com.seniors.justlevelingfork.common.command;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.seniors.justlevelingfork.common.command.arguments.AptitudeArgument;
 import com.seniors.justlevelingfork.common.config.CommonConfigService;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
-import java.util.Locale;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -25,16 +24,7 @@ public final class AptitudeLevelCommand {
         dispatcher.register(Commands.literal("aptitudes")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.argument("player", EntityArgument.player())
-                        .then(Commands.argument("aptitude", StringArgumentType.word())
-                                .suggests((context, builder) -> {
-                                    String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
-                                    RegistryAptitudes.values().stream()
-                                            .map(aptitude -> capitalize(aptitude.getName()))
-                                            .filter(name -> remaining.isEmpty()
-                                                    || name.toLowerCase(Locale.ROOT).contains(remaining))
-                                            .forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
+                        .then(Commands.argument("aptitude", AptitudeArgument.getArgument())
                                 .then(Commands.literal("get")
                                         .executes(context -> getAptitude(
                                                 context,
@@ -63,13 +53,10 @@ public final class AptitudeLevelCommand {
                                                         IntegerArgumentType.getInteger(context, "level"))))))));
     }
 
-    private static String capitalize(String value) {
-        return value.substring(0, 1).toUpperCase(Locale.ROOT) + value.substring(1);
-    }
-
     private static int getAptitude(CommandContext<CommandSourceStack> context, ServerPlayer player, String aptitudeName) {
         Aptitude aptitude = RegistryAptitudes.getAptitude(aptitudeName);
         if (aptitude == null) {
+            sendUnknownAptitude(context, aptitudeName);
             return 0;
         }
 
@@ -88,6 +75,7 @@ public final class AptitudeLevelCommand {
             CommandContext<CommandSourceStack> context, ServerPlayer player, String aptitudeName, int level) {
         Aptitude aptitude = RegistryAptitudes.getAptitude(aptitudeName);
         if (aptitude == null) {
+            sendUnknownAptitude(context, aptitudeName);
             return 0;
         }
 
@@ -103,11 +91,12 @@ public final class AptitudeLevelCommand {
             CommandContext<CommandSourceStack> context, ServerPlayer player, String aptitudeName, int level) {
         Aptitude aptitude = RegistryAptitudes.getAptitude(aptitudeName);
         if (aptitude == null) {
+            sendUnknownAptitude(context, aptitudeName);
             return 0;
         }
 
         int targetLevel = PlayerProgressService.get(player)
-                .map(progress -> progress.getAptitudeLevel(aptitude) + level)
+                .map(progress -> saturatingAdd(progress.getAptitudeLevel(aptitude), level))
                 .orElse(1);
         return setAptitude(context, player, aptitudeName, targetLevel);
     }
@@ -116,13 +105,26 @@ public final class AptitudeLevelCommand {
             CommandContext<CommandSourceStack> context, ServerPlayer player, String aptitudeName, int level) {
         Aptitude aptitude = RegistryAptitudes.getAptitude(aptitudeName);
         if (aptitude == null) {
+            sendUnknownAptitude(context, aptitudeName);
             return 0;
         }
 
         int targetLevel = PlayerProgressService.get(player)
-                .map(progress -> progress.getAptitudeLevel(aptitude) - level)
+                .map(progress -> saturatingSubtract(progress.getAptitudeLevel(aptitude), level))
                 .orElse(1);
         return setAptitude(context, player, aptitudeName, targetLevel);
+    }
+
+    private static int saturatingAdd(int currentLevel, int amount) {
+        return (int) Math.min((long) currentLevel + amount, CommonConfigService.aptitudeMaxLevel());
+    }
+
+    private static int saturatingSubtract(int currentLevel, int amount) {
+        return (int) Math.max((long) currentLevel - amount, 1L);
+    }
+
+    private static void sendUnknownAptitude(CommandContext<CommandSourceStack> context, String aptitudeName) {
+        context.getSource().sendFailure(Component.translatable("commands.argument.aptitude.not_found", aptitudeName));
     }
 
     private static void sendGetMessage(

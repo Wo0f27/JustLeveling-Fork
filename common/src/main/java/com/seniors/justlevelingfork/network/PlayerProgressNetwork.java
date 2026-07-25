@@ -17,6 +17,7 @@ public final class PlayerProgressNetwork {
     public static final ResourceLocation TITLE_UNLOCK = id("title_unlock");
     public static final ResourceLocation LOCK_ITEM_SYNC = id("lock_item_sync");
     public static final ResourceLocation COMMON_CONFIG_SYNC = id("common_config_sync");
+    public static final ResourceLocation TITLE_DEFINITIONS_SYNC = id("title_definitions_sync");
 
     private PlayerProgressNetwork() {
     }

@@ -43,9 +43,9 @@ public class CommonConfigScreen extends Screen {
         int labelX = centerX - 150;
         int controlX = centerX + 58;
 
-        addIntRow(labelX, controlX, top, "aptitudeMaxLevel", CommonConfigService.aptitudeMaxLevel(), 2, saver::setAptitudeMaxLevel);
-        addIntRow(labelX, controlX, top, "playersMaxGlobalLevel", CommonConfigService.playersMaxGlobalLevel(), 32, saver::setPlayersMaxGlobalLevel);
-        addIntRow(labelX, controlX, top, "aptitudeFirstCostLevel", CommonConfigService.aptitudeFirstCostLevel(), 1, saver::setAptitudeFirstCostLevel);
+        addIntRow(labelX, controlX, top, "aptitudeMaxLevel", CommonConfigService.aptitudeMaxLevel(), 2, CommonConfigService.MAX_APTITUDE_LEVEL, saver::setAptitudeMaxLevel);
+        addIntRow(labelX, controlX, top, "playersMaxGlobalLevel", CommonConfigService.playersMaxGlobalLevel(), 32, CommonConfigService.MAX_GLOBAL_LEVEL, saver::setPlayersMaxGlobalLevel);
+        addIntRow(labelX, controlX, top, "aptitudeFirstCostLevel", CommonConfigService.aptitudeFirstCostLevel(), 1, CommonConfigService.MAX_FIRST_COST_LEVEL, saver::setAptitudeFirstCostLevel);
         addBooleanRow(labelX, controlX, top, "showPotionsHud", CommonConfigService.showPotionsHud(), saver::setShowPotionsHud);
         addBooleanRow(
                 labelX,
@@ -110,13 +110,14 @@ public class CommonConfigScreen extends Screen {
         Minecraft.getInstance().setScreen(parent);
     }
 
-    private void addIntRow(int labelX, int controlX, int top, String key, int value, int min, IntConsumer setter) {
+    private void addIntRow(
+            int labelX, int controlX, int top, String key, int value, int min, int max, IntConsumer setter) {
         EditBox editBox = new EditBox(font, controlX, top, FIELD_WIDTH, 20, label(key));
         editBox.setValue(Integer.toString(value));
         editBox.setFilter(text -> text.isEmpty() || text.matches("\\d{0,6}"));
         editBox.setResponder(text -> {
             if (!text.isEmpty()) {
-                setter.accept(Math.max(min, Integer.parseInt(text)));
+                setter.accept(Mth.clamp(Integer.parseInt(text), min, max));
             }
         });
         editBox.setTooltip(Tooltip.create(description(key)));

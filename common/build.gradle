@@ -16,8 +16,15 @@ legacyForge {
 
 dependencies {
     compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.4.1'
     compileOnly "curse.maven:questlog-1202066:${questlog_forge_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 sourceSets {

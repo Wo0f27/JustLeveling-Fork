@@ -45,17 +45,17 @@ public final class FabricCommonConfig {
     }
 
     public static void setAptitudeMaxLevel(int level) {
-        values.aptitudeMaxLevel = Math.max(2, level);
+        values.aptitudeMaxLevel = Math.min(CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(2, level));
         save();
     }
 
     public static void setPlayersMaxGlobalLevel(int level) {
-        values.playersMaxGlobalLevel = Math.max(32, level);
+        values.playersMaxGlobalLevel = Math.min(CommonConfigService.MAX_GLOBAL_LEVEL, Math.max(32, level));
         save();
     }
 
     public static void setAptitudeFirstCostLevel(int level) {
-        values.aptitudeFirstCostLevel = Math.max(1, level);
+        values.aptitudeFirstCostLevel = Math.min(CommonConfigService.MAX_FIRST_COST_LEVEL, Math.max(1, level));
         save();
     }
 
@@ -111,24 +111,22 @@ public final class FabricCommonConfig {
 
     private static FabricCommonConfigValues readOrCreate(Path path) {
         if (Files.exists(path)) {
+            FabricCommonConfigValues result;
+            boolean recovered = false;
             try (Reader reader = Files.newBufferedReader(path)) {
                 FabricCommonConfigValues loaded = GSON.fromJson(reader, FabricCommonConfigValues.class);
-                return loaded == null ? new FabricCommonConfigValues() : loaded.sanitized();
-            } catch (IOException exception) {
+                result = loaded == null ? new FabricCommonConfigValues() : loaded.sanitized();
+            } catch (IOException | RuntimeException exception) {
                 Constants.LOG.warn("Failed to read Fabric config {}, using defaults", path, exception);
-                return new FabricCommonConfigValues();
+                result = new FabricCommonConfigValues();
+                recovered = true;
             }
+            write(path, result, recovered ? "recover" : "save");
+            return result;
         }
 
         FabricCommonConfigValues created = new FabricCommonConfigValues();
-        try {
-            Files.createDirectories(path.getParent());
-            try (Writer writer = Files.newBufferedWriter(path)) {
-                GSON.toJson(created, writer);
-            }
-        } catch (IOException exception) {
-            Constants.LOG.warn("Failed to create Fabric config {}, using defaults", path, exception);
-        }
+        write(path, created, "create");
         return created;
     }
 
@@ -137,13 +135,17 @@ public final class FabricCommonConfig {
             return;
         }
 
+        write(configPath, values, "save");
+    }
+
+    private static void write(Path path, FabricCommonConfigValues configValues, String action) {
         try {
-            Files.createDirectories(configPath.getParent());
-            try (Writer writer = Files.newBufferedWriter(configPath)) {
-                GSON.toJson(values, writer);
+            Files.createDirectories(path.getParent());
+            try (Writer writer = Files.newBufferedWriter(path)) {
+                GSON.toJson(configValues, writer);
             }
-        } catch (IOException exception) {
-            Constants.LOG.warn("Failed to save Fabric config {}", configPath, exception);
+        } catch (IOException | RuntimeException exception) {
+            Constants.LOG.warn("Failed to {} Fabric config {}", action, path, exception);
         }
     }
 
@@ -165,9 +167,10 @@ public final class FabricCommonConfig {
         private List<String> convergenceItemList = new ArrayList<>(CommonConfigService.defaultConvergenceItems());
 
         private FabricCommonConfigValues sanitized() {
-            aptitudeMaxLevel = Math.max(2, aptitudeMaxLevel);
-            playersMaxGlobalLevel = Math.max(32, playersMaxGlobalLevel);
-            aptitudeFirstCostLevel = Math.max(1, aptitudeFirstCostLevel);
+            aptitudeMaxLevel = Math.min(CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(2, aptitudeMaxLevel));
+            playersMaxGlobalLevel = Math.min(CommonConfigService.MAX_GLOBAL_LEVEL, Math.max(32, playersMaxGlobalLevel));
+            aptitudeFirstCostLevel =
+                    Math.min(CommonConfigService.MAX_FIRST_COST_LEVEL, Math.max(1, aptitudeFirstCostLevel));
             if (sortPassive == null) {
                 sortPassive = SortPassives.ByName;
             }
@@ -176,11 +179,30 @@ public final class FabricCommonConfig {
             }
             if (treasureHunterItemList == null) {
                 treasureHunterItemList = new ArrayList<>(CommonConfigService.defaultTreasureHunterItems());
+            } else {
+                treasureHunterItemList = sanitizeStringList(
+                        treasureHunterItemList, CommonConfigService.defaultTreasureHunterItems(), false);
             }
             if (convergenceItemList == null) {
                 convergenceItemList = new ArrayList<>(CommonConfigService.defaultConvergenceItems());
+            } else {
+                convergenceItemList = sanitizeStringList(
+                        convergenceItemList, CommonConfigService.defaultConvergenceItems(), true);
             }
             return this;
+        }
+
+        private static List<String> sanitizeStringList(List<String> values, List<String> defaults, boolean requireSeparator) {
+            if (values.isEmpty()) {
+                return new ArrayList<>();
+            }
+            List<String> sanitized = new ArrayList<>();
+            for (String value : values) {
+                if (value != null && !value.isBlank() && (!requireSeparator || value.contains("#"))) {
+                    sanitized.add(value);
+                }
+            }
+            return sanitized.isEmpty() ? new ArrayList<>(defaults) : sanitized;
         }
     }
 }

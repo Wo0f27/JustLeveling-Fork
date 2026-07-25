@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,9 +44,53 @@ public class TitleModel {
         return title;
     }
 
+    /**
+     * Drops malformed entries and copies mutable fields so title reloads cannot
+     * publish null data into the registry or requirement evaluator.
+     */
+    public static List<TitleModel> sanitizedList(Collection<TitleModel> models) {
+        List<TitleModel> sanitized = new ArrayList<>();
+        if (models == null) {
+            return sanitized;
+        }
+
+        for (TitleModel model : models) {
+            if (model == null || !isValidTitleId(model.TitleId)) {
+                continue;
+            }
+            List<String> conditions = new ArrayList<>();
+            if (model.Conditions != null) {
+                for (String condition : model.Conditions) {
+                    if (condition != null && !condition.isBlank()) {
+                        conditions.add(condition);
+                    }
+                }
+            }
+            TitleModel copy = new TitleModel(
+                    model.TitleId,
+                    conditions,
+                    model.Default,
+                    Boolean.TRUE.equals(model.HideRequirements));
+            sanitized.add(copy);
+        }
+        return sanitized;
+    }
+
+    private static boolean isValidTitleId(String titleId) {
+        if (titleId == null || titleId.isBlank() || titleId.indexOf(':') >= 0) {
+            return false;
+        }
+        try {
+            new ResourceLocation(Constants.MOD_ID, titleId);
+            return true;
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
     @Override
     public String toString() {
-        return String.format("%s:%s:%s", TitleId, String.join("=", Conditions), Default);
+        return String.format("%s:%s:%s", TitleId, String.join("=", Conditions == null ? List.of() : Conditions), Default);
     }
 
     public boolean checkRequirements(ServerPlayer serverPlayer, ConditionResolver conditionResolver) {
@@ -53,8 +98,13 @@ public class TitleModel {
             return true;
         }
 
-        byte passedConditions = 0;
-        for (String condition : Conditions) {
+        List<String> conditions = Conditions == null ? List.of() : Conditions;
+        int passedConditions = 0;
+        for (String condition : conditions) {
+            if (condition == null || condition.isBlank()) {
+                Constants.LOG.error(">> Error! Title {} has an empty condition.", TitleId);
+                continue;
+            }
             String[] split = condition.split("/");
 
             if (split.length != 4) {
@@ -82,11 +132,18 @@ public class TitleModel {
             }
         }
 
-        return passedConditions == Conditions.size();
+        return passedConditions == conditions.size();
     }
 
     public Title createTitle() {
-        title = new Title(new ResourceLocation(Constants.MOD_ID, TitleId), Default, this.HideRequirements);
+        ResourceLocation id;
+        try {
+            id = new ResourceLocation(Constants.MOD_ID, TitleId);
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            Constants.LOG.error(">> Invalid title id '{}', using rookie instead.", TitleId);
+            id = new ResourceLocation(Constants.MOD_ID, "rookie");
+        }
+        title = new Title(id, Default, Boolean.TRUE.equals(this.HideRequirements));
         return title;
     }
 

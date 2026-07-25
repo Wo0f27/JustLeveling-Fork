@@ -13,7 +13,12 @@ def envOrDefault = { name, fallback ->
 publishMods {
     def releaseType = providers.environmentVariable('RELEASE_TYPE').orElse('release').get().toLowerCase(Locale.ROOT)
 
-    changelog = envOrDefault('CHANGELOG', '- Parity with the 1.21.1 version').get()
+    changelog = envOrDefault(
+            'CHANGELOG',
+            '''- Fixed Forge 47.4 runtime mappings and mixin compatibility crashes
+- Hardened multiplayer progression requests and live config synchronization
+- Recovered malformed JSON configs and validated custom entries
+- Fixed command validation, item restriction updates, and gameplay probability calculations''').get()
     displayName = envOrDefault('RELEASE_NAME', "${mod_name} ${version} for Minecraft ${minecraft_version}").get()
     version = project.version
     type = releaseType == 'alpha' ? ALPHA : releaseType == 'beta' ? BETA : STABLE

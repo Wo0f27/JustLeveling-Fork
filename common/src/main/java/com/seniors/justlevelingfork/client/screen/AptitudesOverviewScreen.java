@@ -587,9 +587,19 @@ public class AptitudesOverviewScreen extends Screen {
         return String.format(Locale.ROOT, "%02d", value);
     }
 
-    private static boolean canLevelAptitude(PlayerProgress progress, Aptitude aptitude) {
-        return progress.getAptitudeLevel(aptitude) < CommonConfigService.aptitudeMaxLevel()
-                && progress.getGlobalLevel() < CommonConfigService.playersMaxGlobalLevel();
+    private boolean canLevelAptitude(PlayerProgress progress, Aptitude aptitude) {
+        if (progress.getAptitudeLevel(aptitude) >= CommonConfigService.aptitudeMaxLevel()
+                || progress.getGlobalLevel() >= CommonConfigService.playersMaxGlobalLevel()) {
+            return false;
+        }
+
+        if (minecraft.player == null || minecraft.player.isCreative()) {
+            return true;
+        }
+
+        int requiredPoints = AptitudeExperience.requiredPoints(
+                progress.getAptitudeLevel(aptitude), CommonConfigService.aptitudeFirstCostLevel());
+        return requiredPoints <= AptitudeExperience.getPlayerXP(minecraft.player);
     }
 
     private static boolean isMouseWithin(int x, int y, double mouseX, double mouseY, int width, int height) {

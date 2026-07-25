@@ -7,6 +7,9 @@ import java.util.List;
 import net.minecraft.network.FriendlyByteBuf;
 
 public final class LockItemSyncPayload {
+    private static final int MAX_LOCK_ITEMS = 1024;
+    private static final int MAX_LOCK_ITEM_LENGTH = 8192;
+
     private LockItemSyncPayload() {
     }
 
@@ -17,9 +20,10 @@ public final class LockItemSyncPayload {
 
     public static List<String> read(FriendlyByteBuf buffer) {
         int size = buffer.readInt();
+        requireCount(size, MAX_LOCK_ITEMS, "lock items");
         List<String> lockItems = new ArrayList<>(size);
         for (int index = 0; index < size; index++) {
-            lockItems.add(buffer.readUtf());
+            lockItems.add(buffer.readUtf(MAX_LOCK_ITEM_LENGTH));
         }
         return lockItems;
     }
@@ -27,8 +31,17 @@ public final class LockItemSyncPayload {
     public static void apply(List<String> lockItemEntries) {
         List<LockItem> lockItems = new ArrayList<>();
         for (String entry : lockItemEntries) {
-            lockItems.add(LockItem.getLockItemFromString(entry, new LockItem()));
+            LockItem lockItem = LockItem.getLockItemFromString(entry, null);
+            if (lockItem != null) {
+                lockItems.add(lockItem);
+            }
         }
-        HandlerAptitude.updateLockItems(lockItems);
+        HandlerAptitude.updateLockItems(LockItem.sanitizedList(lockItems));
+    }
+
+    private static void requireCount(int count, int maximum, String description) {
+        if (count < 0 || count > maximum) {
+            throw new IllegalArgumentException("Invalid " + description + " count: " + count);
+        }
     }
 }
