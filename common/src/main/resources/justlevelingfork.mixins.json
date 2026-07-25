@@ -1,0 +1,30 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.seniors.justlevelingfork.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "justlevelingfork.refmap.json",
+  "client": [
+    "MixInventoryScreen",
+    "MixMultiPlayerGameMode",
+    "MixPlayerRenderer"
+  ],
+  "mixins": [
+    "MixAbstractArrow",
+    "MixBlockBehaviour",
+    "MixCraftingMenu",
+    "MixHorseInventoryMenu",
+    "MixItemStack",
+    "MixLivingEntity",
+    "MixPlayer",
+    "MixPowderSnowBlock",
+    "MixResultSlot",
+    "MixServerPlayer",
+    "MixShulkerBullet",
+    "MixThrownEnderpearl",
+    "MixVillager"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

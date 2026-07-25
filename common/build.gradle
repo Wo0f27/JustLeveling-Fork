@@ -1,0 +1,62 @@
+plugins {
+    id 'multiloader-common'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+legacyForge {
+    mcpVersion = minecraft_version
+    if (file("src/main/resources/META-INF/accesstransformer.cfg").exists()) {
+        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+}
+
+dependencies {
+    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly "curse.maven:questlog-1202066:${questlog_forge_version}"
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+}
+
+sourceSets {
+    questlogStub {
+        java.srcDir 'src/questlogStub/java'
+    }
+}
+
+configurations {
+    questlogStubImplementation.extendsFrom implementation
+    compileOnly.extendsFrom questlogStubImplementation
+}
+
+compileJava {
+    dependsOn compileQuestlogStubJava
+    classpath += sourceSets.questlogStub.output
+}
+
+compileQuestlogStubJava {
+    classpath += sourceSets.main.compileClasspath
+}
+
+javadoc {
+    dependsOn compileQuestlogStubJava
+    classpath += sourceSets.questlogStub.output
+}
+
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}

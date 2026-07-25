@@ -1,0 +1,87 @@
+{
+  "mappings": {
+    "com/seniors/justlevelingfork/mixin/MixAbstractArrow": {
+      "onHitEntity": "Lnet/minecraft/world/entity/projectile/AbstractArrow;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixCraftingMenu": {
+      "slotChangedCraftingGrid(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/inventory/CraftingContainer;Lnet/minecraft/world/inventory/ResultContainer;)V": "Lnet/minecraft/world/inventory/CraftingMenu;m_150546_(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/inventory/CraftingContainer;Lnet/minecraft/world/inventory/ResultContainer;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixHorseInventoryMenu": {
+      "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/animal/horse/AbstractHorse;)V": "Lnet/minecraft/world/inventory/HorseInventoryMenu;<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;Lnet/minecraft/world/entity/animal/horse/AbstractHorse;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixInventoryScreen": {
+      "mouseClicked(DDI)Z": "Lnet/minecraft/client/gui/screens/inventory/InventoryScreen;m_6375_(DDI)Z",
+      "renderBg(Lnet/minecraft/client/gui/GuiGraphics;FII)V": "Lnet/minecraft/client/gui/screens/inventory/InventoryScreen;m_7286_(Lnet/minecraft/client/gui/GuiGraphics;FII)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixItemStack": {
+      "appendEnchantmentNames": "Lnet/minecraft/world/item/ItemStack;m_41709_(Ljava/util/List;Lnet/minecraft/nbt/ListTag;)V",
+      "getTooltipLines": "Lnet/minecraft/world/item/ItemStack;m_41651_(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/TooltipFlag;)Ljava/util/List;"
+    },
+    "com/seniors/justlevelingfork/mixin/MixLivingEntity": {
+      "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/world/entity/LivingEntity;m_147207_(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z",
+      "dropAllDeathLoot": "Lnet/minecraft/world/entity/LivingEntity;m_6668_(Lnet/minecraft/world/damagesource/DamageSource;)V",
+      "getDamageAfterArmorAbsorb": "Lnet/minecraft/world/entity/LivingEntity;m_21161_(Lnet/minecraft/world/damagesource/DamageSource;F)F",
+      "getVisibilityPercent": "Lnet/minecraft/world/entity/LivingEntity;m_20968_(Lnet/minecraft/world/entity/Entity;)D",
+      "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+    },
+    "com/seniors/justlevelingfork/mixin/MixMultiPlayerGameMode": {
+      "getPickRange": "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;m_105286_()F",
+      "hasFarPickRange": "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;m_105291_()Z"
+    },
+    "com/seniors/justlevelingfork/mixin/MixPlayer": {
+      "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z": "Lnet/minecraft/world/entity/Entity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+      "attack": "Lnet/minecraft/world/entity/player/Player;m_5706_(Lnet/minecraft/world/entity/Entity;)V",
+      "getDestroySpeed": "Lnet/minecraft/world/entity/player/Player;m_36281_(Lnet/minecraft/world/level/block/state/BlockState;)F"
+    },
+    "com/seniors/justlevelingfork/mixin/MixPlayerRenderer": {
+      "renderNameTag(Lnet/minecraft/client/player/AbstractClientPlayer;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V": "Lnet/minecraft/client/renderer/entity/player/PlayerRenderer;m_7649_(Lnet/minecraft/client/player/AbstractClientPlayer;Lnet/minecraft/network/chat/Component;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixPowderSnowBlock": {
+      "canEntityWalkOnPowderSnow(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/world/level/block/PowderSnowBlock;m_154255_(Lnet/minecraft/world/entity/Entity;)Z"
+    },
+    "com/seniors/justlevelingfork/mixin/MixResultSlot": {
+      "onTake": "Lnet/minecraft/world/inventory/ResultSlot;m_142406_(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/item/ItemStack;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixShulkerBullet": {
+      "Lnet/minecraft/world/entity/projectile/Projectile;onHitEntity(Lnet/minecraft/world/phys/EntityHitResult;)V": "Lnet/minecraft/world/entity/projectile/Projectile;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V",
+      "onHitEntity": "Lnet/minecraft/world/entity/projectile/ShulkerBullet;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixThrownEnderpearl": {
+      "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z": "Lnet/minecraft/world/entity/Entity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+      "onHit": "Lnet/minecraft/world/entity/projectile/ThrownEnderpearl;m_6532_(Lnet/minecraft/world/phys/HitResult;)V"
+    },
+    "com/seniors/justlevelingfork/mixin/MixVillager": {
+      "updateSpecialPrices(Lnet/minecraft/world/entity/player/Player;)V": "Lnet/minecraft/world/entity/npc/Villager;m_35540_(Lnet/minecraft/world/entity/player/Player;)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "com/seniors/justlevelingfork/mixin/MixAbstractArrow": {
+        "onHitEntity": "Lnet/minecraft/world/entity/projectile/AbstractArrow;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V"
+      },
+      "com/seniors/justlevelingfork/mixin/MixCraftingMenu": {
+        "slotChangedCraftingGrid(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/inventory/CraftingContainer;Lnet/minecraft/world/inventory/ResultContainer;)V": "Lnet/minecraft/world/inventory/CraftingMenu;m_150546_(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/inventory/CraftingContainer;Lnet/minecraft/world/inventory/ResultContainer;)V"
+      },
+      "com/seniors/justlevelingfork/mixin/MixLivingEntity": {
+        "addEffect(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/world/entity/LivingEntity;m_147207_(Lnet/minecraft/world/effect/MobEffectInstance;Lnet/minecraft/world/entity/Entity;)Z",
+        "dropAllDeathLoot": "Lnet/minecraft/world/entity/LivingEntity;m_6668_(Lnet/minecraft/world/damagesource/DamageSource;)V",
+        "getDamageAfterArmorAbsorb": "Lnet/minecraft/world/entity/LivingEntity;m_21161_(Lnet/minecraft/world/damagesource/DamageSource;F)F",
+        "getVisibilityPercent": "Lnet/minecraft/world/entity/LivingEntity;m_20968_(Lnet/minecraft/world/entity/Entity;)D",
+        "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+      },
+      "com/seniors/justlevelingfork/mixin/MixPlayer": {
+        "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z": "Lnet/minecraft/world/entity/Entity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+        "attack": "Lnet/minecraft/world/entity/player/Player;m_5706_(Lnet/minecraft/world/entity/Entity;)V",
+        "getDestroySpeed": "Lnet/minecraft/world/entity/player/Player;m_36281_(Lnet/minecraft/world/level/block/state/BlockState;)F"
+      },
+      "com/seniors/justlevelingfork/mixin/MixShulkerBullet": {
+        "Lnet/minecraft/world/entity/projectile/Projectile;onHitEntity(Lnet/minecraft/world/phys/EntityHitResult;)V": "Lnet/minecraft/world/entity/projectile/Projectile;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V",
+        "onHitEntity": "Lnet/minecraft/world/entity/projectile/ShulkerBullet;m_5790_(Lnet/minecraft/world/phys/EntityHitResult;)V"
+      },
+      "com/seniors/justlevelingfork/mixin/MixThrownEnderpearl": {
+        "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z": "Lnet/minecraft/world/entity/Entity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+        "onHit": "Lnet/minecraft/world/entity/projectile/ThrownEnderpearl;m_6532_(Lnet/minecraft/world/phys/HitResult;)V"
+      }
+    }
+  }
+}

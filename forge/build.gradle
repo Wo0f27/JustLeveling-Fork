@@ -1,0 +1,95 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+
+    validateAccessTransformers = true
+
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers = ["src/main/resources/META-INF/accesstransformer.cfg"]
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+    runs {
+        client {
+            client()
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+configurations {
+    l2LibraryDeobf
+}
+
+dependencies {
+    compileOnly project(":common")
+    compileOnly "top.theillusivec4.curios:curios-forge:${curios_version}:api"
+    compileOnly "org.jetbrains:annotations:24.1.0"
+    compileOnly "dev.latvian.mods:kubejs-forge:${kubejs_version}"
+    compileOnly "dev.latvian.mods:rhino-forge:${rhino_version}"
+    compileOnly "dev.architectury:architectury-forge:${architectury_version}"
+    compileOnly "curse.maven:ftb-quests-forge-289412:${ftb_quests_forge_version}"
+    compileOnly "curse.maven:ftb-library-forge-404465:${ftb_library_forge_version}"
+    compileOnly "curse.maven:questlog-1202066:${questlog_forge_version}"
+    l2LibraryDeobf "curse.maven:l2library-620203:${l2library_version}"
+    compileOnly "curse.maven:l2library-620203:${l2library_version}"
+    compileOnly files(layout.buildDirectory.file("l2tabs/l2tabs-0.3.3.jar")) {
+        builtBy 'extractL2TabsJar'
+    }
+    compileOnly "curse.maven:tetra-289712:${tetra_version}"
+    compileOnly "curse.maven:tetra-351914:${mutil_version}"
+    compileOnly "curse.maven:timeless-and-classics-zero-1028108:${tacz_version}"
+    compileOnly "curse.maven:vics-point-blank-961053:${pointblank_version}"
+    compileOnly "curse.maven:mrcrayfishs-gun-mod-unofficial-945471:${crayfish_gun_version}"
+    compileOnly "curse.maven:scorched-guns-802940:${scorched_guns_version}"
+    compileOnly "curse.maven:irons-spells-n-spellbooks-855414:${irons_spellbooks_version}"
+    compileOnly "maven.modrinth:better-combat:${better_combat_version}"
+}
+
+compileJava {
+    dependsOn project(":common").tasks.named("compileQuestlogStubJava")
+    classpath += project(":common").sourceSets.questlogStub.output
+}
+
+javadoc {
+    dependsOn project(":common").tasks.named("compileQuestlogStubJava")
+    classpath += project(":common").sourceSets.questlogStub.output
+}
+
+tasks.register('extractL2TabsJar', Copy) {
+    from({ configurations.l2LibraryDeobf.collect { zipTree(it) } })
+    include 'META-INF/jarjar/l2tabs-*.jar'
+    into layout.buildDirectory.dir('l2tabs')
+    eachFile { details -> details.path = details.name }
+    includeEmptyDirs = false
+}
+
+jar {
+    manifest {
+        attributes([
+                "MixinConfigs": "${mod_id}.forge.mixins.json"
+        ])
+    }
+    finalizedBy('reobfJar')
+}
