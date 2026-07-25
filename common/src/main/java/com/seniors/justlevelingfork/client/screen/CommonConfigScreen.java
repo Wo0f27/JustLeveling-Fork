@@ -66,6 +66,13 @@ public class CommonConfigScreen extends Screen {
         addEnumRow(labelX, controlX, top, "sortPassive", ClientConfigService.passiveSort(), SortPassives.values(), saver::setPassiveSort);
         addEnumRow(labelX, controlX, top, "sortSkill", ClientConfigService.skillSort(), SortSkills.values(), saver::setSkillSort);
         addBooleanRow(labelX, controlX, top, "dropLockedItems", CommonConfigService.dropLockedItems(), saver::setDropLockedItems);
+        addBooleanRow(
+                labelX,
+                controlX,
+                top,
+                "allowLockedItemsInInventory",
+                CommonConfigService.allowLockedItemsInInventory(),
+                saver::setAllowLockedItemsInInventory);
         addBooleanRow(labelX, controlX, top, "hideMetUsageRequirements", CommonConfigService.hideMetUsageRequirements(), saver::setHideMetUsageRequirements);
         addBooleanRow(labelX, controlX, top, "skillResetRefundsSpentLevels", CommonConfigService.skillResetRefundsSpentLevels(), saver::setSkillResetRefundsSpentLevels);
 
@@ -206,6 +213,8 @@ public class CommonConfigScreen extends Screen {
         void setSkillSort(SortSkills value);
 
         void setDropLockedItems(boolean value);
+
+        void setAllowLockedItemsInInventory(boolean value);
 
         void setHideMetUsageRequirements(boolean value);
 

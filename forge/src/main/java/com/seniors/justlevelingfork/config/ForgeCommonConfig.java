@@ -26,6 +26,7 @@ public final class ForgeCommonConfig {
     private static final ForgeConfigSpec.EnumValue<SortPassives> SORT_PASSIVE;
     private static final ForgeConfigSpec.EnumValue<SortSkills> SORT_SKILL;
     private static final ForgeConfigSpec.BooleanValue DROP_LOCKED_ITEMS;
+    private static final ForgeConfigSpec.BooleanValue ALLOW_LOCKED_ITEMS_IN_INVENTORY;
     private static final ForgeConfigSpec.BooleanValue HIDE_MET_USAGE_REQUIREMENTS;
     private static final ForgeConfigSpec.BooleanValue SKILL_RESET_REFUNDS_SPENT_LEVELS;
     private static final ForgeConfigSpec.BooleanValue LOG_TACZ_GUN_NAMES;
@@ -68,6 +69,12 @@ public final class ForgeCommonConfig {
         DROP_LOCKED_ITEMS = BUILDER
                 .comment("If true, locked items will be automatically dropped from player hands.")
                 .define("dropLockedItems", false);
+        ALLOW_LOCKED_ITEMS_IN_INVENTORY = BUILDER
+                .comment(
+                        "If true, locked items can remain in inventories and equipment slots.",
+                        "Their aptitude requirements still prevent using them.",
+                        "This overrides dropLockedItems and per-item <droppable> markers.")
+                .define("allowLockedItemsInInventory", false);
         HIDE_MET_USAGE_REQUIREMENTS = BUILDER
                 .comment("If true, item usage requirement tooltips hide requirements the player already meets.")
                 .define("hideMetUsageRequirements", false);
@@ -112,6 +119,7 @@ public final class ForgeCommonConfig {
         ClientConfigService.setPassiveSort(SORT_PASSIVE::get);
         ClientConfigService.setSkillSort(SORT_SKILL::get);
         CommonConfigService.setDropLockedItems(DROP_LOCKED_ITEMS::get);
+        CommonConfigService.setAllowLockedItemsInInventory(ALLOW_LOCKED_ITEMS_IN_INVENTORY::get);
         CommonConfigService.setHideMetUsageRequirements(HIDE_MET_USAGE_REQUIREMENTS::get);
         CommonConfigService.setSkillResetRefundsSpentLevels(SKILL_RESET_REFUNDS_SPENT_LEVELS::get);
         ForgeIntegrationConfig.setLogTaczGunNames(LOG_TACZ_GUN_NAMES::get);
@@ -173,6 +181,11 @@ public final class ForgeCommonConfig {
 
     public static void setDropLockedItems(boolean value) {
         DROP_LOCKED_ITEMS.set(value);
+        SPEC.save();
+    }
+
+    public static void setAllowLockedItemsInInventory(boolean value) {
+        ALLOW_LOCKED_ITEMS_IN_INVENTORY.set(value);
         SPEC.save();
     }
 

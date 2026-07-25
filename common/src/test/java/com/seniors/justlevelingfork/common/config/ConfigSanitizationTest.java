@@ -1,5 +1,6 @@
 package com.seniors.justlevelingfork.common.config;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -11,6 +12,27 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 class ConfigSanitizationTest {
+    @Test
+    void fiveRankPassivesEndAtAptitudeLevel32() {
+        int[] expectedLevels = {8, 14, 20, 26, 32};
+
+        assertArrayEquals(expectedLevels, PassiveConfigService.levels5());
+        assertArrayEquals(
+                expectedLevels,
+                PassiveConfigService.defaultConfigs().get("break_speed").levels());
+    }
+
+    @Test
+    void legacyBreakSpeedTypoIsMigratedWithoutDiscardingItsConfiguredValue() {
+        Map<String, PassiveConfig> input = new LinkedHashMap<>();
+        input.put("break_speed", new PassiveConfig(0.75D, new int[] {8, 14, 20, 26, 3}));
+
+        PassiveConfig migrated = PassiveConfigService.sanitize(input).get("break_speed");
+
+        assertEquals(0.75D, migrated.value());
+        assertArrayEquals(new int[] {8, 14, 20, 26, 32}, migrated.levels());
+    }
+
     @Test
     void passiveConfigDropsUnknownKeysAndBoundsValues() {
         Map<String, PassiveConfig> input = new LinkedHashMap<>();

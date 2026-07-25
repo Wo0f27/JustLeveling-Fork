@@ -1,5 +1,8 @@
 package com.seniors.justlevelingfork.registry;
 
+import static com.seniors.justlevelingfork.common.config.PassiveConfigService.levels10;
+import static com.seniors.justlevelingfork.common.config.PassiveConfigService.levels5;
+
 import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.handler.HandlerResources;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
@@ -113,7 +116,7 @@ public final class RegistryPassives {
             RegistryAttributes.BREAK_SPEED,
             "96a891fe-5919-418d-8205-f50464391511",
             0.5D,
-            new int[] {8, 14, 20, 26, 3});
+            levels5());
     public static final Passive BENEFICIAL_EFFECT = register(
             "beneficial_effect",
             RegistryAptitudes.MAGIC,
@@ -215,11 +218,4 @@ public final class RegistryPassives {
         return normalized;
     }
 
-    private static int[] levels5() {
-        return new int[] {8, 14, 20, 26, 32};
-    }
-
-    private static int[] levels10() {
-        return new int[] {5, 8, 11, 14, 17, 20, 23, 26, 29, 32};
-    }
 }

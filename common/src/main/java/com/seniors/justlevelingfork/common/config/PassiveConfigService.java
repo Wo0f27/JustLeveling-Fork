@@ -49,7 +49,7 @@ public final class PassiveConfigService {
         configs.put("attack_speed", new PassiveConfig(0.4D, levels5()));
         configs.put("entity_reach", new PassiveConfig(1.0D, levels5()));
         configs.put("block_reach", new PassiveConfig(1.5D, levels5()));
-        configs.put("break_speed", new PassiveConfig(0.5D, new int[] {8, 14, 20, 26, 32}));
+        configs.put("break_speed", new PassiveConfig(0.5D, levels5()));
         configs.put("beneficial_effect", new PassiveConfig(60.0D, levels10()));
         configs.put("magic_resist", new PassiveConfig(0.5D, levels5()));
         configs.put("critical_damage", new PassiveConfig(0.25D, levels10()));
@@ -63,17 +63,22 @@ public final class PassiveConfigService {
         configs.forEach((name, config) -> {
             PassiveConfig fallback = defaults.get(name);
             if (fallback != null && config != null) {
-                sanitized.put(name, config.sanitized(fallback));
+                PassiveConfig migrated = config;
+                if ("break_speed".equals(name)
+                        && Arrays.equals(config.levels(), new int[] {8, 14, 20, 26, 3})) {
+                    migrated = new PassiveConfig(config.value(), fallback.levels());
+                }
+                sanitized.put(name, migrated.sanitized(fallback));
             }
         });
         return sanitized;
     }
 
-    private static int[] levels5() {
+    public static int[] levels5() {
         return new int[] {8, 14, 20, 26, 32};
     }
 
-    private static int[] levels10() {
+    public static int[] levels10() {
         return new int[] {5, 8, 11, 14, 17, 20, 23, 26, 29, 32};
     }
 

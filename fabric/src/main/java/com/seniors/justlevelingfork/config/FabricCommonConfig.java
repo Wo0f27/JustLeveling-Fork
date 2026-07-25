@@ -38,6 +38,7 @@ public final class FabricCommonConfig {
         ClientConfigService.setPassiveSort(() -> values.sortPassive);
         ClientConfigService.setSkillSort(() -> values.sortSkill);
         CommonConfigService.setDropLockedItems(() -> values.dropLockedItems);
+        CommonConfigService.setAllowLockedItemsInInventory(() -> values.allowLockedItemsInInventory);
         CommonConfigService.setHideMetUsageRequirements(() -> values.hideMetUsageRequirements);
         CommonConfigService.setSkillResetRefundsSpentLevels(() -> values.skillResetRefundsSpentLevels);
         CommonConfigService.setTreasureHunterItems(() -> values.treasureHunterItemList);
@@ -96,6 +97,11 @@ public final class FabricCommonConfig {
 
     public static void setDropLockedItems(boolean value) {
         values.dropLockedItems = value;
+        save();
+    }
+
+    public static void setAllowLockedItemsInInventory(boolean value) {
+        values.allowLockedItemsInInventory = value;
         save();
     }
 
@@ -161,6 +167,7 @@ public final class FabricCommonConfig {
         private SortPassives sortPassive = SortPassives.ByName;
         private SortSkills sortSkill = SortSkills.ByLevel;
         private boolean dropLockedItems = false;
+        private boolean allowLockedItemsInInventory = false;
         private boolean hideMetUsageRequirements = false;
         private boolean skillResetRefundsSpentLevels = false;
         private List<String> treasureHunterItemList = new ArrayList<>(CommonConfigService.defaultTreasureHunterItems());

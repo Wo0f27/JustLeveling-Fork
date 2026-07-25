@@ -118,7 +118,11 @@ public final class HandlerAptitude {
 
     public static boolean shouldDropLockedItem(
             ServerPlayer player, ItemStack stack, AptitudeLevelProvider aptitudeLevelProvider) {
-        if (stack.isEmpty() || canUseItem(player, stack, aptitudeLevelProvider)) {
+        if (stack.isEmpty() || CommonConfigService.allowLockedItemsInInventory()) {
+            return false;
+        }
+
+        if (canUseItem(player, stack, aptitudeLevelProvider)) {
             return false;
         }
 
@@ -127,16 +131,21 @@ public final class HandlerAptitude {
             return false;
         }
 
-        if (CommonConfigService.dropLockedItems()) {
-            return getValue(itemId.toString()) != null;
-        }
-
         List<Aptitudes> requirements = getValue(itemId.toString());
-        return requirements != null && requirements.stream().anyMatch(Aptitudes::isDroppable);
+        return shouldDropLockedItem(
+                true,
+                false,
+                CommonConfigService.dropLockedItems(),
+                requirements != null && requirements.stream().anyMatch(Aptitudes::isDroppable));
     }
 
     public static boolean shouldDropLockedItem(ServerPlayer player, ItemStack stack) {
         return shouldDropLockedItem(player, stack, PlayerProgressService.aptitudeLevelProvider());
+    }
+
+    static boolean shouldDropLockedItem(
+            boolean locked, boolean allowInInventory, boolean dropAllLockedItems, boolean droppable) {
+        return locked && !allowInInventory && (dropAllLockedItems || droppable);
     }
 
     public static Map<String, List<Aptitudes>> mapLockItems(List<LockItem> lockItems) {

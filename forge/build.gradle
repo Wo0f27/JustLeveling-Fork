@@ -95,3 +95,39 @@ jar {
     }
     finalizedBy('reobfJar')
 }
+
+tasks.register('verifyReleaseJar') {
+    group = 'verification'
+    description = 'Verifies that the Forge release JAR uses production runtime mappings.'
+    dependsOn('reobfJar')
+
+    def releaseJar = layout.buildDirectory.file(
+            "libs/${mod_id}-forge-${minecraft_version}-${project.version}.jar")
+    inputs.file(releaseJar)
+
+    doLast {
+        def jarFile = releaseJar.get().asFile
+        def classPath = 'com/seniors/justlevelingfork/config/conditions/EntityKilledCondition.class'
+        def zipFile = new java.util.zip.ZipFile(jarFile)
+
+        try {
+            def classEntry = zipFile.getEntry(classPath)
+            if (classEntry == null) {
+                throw new GradleException("Missing ${classPath} in ${jarFile.name}")
+            }
+
+            def classBytes = zipFile.getInputStream(classEntry).withCloseable { it.bytes }
+            def constantPool = new String(classBytes, java.nio.charset.StandardCharsets.ISO_8859_1)
+            logger.lifecycle(
+                    "Verifying ${jarFile}: Mojmap=${constantPool.contains('ENTITY_KILLED')}, " +
+                            "SRG=${constantPool.contains('f_12986_')}")
+
+            if (constantPool.contains('ENTITY_KILLED') || !constantPool.contains('f_12986_')) {
+                throw new GradleException(
+                        "${jarFile.name} is not reobfuscated for the Forge production runtime")
+            }
+        } finally {
+            zipFile.close()
+        }
+    }
+}

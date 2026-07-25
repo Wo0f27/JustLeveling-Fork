@@ -15,6 +15,7 @@ public final class CommonConfigService {
     private static IntSupplier aptitudeFirstCostLevel = () -> 5;
     private static BooleanSupplier showPotionsHud = () -> true;
     private static BooleanSupplier dropLockedItems = () -> false;
+    private static BooleanSupplier allowLockedItemsInInventory = () -> false;
     private static BooleanSupplier hideMetUsageRequirements = () -> false;
     private static BooleanSupplier skillResetRefundsSpentLevels = () -> false;
     private static Supplier<List<String>> treasureHunterItems = CommonConfigService::defaultTreasureHunterItems;
@@ -62,6 +63,15 @@ public final class CommonConfigService {
 
     public static boolean dropLockedItems() {
         return dropLockedItems.getAsBoolean();
+    }
+
+    public static void setAllowLockedItemsInInventory(BooleanSupplier allowLockedItemsInInventory) {
+        CommonConfigService.allowLockedItemsInInventory =
+                Optional.ofNullable(allowLockedItemsInInventory).orElse(() -> false);
+    }
+
+    public static boolean allowLockedItemsInInventory() {
+        return allowLockedItemsInInventory.getAsBoolean();
     }
 
     public static void setHideMetUsageRequirements(BooleanSupplier hideMetUsageRequirements) {

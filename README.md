@@ -31,12 +31,16 @@ Release jars are written to `fabric/build/libs` and `forge/build/libs`.
 
 The common settings control aptitude limits and costs, item-drop behavior, UI preferences, and Treasure Hunter/Convergence item lists.
 
-- Fabric: `config/justlevelingfork.json`
-- Forge: `config/justlevelingfork.toml`
-- Skills: `config/justlevelingfork.skills.json`
-- Passives: `config/justlevelingfork.passives.json`
-- Titles: `config/justlevelingfork.titles.json`
-- Item restrictions: `config/justlevelingfork.lock_items.json`
+Set `allowLockedItemsInInventory` to `true` to let players pick up and keep locked
+items. The items remain unusable until their aptitude requirements are met. This
+setting overrides both `dropLockedItems` and per-item `<droppable>` markers.
+
+- Fabric: `config/just_leveling_fork.json`
+- Forge: `config/just_leveling_fork.toml`
+- Skills: `config/just_leveling_fork.skills.json`
+- Passives: `config/just_leveling_fork.passives.json`
+- Titles: `config/just_leveling_fork.titles.json`
+- Item restrictions: `config/just_leveling_fork.lock_items.json`
 
 Malformed JSON files recover to validated defaults instead of preventing startup. Server-owned gameplay settings, item restrictions, and title definitions are synchronized to connected clients.
 

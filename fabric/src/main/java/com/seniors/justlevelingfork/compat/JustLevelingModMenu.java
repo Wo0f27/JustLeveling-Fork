@@ -70,6 +70,11 @@ public class JustLevelingModMenu implements ModMenuApi {
         }
 
         @Override
+        public void setAllowLockedItemsInInventory(boolean value) {
+            FabricCommonConfig.setAllowLockedItemsInInventory(value);
+        }
+
+        @Override
         public void setHideMetUsageRequirements(boolean value) {
             FabricCommonConfig.setHideMetUsageRequirements(value);
         }

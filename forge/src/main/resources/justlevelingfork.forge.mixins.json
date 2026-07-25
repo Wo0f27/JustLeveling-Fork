@@ -21,7 +21,6 @@
   "client": [
     "MixForgeGui",
     "MixInventoryScreen",
-    "MixMultiPlayerGameMode",
     "MixPointBlankGunItem",
     "MixPlayerRenderer"
   ],

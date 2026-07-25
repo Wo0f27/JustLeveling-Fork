@@ -132,6 +132,11 @@ public final class ForgeClientEvents {
         }
 
         @Override
+        public void setAllowLockedItemsInInventory(boolean value) {
+            ForgeCommonConfig.setAllowLockedItemsInInventory(value);
+        }
+
+        @Override
         public void setHideMetUsageRequirements(boolean value) {
             ForgeCommonConfig.setHideMetUsageRequirements(value);
         }
