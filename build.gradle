@@ -12,6 +12,7 @@ def envOrDefault = { name, fallback ->
 
 publishMods {
     def releaseType = providers.environmentVariable('RELEASE_TYPE').orElse('release').get().toLowerCase(Locale.ROOT)
+    def releaseVersion = project.version.toString()
 
     changelog = envOrDefault(
             'CHANGELOG',
@@ -19,8 +20,10 @@ publishMods {
 - Hardened multiplayer progression requests and live config synchronization
 - Recovered malformed JSON configs and validated custom entries
 - Fixed command validation, item restriction updates, and gameplay probability calculations''').get()
-    displayName = envOrDefault('RELEASE_NAME', "${mod_name} ${version} for Minecraft ${minecraft_version}").get()
-    version = project.version
+    displayName = envOrDefault(
+            'RELEASE_NAME',
+            "${mod_name} ${releaseVersion} for Minecraft ${minecraft_version}").get()
+    version = releaseVersion
     type = releaseType == 'alpha' ? ALPHA : releaseType == 'beta' ? BETA : STABLE
     dryRun = providers.environmentVariable('DRY_RUN').map { it.toBoolean() }.orElse(false).get()
 
@@ -29,6 +32,8 @@ publishMods {
         projectId = envOrDefault('CURSEFORGE_PROJECT_ID', '1073400')
         minecraftVersions.add(minecraft_version)
         javaVersions.add(JavaVersion.VERSION_17)
+        clientRequired = true
+        serverRequired = true
     }
 
     def mrOptions = modrinthOptions {
