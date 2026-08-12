@@ -44,29 +44,12 @@ publishMods {
         minecraftVersions.add(minecraft_version)
     }
 
-    curseforge('curseforgeFabric') {
-        from cfOptions
-        file project(':fabric')
-        modLoaders.add('fabric')
-        requires('fabric-api')
-        optional('ftb-quests-fabric')
-        optional('questlog')
-    }
 
     curseforge('curseforgeForge') {
         from cfOptions
         file = forgeReleaseJar
         modLoaders.add('forge')
         optional('ftb-quests-forge')
-        optional('questlog')
-    }
-
-    modrinth('modrinthFabric') {
-        from mrOptions
-        file project(':fabric')
-        modLoaders.add('fabric')
-        requires('fabric-api')
-        optional('ftb-quests')
         optional('questlog')
     }
 
