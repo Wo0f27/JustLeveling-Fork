@@ -15,14 +15,38 @@ public final class RegistryAptitudes {
     public static final ResourceKey<Registry<Aptitude>> APTITUDES_KEY =
             ResourceKey.createRegistryKey(new ResourceLocation(Constants.MOD_ID, "aptitudes"));
 
-    public static final Aptitude STRENGTH = register(0, "strength", HandlerResources.STRENGTH_LOCKED_ICON, "yellow_terracotta");
-    public static final Aptitude CONSTITUTION = register(1, "constitution", HandlerResources.CONSTITUTION_LOCKED_ICON, "red_terracotta");
-    public static final Aptitude DEXTERITY = register(2, "dexterity", HandlerResources.DEXTERITY_LOCKED_ICON, "blue_terracotta");
-    public static final Aptitude DEFENSE = register(3, "defense", HandlerResources.DEFENSE_LOCKED_ICON, "cyan_terracotta");
-    public static final Aptitude INTELLIGENCE = register(4, "intelligence", HandlerResources.INTELLIGENCE_LOCKED_ICON, "orange_terracotta");
-    public static final Aptitude BUILDING = register(5, "building", HandlerResources.BUILDING_LOCKED_ICON, "brown_terracotta");
-    public static final Aptitude MAGIC = register(6, "magic", HandlerResources.MAGIC_LOCKED_ICON, "purple_terracotta");
-    public static final Aptitude LUCK = register(7, "luck", HandlerResources.LUCK_LOCKED_ICON, "lime_terracotta");
+    public static final Aptitude STRENGTH =
+            register(0, "strength", HandlerResources.STRENGTH_LOCKED_ICON, "yellow_terracotta");
+
+    public static final Aptitude DEXTERITY =
+            register(1, "dexterity", HandlerResources.DEXTERITY_LOCKED_ICON, "blue_terracotta");
+
+    public static final Aptitude CONSTITUTION =
+            register(2, "constitution", HandlerResources.CONSTITUTION_LOCKED_ICON, "red_terracotta");
+
+    public static final Aptitude INTELLIGENCE =
+            register(3, "intelligence", HandlerResources.INTELLIGENCE_LOCKED_ICON, "orange_terracotta");
+
+    public static final Aptitude WISDOM =
+            register(4, "wisdom", HandlerResources.WISDOM_LOCKED_ICON, "cyan_terracotta");
+
+    public static final Aptitude CHARISMA =
+            register(5, "charisma", HandlerResources.CHARISMA_LOCKED_ICON, "purple_terracotta");
+
+
+    // Temporary compatibility aliases.
+// Remove these once the old skill/passive trees are migrated.
+    @Deprecated
+    public static final Aptitude DEFENSE = WISDOM;
+
+    @Deprecated
+    public static final Aptitude BUILDING = INTELLIGENCE;
+
+    @Deprecated
+    public static final Aptitude MAGIC = CHARISMA;
+
+    @Deprecated
+    public static final Aptitude LUCK = CHARISMA;
 
     private static final Map<String, Aptitude> APTITUDES_BY_NAME = new LinkedHashMap<>();
 
@@ -55,13 +79,11 @@ public final class RegistryAptitudes {
         }
 
         put(STRENGTH);
-        put(CONSTITUTION);
         put(DEXTERITY);
-        put(DEFENSE);
+        put(CONSTITUTION);
         put(INTELLIGENCE);
-        put(BUILDING);
-        put(MAGIC);
-        put(LUCK);
+        put(WISDOM);
+        put(CHARISMA);
     }
 
     private static void put(Aptitude aptitude) {

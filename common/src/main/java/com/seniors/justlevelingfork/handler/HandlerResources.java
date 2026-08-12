@@ -66,6 +66,9 @@ public class HandlerResources {
             create("textures/skill/luck/locked_24.png")
     };
 
+    public static final ResourceLocation[] WISDOM_LOCKED_ICON = DEFENSE_LOCKED_ICON;
+    public static final ResourceLocation[] CHARISMA_LOCKED_ICON = MAGIC_LOCKED_ICON;
+
     public static final ResourceLocation SKILL_ICONS = create("textures/skill/icons.png");
     public static final ResourceLocation TABS = create("textures/gui/container/tabs.png");
     public static final ResourceLocation NULL_SKILL = create("textures/skill/null_skill.png");
