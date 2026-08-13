@@ -115,6 +115,8 @@ public final class PlayerProgressService {
         return get(player)
                 .map(progress -> {
                     mutation.accept(progress);
+                    AbilityDerivedAttributeService.refresh(player, progress);
+
                     if (refreshTitles) {
                         refreshUnlockedTitles(player, progress);
                     }
@@ -129,6 +131,7 @@ public final class PlayerProgressService {
     public static boolean sync(ServerPlayer player) {
         return get(player)
                 .map(progress -> {
+                    AbilityDerivedAttributeService.refresh(player, progress);
                     refreshUnlockedTitles(player, progress);
                     normalizeSelectedTitle(player, progress);
                     changeListener.accept(player, progress);
