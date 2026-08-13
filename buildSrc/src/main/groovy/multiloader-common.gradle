@@ -63,6 +63,13 @@ repositories {
         url = 'https://maven.architectury.dev/'
     }
     maven {
+        name = 'ShadowsOfFire'
+        url = 'https://maven.shadowsoffire.dev/releases'
+        content {
+            includeGroup 'dev.shadowsoffire'
+        }
+    }
+    maven {
         name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
     }
