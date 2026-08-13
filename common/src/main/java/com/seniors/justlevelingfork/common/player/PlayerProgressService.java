@@ -18,6 +18,7 @@ import java.util.function.Function;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
+
 public final class PlayerProgressService {
     private static Function<ServerPlayer, Optional<PlayerProgress>> progressProvider = player -> Optional.empty();
     private static BiConsumer<ServerPlayer, PlayerProgress> changeListener = (player, progress) -> {};
@@ -46,6 +47,60 @@ public final class PlayerProgressService {
 
     public static AptitudeLevelProvider aptitudeLevelProvider() {
         return APTITUDE_LEVEL_PROVIDER;
+    }
+
+    public static int getAbilityScore(ServerPlayer player, Aptitude aptitude) {
+        if (aptitude == null) {
+            return 10;
+        }
+
+        return get(player)
+                .map(progress -> AbilityScoreService.abilityScore(
+                        progress.getAptitudeLevel(aptitude)))
+                .orElse(10);
+    }
+
+    public static int getAbilityModifier(ServerPlayer player, Aptitude aptitude) {
+        if (aptitude == null) {
+            return 0;
+        }
+
+        return get(player)
+                .map(progress -> AbilityScoreService.abilityModifier(
+                        progress.getAptitudeLevel(aptitude)))
+                .orElse(0);
+    }
+
+    public static int getAbilityScore(
+            ServerPlayer player,
+            Aptitude aptitude,
+            int externalBonus) {
+
+        if (aptitude == null) {
+            return 10 + externalBonus;
+        }
+
+        return get(player)
+                .map(progress -> AbilityScoreService.abilityScore(
+                        progress.getAptitudeLevel(aptitude),
+                        externalBonus))
+                .orElse(10 + externalBonus);
+    }
+
+    public static int getAbilityModifier(
+            ServerPlayer player,
+            Aptitude aptitude,
+            int externalBonus) {
+
+        if (aptitude == null) {
+            return Math.floorDiv(externalBonus, 2);
+        }
+
+        return get(player)
+                .map(progress -> AbilityScoreService.abilityModifier(
+                        progress.getAptitudeLevel(aptitude),
+                        externalBonus))
+                .orElse(Math.floorDiv(externalBonus, 2));
     }
 
     public static boolean update(ServerPlayer player, Consumer<PlayerProgress> mutation) {

@@ -2,11 +2,9 @@ package com.seniors.justlevelingfork.config.models;
 
 public enum EAptitude {
     Strength,
-    Constitution,
     Dexterity,
-    Defense,
+    Constitution,
     Intelligence,
-    Building,
-    Magic,
-    Luck
+    Wisdom,
+    Charisma
 }
