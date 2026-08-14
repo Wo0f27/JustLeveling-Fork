@@ -42,6 +42,24 @@ public final class AbilityDerivedAttributeService {
     private static final UUID CON_KNOCKBACK_RESISTANCE_UUID =
             UUID.fromString("96ea6b30-2a31-46e9-94db-27dc99fd60e5");
 
+    // Intelligence - Iron's Spells
+    private static final UUID INT_MAX_MANA_UUID =
+            UUID.fromString("044dc8c2-b9f2-4e40-8929-c609c9c97907");
+
+    private static final UUID INT_CAST_TIME_REDUCTION_UUID =
+            UUID.fromString("c3329c0d-677e-4ade-b845-2998b8ebc088");
+
+    // Wisdom - Iron's Spells
+    private static final UUID WIS_MANA_REGEN_UUID =
+            UUID.fromString("8d623089-9ad9-406e-9c9c-cac92eee56e5");
+
+    private static final UUID WIS_SPELL_RESIST_UUID =
+            UUID.fromString("d78b3bb7-72b0-4d0b-a89e-edac8fa86523");
+
+    // Charisma - Iron's Spells
+    private static final UUID CHA_COOLDOWN_REDUCTION_UUID =
+            UUID.fromString("23a50606-651e-4cfe-9ade-9165ff2a898d");
+
     private AbilityDerivedAttributeService() {
     }
 
@@ -59,9 +77,21 @@ public final class AbilityDerivedAttributeService {
         int constitutionModifier = AbilityScoreService.abilityModifier(
                 progress.getAptitudeLevel(RegistryAptitudes.CONSTITUTION));
 
+        int intelligenceModifier = AbilityScoreService.abilityModifier(
+                progress.getAptitudeLevel(RegistryAptitudes.INTELLIGENCE));
+
+        int wisdomModifier = AbilityScoreService.abilityModifier(
+                progress.getAptitudeLevel(RegistryAptitudes.WISDOM));
+
+        int charismaModifier = AbilityScoreService.abilityModifier(
+                progress.getAptitudeLevel(RegistryAptitudes.CHARISMA));
+
         applyStrength(player, strengthModifier);
         applyDexterity(player, dexterityModifier);
         applyConstitution(player, constitutionModifier);
+        applyIntelligence(player, intelligenceModifier);
+        applyWisdom(player, wisdomModifier);
+        applyCharisma(player, charismaModifier);
     }
 
     private static void applyStrength(ServerPlayer player, int modifier) {
@@ -148,5 +178,51 @@ public final class AbilityDerivedAttributeService {
         if (player.getHealth() > player.getMaxHealth()) {
             player.setHealth(player.getMaxHealth());
         }
+    }
+
+    private static void applyIntelligence(ServerPlayer player, int modifier) {
+        ExternalAttributeService.applyPermanentAddition(
+                player,
+                "irons_spellbooks",
+                "max_mana",
+                modifier * 10.0D,
+                INT_MAX_MANA_UUID,
+                modifier != 0);
+
+        ExternalAttributeService.applyPermanentAddition(
+                player,
+                "irons_spellbooks",
+                "cast_time_reduction",
+                modifier * 0.05D,
+                INT_CAST_TIME_REDUCTION_UUID,
+                modifier != 0);
+    }
+
+    private static void applyWisdom(ServerPlayer player, int modifier) {
+        ExternalAttributeService.applyPermanentAddition(
+                player,
+                "irons_spellbooks",
+                "mana_regen",
+                modifier * 0.05D,
+                WIS_MANA_REGEN_UUID,
+                modifier != 0);
+
+        ExternalAttributeService.applyPermanentAddition(
+                player,
+                "irons_spellbooks",
+                "spell_resist",
+                modifier * 0.05D,
+                WIS_SPELL_RESIST_UUID,
+                modifier != 0);
+    }
+
+    private static void applyCharisma(ServerPlayer player, int modifier) {
+        ExternalAttributeService.applyPermanentAddition(
+                player,
+                "irons_spellbooks",
+                "cooldown_reduction",
+                modifier * 0.05D,
+                CHA_COOLDOWN_REDUCTION_UUID,
+                modifier != 0);
     }
 }
