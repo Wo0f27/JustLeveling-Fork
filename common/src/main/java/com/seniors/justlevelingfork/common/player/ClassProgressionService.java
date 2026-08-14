@@ -88,6 +88,15 @@ public final class ClassProgressionService {
         int currentClassLevel =
                 progress.getClassLevel(classId.toString());
 
+        if (currentClassLevel == 0
+                && progress.getCharacterLevel() > 0
+                && !ClassPrerequisiteService.canMulticlassInto(
+                player,
+                progress,
+                classId)) {
+            return false;
+        }
+
         return PlayerProgressService.update(
                 player,
                 updated -> updated.setClassLevel(
@@ -113,6 +122,19 @@ public final class ClassProgressionService {
 
         int currentClassLevel =
                 progress.getClassLevel(classId.toString());
+
+        boolean enteringNewClass =
+                currentClassLevel == 0
+                        && level > 0
+                        && progress.getCharacterLevel() > 0;
+
+        if (enteringNewClass
+                && !ClassPrerequisiteService.canMulticlassInto(
+                player,
+                progress,
+                classId)) {
+            return false;
+        }
 
         int otherClassLevels =
                 progress.getCharacterLevel() - currentClassLevel;

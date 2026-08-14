@@ -68,23 +68,35 @@ public final class AbilityDerivedAttributeService {
             return;
         }
 
-        int strengthModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.STRENGTH));
+        int strengthModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.STRENGTH);
 
-        int dexterityModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.DEXTERITY));
+        int dexterityModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.DEXTERITY);
 
-        int constitutionModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.CONSTITUTION));
+        int constitutionModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.CONSTITUTION);
 
-        int intelligenceModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.INTELLIGENCE));
+        int intelligenceModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.INTELLIGENCE);
 
-        int wisdomModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.WISDOM));
+        int wisdomModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.WISDOM);
 
-        int charismaModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.CHARISMA));
+        int charismaModifier = AbilityScoreBonusService.getAbilityModifier(
+                player,
+                progress,
+                RegistryAptitudes.CHARISMA);
 
         applyStrength(player, strengthModifier);
         applyDexterity(player, dexterityModifier);
