@@ -26,6 +26,8 @@ import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import java.util.LinkedHashMap;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
+import com.mojang.brigadier.arguments.LongArgumentType;
+import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
 
 public final class CharacterCommand {
 
@@ -50,6 +52,63 @@ public final class CharacterCommand {
                                                         EntityArgument.getPlayer(
                                                                 context,
                                                                 "player"))))
+                                .then(Commands.literal("xp")
+
+                                        .then(Commands.literal("get")
+                                                .executes(context ->
+                                                        showCharacter(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("set")
+                                                .then(Commands.argument(
+                                                                "amount",
+                                                                LongArgumentType.longArg(0L))
+
+                                                        .executes(context ->
+                                                                setCharacterXp(
+                                                                        context,
+                                                                        EntityArgument.getPlayer(
+                                                                                context,
+                                                                                "player"),
+                                                                        LongArgumentType.getLong(
+                                                                                context,
+                                                                                "amount")))))
+
+                                        .then(Commands.literal("add")
+                                                .then(Commands.argument(
+                                                                "amount",
+                                                                LongArgumentType.longArg(1L))
+
+                                                        .executes(context ->
+                                                                addCharacterXp(
+                                                                        context,
+                                                                        EntityArgument.getPlayer(
+                                                                                context,
+                                                                                "player"),
+                                                                        LongArgumentType.getLong(
+                                                                                context,
+                                                                                "amount"))))))
+                                .then(Commands.literal("levelup")
+
+                                        .then(Commands.argument(
+                                                        "class",
+                                                        StringArgumentType.word())
+
+                                                .suggests(
+                                                        CharacterCommand::suggestClasses)
+
+                                                .executes(context ->
+                                                        applyLevelUp(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"),
+                                                                StringArgumentType.getString(
+                                                                        context,
+                                                                        "class")))))
 
                                 .then(Commands.literal("class")
                                         .then(Commands.literal("set")
@@ -200,6 +259,76 @@ public final class CharacterCommand {
         return showCharacter(context, player);
     }
 
+    private static int setCharacterXp(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player,
+            long amount) {
+
+        if (!CharacterExperienceService.setExperience(
+                player,
+                amount)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not set Character XP."));
+            return 0;
+        }
+
+        return showCharacter(context, player);
+    }
+
+    private static int addCharacterXp(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player,
+            long amount) {
+
+        if (!CharacterExperienceService.addExperience(
+                player,
+                amount)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not add Character XP."));
+            return 0;
+        }
+
+        return showCharacter(context, player);
+    }
+
+    private static int applyLevelUp(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player,
+            String className) {
+
+        ResourceLocation classId =
+                RegistryClasses.get(className);
+
+        if (classId == null) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Unknown class: " + className));
+
+            return 0;
+        }
+
+        if (!ClassProgressionService.applyPendingLevelUp(
+                player,
+                classId)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not apply level-up. "
+                                    + "No level may be pending, "
+                                    + "the character may be at level 30, "
+                                    + "or multiclass prerequisites may not be met."));
+
+            return 0;
+        }
+
+        return showCharacter(context, player);
+    }
+
     private static int showCharacter(
             CommandContext<CommandSourceStack> context,
             ServerPlayer player) {
@@ -223,6 +352,36 @@ public final class CharacterCommand {
                         return Command.SINGLE_SUCCESS;
                     }
 
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Character XP: "
+                                            + progress.getCharacterXp()),
+                            false);
+
+                    if (progress.getCharacterLevel()
+                            < ClassProgressionService.MAX_CHARACTER_LEVEL) {
+
+                        context.getSource().sendSuccess(
+                                () -> Component.literal(
+                                        "Next Level: "
+                                                + CharacterExperienceService
+                                                .xpForNextLevel(progress)
+                                                + " XP"),
+                                false);
+                    }
+
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Pending Level-Ups: "
+                                            + progress.getPendingLevelUps()),
+                            false);
+
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Pending Advancements: "
+                                            + progress.getPendingAdvancements()),
+                            false);
+
                     progress.classLevels.entrySet()
                             .stream()
                             .sorted(
@@ -239,6 +398,8 @@ public final class CharacterCommand {
 
                     return Command.SINGLE_SUCCESS;
                 })
+
+
                 .orElseGet(() -> {
                     context.getSource().sendFailure(
                             Component.literal(

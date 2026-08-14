@@ -59,9 +59,15 @@ public final class ClassProgressionService {
 
         return PlayerProgressService.update(
                 player,
-                updated -> updated.setClassLevel(
-                        classId.toString(),
-                        1));
+                updated -> {
+
+                    updated.setClassLevel(
+                            classId.toString(),
+                            1);
+
+                    CharacterExperienceService
+                            .refreshPendingLevelUps(updated);
+                });
     }
 
     /**
@@ -181,5 +187,68 @@ public final class ClassProgressionService {
                 progress -> progress.setSubclass(
                         classId.toString(),
                         subclassId.toString()));
+    }
+
+    public static boolean applyPendingLevelUp(
+            ServerPlayer player,
+            ResourceLocation classId) {
+
+        if (player == null || classId == null) {
+            return false;
+        }
+
+        PlayerProgress progress =
+                PlayerProgressService.get(player).orElse(null);
+
+        if (progress == null
+                || progress.getPendingLevelUps() <= 0
+                || progress.getCharacterLevel() <= 0
+                || progress.getCharacterLevel()
+                >= MAX_CHARACTER_LEVEL) {
+            return false;
+        }
+
+        int currentClassLevel =
+                progress.getClassLevel(classId.toString());
+
+        /*
+         * If this is a new class, this is a multiclass operation.
+         */
+        if (currentClassLevel == 0
+                && !ClassPrerequisiteService.canMulticlassInto(
+                player,
+                progress,
+                classId)) {
+            return false;
+        }
+
+        return PlayerProgressService.update(
+                player,
+                updated -> {
+
+                    int updatedClassLevel =
+                            updated.getClassLevel(
+                                    classId.toString()) + 1;
+
+                    updated.setClassLevel(
+                            classId.toString(),
+                            updatedClassLevel);
+
+                    /*
+                     * Recalculate rather than simply subtracting 1.
+                     * This keeps XP and class level state authoritative.
+                     */
+                    CharacterExperienceService
+                            .refreshPendingLevelUps(updated);
+
+                    /*
+                     * Every completed character level grants one
+                     * advancement choice.
+                     *
+                     * Later this opens Feat / ASI selection.
+                     */
+                    updated.setPendingAdvancements(
+                            updated.getPendingAdvancements() + 1);
+                });
     }
 }
