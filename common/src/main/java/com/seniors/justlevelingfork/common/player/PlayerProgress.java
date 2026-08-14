@@ -43,6 +43,8 @@ public class PlayerProgress {
     public float counterAttackDamage = 0.0F;
     public boolean counterAttack = false;
 
+    public boolean startingAbilitiesAssigned = false;
+
     public PlayerProgress(Collection<Passive> passives, Collection<Skill> skills, Collection<Title> titles) {
         this(passives.stream().map(Passive::getName).toList(), skills.stream().map(Skill::getName).toList(), titles);
     }
@@ -71,6 +73,10 @@ public class PlayerProgress {
     public int getAptitudeLevel(String aptitudeName) {
         return aptitudeLevel.getOrDefault(aptitudeName, 1);
     }
+
+    public boolean isStartingAbilitiesAssigned() {return startingAbilitiesAssigned;}
+
+    public void setStartingAbilitiesAssigned(boolean startingAbilitiesAssigned) {this.startingAbilitiesAssigned = startingAbilitiesAssigned;}
 
     public void setAptitudeLevel(Aptitude aptitude, int level) {
         setAptitudeLevel(aptitude.getName(), level);
@@ -254,6 +260,7 @@ public class PlayerProgress {
         tag.putLong("characterXp", characterXp);
         tag.putInt("pendingLevelUps", pendingLevelUps);
         tag.putInt("pendingAdvancements", pendingAdvancements);
+        tag.putBoolean("startingAbilitiesAssigned", startingAbilitiesAssigned);
 
         CompoundTag classLevelsTag = new CompoundTag();
         classLevels.forEach(classLevelsTag::putInt);
@@ -280,6 +287,8 @@ public class PlayerProgress {
         characterXp = Math.max(0L, tag.getLong("characterXp"));
         pendingLevelUps = Math.max(0, tag.getInt("pendingLevelUps"));
         pendingAdvancements = Math.max(0, tag.getInt("pendingAdvancements"));
+
+        startingAbilitiesAssigned = tag.getBoolean("startingAbilitiesAssigned");
 
         CompoundTag classLevelsTag = tag.getCompound("classLevels");
         classLevelsTag.getAllKeys().forEach(classId -> {
@@ -331,6 +340,7 @@ public class PlayerProgress {
             clearTransientState();
             return;
         }
+        startingAbilitiesAssigned = source.startingAbilitiesAssigned;
 
         aptitudeLevel.clear();
         aptitudeLevel.putAll(source.aptitudeLevel);
@@ -360,6 +370,7 @@ public class PlayerProgress {
         characterXp = 0L;
         pendingLevelUps = 0;
         pendingAdvancements = 0;
+        startingAbilitiesAssigned = false;
 
         classLevels.clear();
         subclasses.clear();

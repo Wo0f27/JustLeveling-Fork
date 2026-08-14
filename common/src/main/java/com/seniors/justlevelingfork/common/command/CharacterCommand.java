@@ -19,6 +19,10 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import com.seniors.justlevelingfork.common.player.AbilityScoreBonusService;
+import com.seniors.justlevelingfork.common.player.AbilityScoreService;
+import com.seniors.justlevelingfork.common.player.CharacterInitializationService;
+import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 
 public final class CharacterCommand {
 
@@ -49,6 +53,7 @@ public final class CharacterCommand {
                                                 .then(Commands.argument(
                                                                 "class",
                                                                 StringArgumentType.word())
+
                                                         .suggests(
                                                                 CharacterCommand::suggestClasses)
 
@@ -69,7 +74,33 @@ public final class CharacterCommand {
                                                                                         "class"),
                                                                                 IntegerArgumentType.getInteger(
                                                                                         context,
-                                                                                        "level")))))))));
+                                                                                        "level")))))))
+
+                                .then(Commands.literal("abilities")
+
+                                        .then(Commands.literal("get")
+                                                .executes(context ->
+                                                        showAbilities(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("randomize")
+                                                .executes(context ->
+                                                        randomizeAbilities(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("reset")
+                                                .executes(context ->
+                                                        resetAbilities(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player")))))));
     }
 
     private static int setClassLevel(
@@ -161,5 +192,127 @@ public final class CharacterCommand {
                 builder.suggest(classId.getPath()));
 
         return builder.buildFuture();
+    }
+
+    private static int randomizeAbilities(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        Map<Aptitude, Integer> assignment =
+                CharacterInitializationService
+                        .generateRandomAssignment();
+
+        if (!CharacterInitializationService
+                .initializeStartingAbilities(
+                        player,
+                        assignment)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not assign starting abilities. "
+                                    + "The character must have exactly "
+                                    + "one starting class level and "
+                                    + "must not have completed ability setup already."));
+
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Starting ability scores assigned."),
+                false);
+
+        return showAbilities(context, player);
+    }
+
+    private static int showAbilities(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        return PlayerProgressService.get(player)
+                .map(progress -> {
+
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Starting Abilities: "
+                                            + (progress.isStartingAbilitiesAssigned()
+                                            ? "Assigned"
+                                            : "Not Assigned")),
+                            false);
+
+                    for (Aptitude aptitude
+                            : CharacterInitializationService.aptitudes()) {
+
+                        int aptitudeLevel =
+                                progress.getAptitudeLevel(aptitude);
+
+                        int baseScore =
+                                AbilityScoreService.abilityScore(
+                                        aptitudeLevel);
+
+                        int effectiveScore =
+                                AbilityScoreBonusService.getAbilityScore(
+                                        player,
+                                        progress,
+                                        aptitude);
+
+                        context.getSource().sendSuccess(
+                                () -> Component.literal(
+                                        aptitude.getName()
+                                                + ": "
+                                                + baseScore
+                                                + " (effective "
+                                                + effectiveScore
+                                                + ")"),
+                                false);
+                    }
+
+                    return Command.SINGLE_SUCCESS;
+                })
+                .orElseGet(() -> {
+
+                    context.getSource().sendFailure(
+                            Component.literal(
+                                    "Player progression data not found."));
+
+                    return 0;
+                });
+    }
+
+    private static int resetAbilities(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        boolean success =
+                PlayerProgressService.update(
+                        player,
+                        progress -> {
+
+                            for (Aptitude aptitude
+                                    : CharacterInitializationService
+                                    .aptitudes()) {
+
+                                progress.setAptitudeLevel(
+                                        aptitude,
+                                        1);
+                            }
+
+                            progress.setStartingAbilitiesAssigned(false);
+                        });
+
+        if (!success) {
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not reset starting abilities."));
+
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Starting ability setup reset."),
+                false);
+
+        return Command.SINGLE_SUCCESS;
     }
 }
