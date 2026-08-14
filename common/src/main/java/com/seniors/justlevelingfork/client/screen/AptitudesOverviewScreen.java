@@ -138,6 +138,8 @@ public class AptitudesOverviewScreen extends Screen {
         int xpWidth = client.player == null ? 0 : (int) (client.player.experienceProgress * 151.0F);
         graphics.blit(HandlerResources.SKILL_PAGE[0], left + 12, top + 43, 0, 166, xpWidth, 5);
 
+        renderAdvancementButton(graphics, left, top, mouseX, mouseY);
+
         List<Aptitude> aptitudes = sortedAptitudes();
         for (int i = 0; i < aptitudes.size(); i++) {
             Aptitude aptitude = aptitudes.get(i);
@@ -163,6 +165,37 @@ public class AptitudesOverviewScreen extends Screen {
         }
     }
 
+    private void renderAdvancementButton(
+            GuiGraphics graphics,
+            int left,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        int x = left + 153;
+        int y = top + 14;
+
+        // Disabled appearance for now.
+        // Later this will depend on pendingAdvancements > 0.
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[1],
+                x,
+                y,
+                177,
+                1,
+                6,
+                6);
+
+        if (isMouseWithin(x - 4, y - 4, mouseX, mouseY, 14, 14)) {
+            graphics.renderTooltip(
+                    font,
+                    Component.literal("Advancements")
+                            .withStyle(ChatFormatting.GRAY),
+                    mouseX,
+                    mouseY);
+        }
+    }
+
     private void renderSkills(GuiGraphics graphics, PlayerProgress progress, int left, int top, int mouseX, int mouseY) {
         Aptitude aptitude = selectedAptitude();
         int aptitudeLevel = progress.getAptitudeLevel(aptitude);
@@ -179,8 +212,6 @@ public class AptitudesOverviewScreen extends Screen {
                 top + 18,
                 FONT_COLOR,
                 false);
-
-        renderLevelButton(graphics, progress, aptitude, left, top, mouseX, mouseY);
 
         List<Object> entries = skillEntries(aptitude);
         int totalPages = Math.max(1, (entries.size() + SKILLS_PER_PAGE - 1) / SKILLS_PER_PAGE);
@@ -315,41 +346,6 @@ public class AptitudesOverviewScreen extends Screen {
         return String.format(Locale.ROOT, "%+.0f%%", value * 100.0D);
     }
 
-    private void renderLevelButton(GuiGraphics graphics, PlayerProgress progress, Aptitude aptitude, int left, int top, int mouseX, int mouseY) {
-        boolean canLevel = canLevelAptitude(progress, aptitude);
-        int iconOffset = progress.getAptitudeLevel(aptitude) >= CommonConfigService.aptitudeMaxLevel() ? 12 : canLevel ? 6 : 0;
-        graphics.blit(HandlerResources.SKILL_PAGE[1], left + 153, top + 14, 177 + iconOffset, 1, 6, 6);
-        if (!isMouseWithin(left + 149, top + 10, mouseX, mouseY, 14, 14)) {
-            return;
-        }
-        int aptitudeLevel = progress.getAptitudeLevel(aptitude);
-        if (progress.getGlobalLevel() >= CommonConfigService.playersMaxGlobalLevel()) {
-            graphics.renderTooltip(
-                    font,
-                    Component.translatable("tooltip.aptitude.global_max_level", CommonConfigService.playersMaxGlobalLevel()).withStyle(ChatFormatting.RED),
-                    mouseX,
-                    mouseY);
-        } else if (aptitudeLevel >= CommonConfigService.aptitudeMaxLevel()) {
-            graphics.renderTooltip(
-                    font,
-                    Component.translatable("tooltip.aptitude.max_level", Component.translatable(aptitude.getKey()).withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.GRAY),
-                    mouseX,
-                    mouseY);
-        } else {
-            int firstCost = CommonConfigService.aptitudeFirstCostLevel();
-            ChatFormatting color = canLevel ? ChatFormatting.GREEN : ChatFormatting.RED;
-            graphics.renderTooltip(
-                    font,
-                    Component.translatable(
-                            "tooltip.aptitude.level_up",
-                            Component.literal(String.valueOf(AptitudeExperience.requiredExperienceLevels(aptitudeLevel, firstCost))).withStyle(color),
-                            Component.literal(String.valueOf(AptitudeExperience.requiredPoints(aptitudeLevel, firstCost))).withStyle(color),
-                            Component.translatable(aptitude.getKey()).withStyle(color)).withStyle(ChatFormatting.GRAY),
-                    mouseX,
-                    mouseY);
-        }
-    }
-
     private void renderEntryIcon(GuiGraphics graphics, PlayerProgress progress, Object entry, int x, int y, int mouseX, int mouseY) {
         boolean hover = isMouseWithin(x, y, mouseX, mouseY, 24, 24);
         RenderSystem.enableBlend();
@@ -473,10 +469,6 @@ public class AptitudesOverviewScreen extends Screen {
 
     private boolean handleSkillClick(PlayerProgress progress, int left, int top, double mouseX, double mouseY) {
         Aptitude aptitude = selectedAptitude();
-        if (isMouseWithin(left + 149, top + 10, mouseX, mouseY, 14, 14) && canLevelAptitude(progress, aptitude)) {
-            PlayerProgressClientRequests.requestAptitudeLevelUp(aptitude);
-            return true;
-        }
         if (isMouseWithin(left + 141, top + 144, mouseX, mouseY, 18, 10)) {
             page = PAGE_APTITUDES;
             updateTitleSearchVisibility();
@@ -698,20 +690,6 @@ public class AptitudesOverviewScreen extends Screen {
         return String.format(Locale.ROOT, "%02d", value);
     }
 
-    private boolean canLevelAptitude(PlayerProgress progress, Aptitude aptitude) {
-        if (progress.getAptitudeLevel(aptitude) >= CommonConfigService.aptitudeMaxLevel()
-                || progress.getGlobalLevel() >= CommonConfigService.playersMaxGlobalLevel()) {
-            return false;
-        }
-
-        if (minecraft.player == null || minecraft.player.isCreative()) {
-            return true;
-        }
-
-        int requiredPoints = AptitudeExperience.requiredPoints(
-                progress.getAptitudeLevel(aptitude), CommonConfigService.aptitudeFirstCostLevel());
-        return requiredPoints <= AptitudeExperience.getPlayerXP(minecraft.player);
-    }
 
     private static boolean isMouseWithin(int x, int y, double mouseX, double mouseY, int width, int height) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
