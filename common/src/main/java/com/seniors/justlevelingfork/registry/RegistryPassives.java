@@ -21,38 +21,7 @@ public final class RegistryPassives {
     public static final ResourceKey<Registry<Passive>> PASSIVES_KEY =
             ResourceKey.createRegistryKey(new ResourceLocation(Constants.MOD_ID, "passives"));
 
-    public static final Passive ATTACK_DAMAGE = register(
-            "attack_damage",
-            RegistryAptitudes.STRENGTH,
-            "textures/skill/strength/passive_attack_damage.png",
-            Attributes.ATTACK_DAMAGE,
-            "96a891fe-5919-418d-8205-f50464391500",
-            1.5D,
-            levels10());
-    public static final Passive ATTACK_KNOCKBACK = register(
-            "attack_knockback",
-            RegistryAptitudes.STRENGTH,
-            "textures/skill/strength/passive_attack_knockback.png",
-            Attributes.ATTACK_KNOCKBACK,
-            "96a891fe-5919-418d-8205-f50464391501",
-            0.4D,
-            levels5());
-    public static final Passive MAX_HEALTH = register(
-            "max_health",
-            RegistryAptitudes.CONSTITUTION,
-            "textures/skill/constitution/passive_max_health.png",
-            Attributes.MAX_HEALTH,
-            "96a891fe-5919-418d-8205-f50464391502",
-            20.0D,
-            levels10());
-    public static final Passive KNOCKBACK_RESISTANCE = register(
-            "knockback_resistance",
-            RegistryAptitudes.CONSTITUTION,
-            "textures/skill/constitution/passive_knockback_resistance.png",
-            Attributes.KNOCKBACK_RESISTANCE,
-            "96a891fe-5919-418d-8205-f50464391503",
-            0.5D,
-            levels5());
+
     public static final Passive MOVEMENT_SPEED = register(
             "movement_speed",
             RegistryAptitudes.DEXTERITY,
@@ -71,7 +40,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive ARMOR = register(
             "armor",
-            RegistryAptitudes.DEFENSE,
+            RegistryAptitudes.CONSTITUTION,
             "textures/skill/defense/passive_armor.png",
             Attributes.ARMOR,
             "96a891fe-5919-418d-8205-f50464391506",
@@ -79,7 +48,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive ARMOR_TOUGHNESS = register(
             "armor_toughness",
-            RegistryAptitudes.DEFENSE,
+            RegistryAptitudes.CONSTITUTION,
             "textures/skill/defense/passive_armor_toughness.png",
             Attributes.ARMOR_TOUGHNESS,
             "96a891fe-5919-418d-8205-f50464391507",
@@ -103,7 +72,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive BLOCK_REACH = register(
             "block_reach",
-            RegistryAptitudes.BUILDING,
+            RegistryAptitudes.INTELLIGENCE,
             "textures/skill/building/passive_block_reach.png",
             RegistryAttributes.BLOCK_REACH,
             "96a891fe-5919-418d-8205-f50464391510",
@@ -111,7 +80,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive BREAK_SPEED = register(
             "break_speed",
-            RegistryAptitudes.BUILDING,
+            RegistryAptitudes.STRENGTH,
             "textures/skill/building/passive_break_speed.png",
             RegistryAttributes.BREAK_SPEED,
             "96a891fe-5919-418d-8205-f50464391511",
@@ -119,7 +88,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive BENEFICIAL_EFFECT = register(
             "beneficial_effect",
-            RegistryAptitudes.MAGIC,
+            RegistryAptitudes.CHARISMA,
             "textures/skill/magic/passive_beneficial_effect.png",
             RegistryAttributes.BENEFICIAL_EFFECT,
             "96a891fe-5919-418d-8205-f50464391512",
@@ -127,7 +96,7 @@ public final class RegistryPassives {
             levels10());
     public static final Passive MAGIC_RESIST = register(
             "magic_resist",
-            RegistryAptitudes.MAGIC,
+            RegistryAptitudes.WISDOM,
             "textures/skill/magic/passive_magic_resist.png",
             RegistryAttributes.MAGIC_RESIST,
             "96a891fe-5919-418d-8205-f50464391513",
@@ -135,7 +104,7 @@ public final class RegistryPassives {
             levels5());
     public static final Passive CRITICAL_DAMAGE = register(
             "critical_damage",
-            RegistryAptitudes.LUCK,
+            RegistryAptitudes.DEXTERITY,
             "textures/skill/luck/passive_critical_damage.png",
             RegistryAttributes.CRITICAL_DAMAGE,
             "96a891fe-5919-418d-8205-f50464391515",
@@ -143,7 +112,7 @@ public final class RegistryPassives {
             levels10());
     public static final Passive LUCK = register(
             "luck",
-            RegistryAptitudes.LUCK,
+            RegistryAptitudes.WISDOM,
             "textures/skill/luck/passive_luck.png",
             Attributes.LUCK,
             "96a891fe-5919-418d-8205-f50464391514",
@@ -187,10 +156,6 @@ public final class RegistryPassives {
             return;
         }
 
-        put(ATTACK_DAMAGE);
-        put(ATTACK_KNOCKBACK);
-        put(MAX_HEALTH);
-        put(KNOCKBACK_RESISTANCE);
         put(MOVEMENT_SPEED);
         put(PROJECTILE_DAMAGE);
         put(ARMOR);

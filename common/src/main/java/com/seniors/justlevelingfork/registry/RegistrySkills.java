@@ -48,7 +48,7 @@ public final class RegistrySkills {
     public static final Skill LION_HEART = register(
             "lion_heart",
             RegistryAptitudes.CONSTITUTION,
-            32,
+            30,
             HandlerResources.LION_HEART_SKILL,
             new Value(ValueType.PERCENT, 50));
     public static final Skill QUICK_REPOSITION = register(
@@ -67,19 +67,19 @@ public final class RegistrySkills {
             new Value(ValueType.PERCENT, 60),
             new Value(ValueType.MODIFIER, 1.25F));
     public static final Skill CAT_EYES =
-            register("cat_eyes", RegistryAptitudes.DEXTERITY, 32, HandlerResources.CAT_EYES_SKILL);
+            register("cat_eyes", RegistryAptitudes.DEXTERITY, 30, HandlerResources.CAT_EYES_SKILL);
     public static final Skill SNOW_WALKER =
-            register("snow_walker", RegistryAptitudes.DEFENSE, 10, HandlerResources.SNOW_WALKER_SKILL);
+            register("snow_walker", RegistryAptitudes.DEXTERITY, 10, HandlerResources.SNOW_WALKER_SKILL);
     public static final Skill COUNTER_ATTACK = register(
             "counter_attack",
-            RegistryAptitudes.DEFENSE,
+            RegistryAptitudes.DEXTERITY,
             18,
             HandlerResources.COUNTER_ATTACK_SKILL,
             new Value(ValueType.DURATION, 3),
             new Value(ValueType.PERCENT, 50));
     public static final Skill DIAMOND_SKIN = register(
             "diamond_skin",
-            RegistryAptitudes.DEFENSE,
+            RegistryAptitudes.DEXTERITY,
             30,
             HandlerResources.DIAMOND_SKIN_SKILL,
             new Value(ValueType.BOOST, 2),
@@ -100,49 +100,49 @@ public final class RegistrySkills {
             new Value(ValueType.AMPLIFIER, 1.0F));
     public static final Skill OBSIDIAN_SMASHER = register(
             "obsidian_smasher",
-            RegistryAptitudes.BUILDING,
+            RegistryAptitudes.STRENGTH,
             12,
             HandlerResources.OBSIDIAN_SMASHER_SKILL,
             new Value(ValueType.MODIFIER, 10.0F));
     public static final Skill TREASURE_HUNTER = register(
             "treasure_hunter",
-            RegistryAptitudes.BUILDING,
+            RegistryAptitudes.WISDOM,
             20,
             HandlerResources.TREASURE_HUNTER_SKILL,
             new Value(ValueType.PROBABILITY, 500));
     public static final Skill CONVERGENCE = register(
             "convergence",
-            RegistryAptitudes.BUILDING,
+            RegistryAptitudes.INTELLIGENCE,
             30,
             HandlerResources.CONVERGENCE_SKILL,
             new Value(ValueType.PROBABILITY, 8));
     public static final Skill SAFE_PORT =
-            register("safe_port", RegistryAptitudes.MAGIC, 12, HandlerResources.SAFE_PORT_SKILL);
+            register("safe_port", RegistryAptitudes.INTELLIGENCE, 12, HandlerResources.SAFE_PORT_SKILL);
     public static final Skill LIFE_EATER = register(
             "life_eater",
-            RegistryAptitudes.MAGIC,
+            RegistryAptitudes.CHARISMA,
             18,
             HandlerResources.LIFE_EATER_SKILL,
             new Value(ValueType.AMPLIFIER, 1.0F));
     public static final Skill WORMHOLE_STORAGE =
-            register("wormhole_storage", RegistryAptitudes.MAGIC, 32, HandlerResources.WORMHOLE_STORAGE_SKILL);
+            register("wormhole_storage", RegistryAptitudes.INTELLIGENCE, 30, HandlerResources.WORMHOLE_STORAGE_SKILL);
     public static final Skill CRITICAL_ROLL = register(
             "critical_roll",
-            RegistryAptitudes.LUCK,
+            RegistryAptitudes.DEXTERITY,
             12,
             HandlerResources.CRITICAL_ROLL_SKILL,
             new Value(ValueType.MODIFIER, 1.25F),
             new Value(ValueType.PROBABILITY, 3));
     public static final Skill LUCKY_DROP = register(
             "lucky_drop",
-            RegistryAptitudes.LUCK,
+            RegistryAptitudes.WISDOM,
             22,
             HandlerResources.LUCKY_DROP_SKILL,
             new Value(ValueType.PROBABILITY, 10),
             new Value(ValueType.MODIFIER, 2.0F));
     public static final Skill LIMIT_BREAKER = register(
             "limit_breaker",
-            RegistryAptitudes.LUCK,
+            RegistryAptitudes.CONSTITUTION,
             32,
             HandlerResources.LIMIT_BREAKER_SKILL,
             new Value(ValueType.PROBABILITY, 100),
