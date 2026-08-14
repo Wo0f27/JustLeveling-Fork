@@ -34,20 +34,6 @@ public final class RegistryAptitudes {
             register(5, "charisma", HandlerResources.CHARISMA_LOCKED_ICON, "purple_terracotta");
 
 
-    // Temporary compatibility aliases.
-// Remove these once the old skill/passive trees are migrated.
-    @Deprecated
-    public static final Aptitude DEFENSE = WISDOM;
-
-    @Deprecated
-    public static final Aptitude BUILDING = INTELLIGENCE;
-
-    @Deprecated
-    public static final Aptitude MAGIC = CHARISMA;
-
-    @Deprecated
-    public static final Aptitude LUCK = CHARISMA;
-
     private static final Map<String, Aptitude> APTITUDES_BY_NAME = new LinkedHashMap<>();
 
     private RegistryAptitudes() {
