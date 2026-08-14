@@ -31,6 +31,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import com.seniors.justlevelingfork.common.player.AbilityDerivedValues;
+import com.seniors.justlevelingfork.common.player.AbilityScoreService;
 
 public class AptitudesOverviewScreen extends Screen {
     private static final int WIDTH = 176;
@@ -156,7 +158,7 @@ public class AptitudesOverviewScreen extends Screen {
                     0xAAAAAA,
                     false);
             if (hover) {
-                graphics.renderTooltip(font, Component.translatable(aptitude.getKey()), mouseX, mouseY);
+                renderTooltipList(graphics, aptitudeTooltip(progress, aptitude), mouseX, mouseY);
             }
         }
     }
@@ -202,6 +204,115 @@ public class AptitudesOverviewScreen extends Screen {
             graphics.blit(HandlerResources.SKILL_PAGE[1], left + 67, top + 144, 241, skillPage > 0 ? 12 : 0, 7, 11);
             graphics.blit(HandlerResources.SKILL_PAGE[1], left + 103, top + 144, 249, skillPage < totalPages - 1 ? 12 : 0, 7, 11);
         }
+    }
+
+    private List<Component> aptitudeTooltip(PlayerProgress progress, Aptitude aptitude) {
+        int aptitudeLevel = progress.getAptitudeLevel(aptitude);
+        int abilityScore = AbilityScoreService.abilityScore(aptitudeLevel);
+        int modifier = AbilityScoreService.abilityModifier(aptitudeLevel);
+
+        List<Component> lines = new ArrayList<>();
+
+        lines.add(Component.translatable(aptitude.getKey())
+                .withStyle(ChatFormatting.GOLD));
+
+        lines.add(Component.literal("Ability Score: " + abilityScore)
+                .withStyle(ChatFormatting.WHITE));
+
+        lines.add(Component.literal(
+                        "Modifier: " + (modifier >= 0 ? "+" : "") + modifier)
+                .withStyle(ChatFormatting.GRAY));
+
+        lines.add(Component.empty());
+
+        lines.add(Component.literal("Aptitude Bonuses")
+                .withStyle(ChatFormatting.AQUA));
+
+        if (aptitude == RegistryAptitudes.STRENGTH) {
+            lines.add(Component.literal(
+                    signed(modifier * AbilityDerivedValues.STR_ATTACK_DAMAGE)
+                            + " Attack Damage"));
+
+            lines.add(Component.literal(
+                    signed(modifier * AbilityDerivedValues.STR_ATTACK_KNOCKBACK)
+                            + " Attack Knockback"));
+
+            lines.add(Component.literal(
+                    signed(modifier * AbilityDerivedValues.STR_ARMOR_PIERCE)
+                            + " Armor Pierce"));
+        }
+
+        else if (aptitude == RegistryAptitudes.DEXTERITY) {
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.DEX_DODGE_CHANCE)
+                            + " Dodge Chance"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.DEX_ARROW_DAMAGE)
+                            + " Arrow Damage"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.DEX_ARROW_VELOCITY)
+                            + " Arrow Velocity"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.DEX_DRAW_SPEED)
+                            + " Draw Speed"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.DEX_CRIT_CHANCE)
+                            + " Critical Chance"));
+        }
+
+        else if (aptitude == RegistryAptitudes.CONSTITUTION) {
+            lines.add(Component.literal(
+                    signed(modifier * AbilityDerivedValues.CON_MAX_HEALTH)
+                            + " Maximum Health"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.CON_KNOCKBACK_RESISTANCE)
+                            + " Knockback Resistance"));
+        }
+
+        else if (aptitude == RegistryAptitudes.INTELLIGENCE) {
+            lines.add(Component.literal(
+                    signedWhole(modifier * AbilityDerivedValues.INT_MAX_MANA)
+                            + " Maximum Mana"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.INT_CAST_TIME_REDUCTION)
+                            + " Cast Time Reduction"));
+        }
+
+        else if (aptitude == RegistryAptitudes.WISDOM) {
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.WIS_MANA_REGEN)
+                            + " Mana Regeneration"));
+
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.WIS_SPELL_RESIST)
+                            + " Spell Resistance"));
+        }
+
+        else if (aptitude == RegistryAptitudes.CHARISMA) {
+            lines.add(Component.literal(
+                    signedPercent(modifier * AbilityDerivedValues.CHA_COOLDOWN_REDUCTION)
+                            + " Cooldown Reduction"));
+        }
+
+        return lines;
+    }
+
+    private String signed(double value) {
+        return String.format(Locale.ROOT, "%+.2f", value);
+    }
+
+    private String signedWhole(double value) {
+        return String.format(Locale.ROOT, "%+.0f", value);
+    }
+
+    private String signedPercent(double value) {
+        return String.format(Locale.ROOT, "%+.0f%%", value * 100.0D);
     }
 
     private void renderLevelButton(GuiGraphics graphics, PlayerProgress progress, Aptitude aptitude, int left, int top, int mouseX, int mouseY) {
