@@ -82,6 +82,15 @@ repositories {
         }
         filter { includeGroup('curse.maven') }
     }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+    }
+
+    maven {
+        name = 'KosmX'
+        url = 'https://maven.kosmx.dev/'
+    }
 }
 
 // Declare capabilities on the outgoing configurations.
