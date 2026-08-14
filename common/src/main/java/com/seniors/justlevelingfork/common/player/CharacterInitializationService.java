@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.server.level.ServerPlayer;
+import com.seniors.justlevelingfork.registry.RegistryClasses;
+import net.minecraft.resources.ResourceLocation;
 
 public final class CharacterInitializationService {
 
@@ -51,6 +53,113 @@ public final class CharacterInitializationService {
         return PlayerProgressService.get(player)
                 .map(PlayerProgress::isStartingAbilitiesAssigned)
                 .orElse(false);
+    }
+
+    public static Map<Aptitude, Integer> generateRecommendedAssignment(
+            ResourceLocation classId) {
+
+        if (classId == null) {
+            return null;
+        }
+
+        if (classId.equals(RegistryClasses.BARBARIAN)) {
+            return assignment(15, 13, 14, 10, 12, 11);
+        }
+
+        if (classId.equals(RegistryClasses.BARD)) {
+            return assignment(10, 14, 13, 11, 12, 15);
+        }
+
+        if (classId.equals(RegistryClasses.CLERIC)) {
+            return assignment(13, 12, 14, 10, 15, 11);
+        }
+
+        if (classId.equals(RegistryClasses.DRUID)) {
+            return assignment(11, 13, 14, 12, 15, 10);
+        }
+
+        if (classId.equals(RegistryClasses.FIGHTER)) {
+            return assignment(15, 13, 14, 10, 12, 11);
+        }
+
+        if (classId.equals(RegistryClasses.MONK)) {
+            return assignment(12, 15, 13, 11, 14, 10);
+        }
+
+        if (classId.equals(RegistryClasses.PALADIN)) {
+            return assignment(15, 11, 13, 10, 12, 14);
+        }
+
+        if (classId.equals(RegistryClasses.RANGER)) {
+            return assignment(12, 15, 13, 10, 14, 11);
+        }
+
+        if (classId.equals(RegistryClasses.ROGUE)) {
+            return assignment(10, 15, 14, 11, 13, 12);
+        }
+
+        if (classId.equals(RegistryClasses.SORCERER)) {
+            return assignment(10, 13, 14, 11, 12, 15);
+        }
+
+        if (classId.equals(RegistryClasses.WARLOCK)) {
+            return assignment(10, 13, 14, 11, 12, 15);
+        }
+
+        if (classId.equals(RegistryClasses.WIZARD)) {
+            return assignment(10, 13, 14, 15, 12, 11);
+        }
+
+        return null;
+    }
+
+    private static Map<Aptitude, Integer> assignment(
+            int strength,
+            int dexterity,
+            int constitution,
+            int intelligence,
+            int wisdom,
+            int charisma) {
+
+        Map<Aptitude, Integer> assignment =
+                new LinkedHashMap<>();
+
+        assignment.put(RegistryAptitudes.STRENGTH, strength);
+        assignment.put(RegistryAptitudes.DEXTERITY, dexterity);
+        assignment.put(RegistryAptitudes.CONSTITUTION, constitution);
+        assignment.put(RegistryAptitudes.INTELLIGENCE, intelligence);
+        assignment.put(RegistryAptitudes.WISDOM, wisdom);
+        assignment.put(RegistryAptitudes.CHARISMA, charisma);
+
+        return assignment;
+    }
+
+    public static ResourceLocation getStartingClass(
+            PlayerProgress progress) {
+
+        if (progress == null
+                || progress.getCharacterLevel() != 1
+                || progress.classLevels.size() != 1) {
+            return null;
+        }
+
+        Map.Entry<String, Integer> entry =
+                progress.classLevels.entrySet()
+                        .iterator()
+                        .next();
+
+        if (entry.getValue() != 1) {
+            return null;
+        }
+
+        return ResourceLocation.tryParse(entry.getKey());
+    }
+
+    public static Map<Aptitude, Integer>
+    generateRecommendedAssignment(PlayerProgress progress) {
+
+        return generateRecommendedAssignment(
+                getStartingClass(progress));
     }
 
     /**

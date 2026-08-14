@@ -23,6 +23,9 @@ import com.seniors.justlevelingfork.common.player.AbilityScoreBonusService;
 import com.seniors.justlevelingfork.common.player.AbilityScoreService;
 import com.seniors.justlevelingfork.common.player.CharacterInitializationService;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
+import com.seniors.justlevelingfork.registry.RegistryAptitudes;
+import java.util.LinkedHashMap;
+import com.seniors.justlevelingfork.common.player.PlayerProgress;
 
 public final class CharacterCommand {
 
@@ -94,6 +97,65 @@ public final class CharacterCommand {
                                                                         context,
                                                                         "player"))))
 
+                                        .then(Commands.literal("recommend")
+                                                .executes(context ->
+                                                        recommendAbilities(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("set")
+
+                                                .then(Commands.argument(
+                                                                "strength",
+                                                                IntegerArgumentType.integer(10, 15))
+
+                                                        .then(Commands.argument(
+                                                                        "dexterity",
+                                                                        IntegerArgumentType.integer(10, 15))
+
+                                                                .then(Commands.argument(
+                                                                                "constitution",
+                                                                                IntegerArgumentType.integer(10, 15))
+
+                                                                        .then(Commands.argument(
+                                                                                        "intelligence",
+                                                                                        IntegerArgumentType.integer(10, 15))
+
+                                                                                .then(Commands.argument(
+                                                                                                "wisdom",
+                                                                                                IntegerArgumentType.integer(10, 15))
+
+                                                                                        .then(Commands.argument(
+                                                                                                        "charisma",
+                                                                                                        IntegerArgumentType.integer(10, 15))
+
+                                                                                                .executes(context ->
+                                                                                                        setStartingAbilities(
+                                                                                                                context,
+                                                                                                                EntityArgument.getPlayer(
+                                                                                                                        context,
+                                                                                                                        "player"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "strength"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "dexterity"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "constitution"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "intelligence"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "wisdom"),
+                                                                                                                IntegerArgumentType.getInteger(
+                                                                                                                        context,
+                                                                                                                        "charisma"))))))))))
+
                                         .then(Commands.literal("reset")
                                                 .executes(context ->
                                                         resetAbilities(
@@ -101,6 +163,7 @@ public final class CharacterCommand {
                                                                 EntityArgument.getPlayer(
                                                                         context,
                                                                         "player")))))));
+
     }
 
     private static int setClassLevel(
@@ -314,5 +377,108 @@ public final class CharacterCommand {
                 false);
 
         return Command.SINGLE_SUCCESS;
+    }
+    private static int recommendAbilities(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        PlayerProgress progress =
+                PlayerProgressService.get(player).orElse(null);
+
+        if (progress == null) {
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Player progression data not found."));
+            return 0;
+        }
+
+        Map<Aptitude, Integer> assignment =
+                CharacterInitializationService
+                        .generateRecommendedAssignment(progress);
+
+        if (assignment == null) {
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not determine a valid starting class."));
+            return 0;
+        }
+
+        if (!CharacterInitializationService
+                .initializeStartingAbilities(
+                        player,
+                        assignment)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not assign recommended starting abilities."));
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Recommended starting abilities assigned."),
+                false);
+
+        return showAbilities(context, player);
+    }
+    private static int setStartingAbilities(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player,
+            int strength,
+            int dexterity,
+            int constitution,
+            int intelligence,
+            int wisdom,
+            int charisma) {
+
+        Map<Aptitude, Integer> assignment =
+                new LinkedHashMap<>();
+
+        assignment.put(
+                RegistryAptitudes.STRENGTH,
+                strength);
+
+        assignment.put(
+                RegistryAptitudes.DEXTERITY,
+                dexterity);
+
+        assignment.put(
+                RegistryAptitudes.CONSTITUTION,
+                constitution);
+
+        assignment.put(
+                RegistryAptitudes.INTELLIGENCE,
+                intelligence);
+
+        assignment.put(
+                RegistryAptitudes.WISDOM,
+                wisdom);
+
+        assignment.put(
+                RegistryAptitudes.CHARISMA,
+                charisma);
+
+        if (!CharacterInitializationService
+                .initializeStartingAbilities(
+                        player,
+                        assignment)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Invalid starting ability assignment. "
+                                    + "You must use each score from "
+                                    + "10 through 15 exactly once, "
+                                    + "and ability setup must not "
+                                    + "already be completed."));
+
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Starting abilities assigned."),
+                false);
+
+        return showAbilities(context, player);
     }
 }
