@@ -26,6 +26,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import com.seniors.justlevelingfork.common.command.CharacterCommand;
 
 public final class ForgeRegistryCommonEvents {
     private ForgeRegistryCommonEvents() {
@@ -47,6 +48,7 @@ public final class ForgeRegistryCommonEvents {
                 ForgeLockItemStore.instance()::reload,
                 player -> ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems()));
         AptitudeLevelCommand.register(event.getDispatcher());
+        CharacterCommand.register(event.getDispatcher());
         TitleCommand.register(event.getDispatcher());
         TitleConfigReloadCommand.register(
                 event.getDispatcher(),

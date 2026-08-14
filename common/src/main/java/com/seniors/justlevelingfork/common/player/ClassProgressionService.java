@@ -95,6 +95,39 @@ public final class ClassProgressionService {
                         currentClassLevel + 1));
     }
 
+    public static boolean setClassLevel(
+            ServerPlayer player,
+            ResourceLocation classId,
+            int level) {
+
+        if (player == null || classId == null || level < 0) {
+            return false;
+        }
+
+        PlayerProgress progress =
+                PlayerProgressService.get(player).orElse(null);
+
+        if (progress == null) {
+            return false;
+        }
+
+        int currentClassLevel =
+                progress.getClassLevel(classId.toString());
+
+        int otherClassLevels =
+                progress.getCharacterLevel() - currentClassLevel;
+
+        if (otherClassLevels + level > MAX_CHARACTER_LEVEL) {
+            return false;
+        }
+
+        return PlayerProgressService.update(
+                player,
+                updated -> updated.setClassLevel(
+                        classId.toString(),
+                        level));
+    }
+
     public static String getSubclass(
             ServerPlayer player,
             ResourceLocation classId) {
