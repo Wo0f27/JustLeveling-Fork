@@ -38,10 +38,10 @@ public final class SkillConfigService {
         configs.put("berserker", new SkillConfig(30, new double[] {30.0D}));
         configs.put("athletics", new SkillConfig(10, new double[] {1.5D}));
         configs.put("turtle_shield", new SkillConfig(20, new double[0]));
-        configs.put("lion_heart", new SkillConfig(32, new double[] {50.0D}));
+        configs.put("lion_heart", new SkillConfig(30, new double[] {50.0D}));
         configs.put("quick_reposition", new SkillConfig(10, new double[] {2.0D, 3.0D}));
         configs.put("stealth_mastery", new SkillConfig(16, new double[] {20.0D, 60.0D, 1.25D}));
-        configs.put("cat_eyes", new SkillConfig(32, new double[0]));
+        configs.put("cat_eyes", new SkillConfig(30, new double[0]));
         configs.put("snow_walker", new SkillConfig(10, new double[0]));
         configs.put("counter_attack", new SkillConfig(18, new double[] {3.0D, 50.0D}));
         configs.put("diamond_skin", new SkillConfig(30, new double[] {2.0D, 2.0D}));
@@ -53,10 +53,10 @@ public final class SkillConfigService {
         configs.put("convergence", new SkillConfig(30, new double[] {8.0D}));
         configs.put("safe_port", new SkillConfig(12, new double[0]));
         configs.put("life_eater", new SkillConfig(18, new double[] {1.0D}));
-        configs.put("wormhole_storage", new SkillConfig(32, new double[0]));
+        configs.put("wormhole_storage", new SkillConfig(30, new double[0]));
         configs.put("critical_roll", new SkillConfig(12, new double[] {1.25D, 3.0D}));
         configs.put("lucky_drop", new SkillConfig(22, new double[] {10.0D, 2.0D}));
-        configs.put("limit_breaker", new SkillConfig(32, new double[] {100.0D, 999.0D}));
+        configs.put("limit_breaker", new SkillConfig(30, new double[] {100.0D, 999.0D}));
         return configs;
     }
 

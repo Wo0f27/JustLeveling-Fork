@@ -7,10 +7,10 @@ import java.util.function.Supplier;
 import java.util.List;
 
 public final class CommonConfigService {
-    public static final int MAX_APTITUDE_LEVEL = 1000;
+    public static final int MAX_APTITUDE_LEVEL = 30;
     public static final int MAX_GLOBAL_LEVEL = 99999;
     public static final int MAX_FIRST_COST_LEVEL = 1000;
-    private static IntSupplier aptitudeMaxLevel = () -> 32;
+    private static IntSupplier aptitudeMaxLevel = () -> 30;
     private static IntSupplier playersMaxGlobalLevel = () -> 256;
     private static IntSupplier aptitudeFirstCostLevel = () -> 5;
     private static BooleanSupplier showPotionsHud = () -> true;
@@ -30,7 +30,7 @@ public final class CommonConfigService {
     }
 
     public static void setAptitudeMaxLevel(IntSupplier aptitudeMaxLevel) {
-        CommonConfigService.aptitudeMaxLevel = Optional.ofNullable(aptitudeMaxLevel).orElse(() -> 32);
+        CommonConfigService.aptitudeMaxLevel = Optional.ofNullable(aptitudeMaxLevel).orElse(() -> 30);
     }
 
     public static int aptitudeMaxLevel() {

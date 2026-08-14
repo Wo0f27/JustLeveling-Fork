@@ -38,7 +38,7 @@ public final class ForgeCommonConfig {
         BUILDER.push("general");
         APTITUDE_MAX_LEVEL = BUILDER
                 .comment("Aptitudes max level.")
-                .defineInRange("aptitudeMaxLevel", 32, 2, 1000);
+                .defineInRange("aptitudeMaxLevel", 30, 2, 30);
         PLAYERS_MAX_GLOBAL_LEVEL = BUILDER
                 .comment("Global max level, calculated by summing all aptitude levels.")
                 .defineInRange("playersMaxGlobalLevel", 256, 32, 99999);

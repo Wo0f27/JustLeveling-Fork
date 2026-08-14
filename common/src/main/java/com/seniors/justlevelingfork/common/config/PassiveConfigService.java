@@ -75,18 +75,18 @@ public final class PassiveConfigService {
     }
 
     public static int[] levels5() {
-        return new int[] {8, 14, 20, 26, 32};
+        return new int[] {8, 14, 20, 26, 30};
     }
 
     public static int[] levels10() {
-        return new int[] {5, 8, 11, 14, 17, 20, 23, 26, 29, 32};
+        return new int[] {5, 8, 11, 14, 17, 20, 23, 26, 29, 30};
     }
 
     public record PassiveConfig(double value, int[] levels) {
         public PassiveConfig sanitized(PassiveConfig fallback) {
             double sanitizedValue = Double.isFinite(value) ? Math.max(0.0D, value) : fallback == null ? 0.0D : fallback.value();
             int[] sanitizedLevels = levels == null || levels.length == 0
-                    ? fallback == null ? new int[] {8, 14, 20, 26, 32} : fallback.levels()
+                    ? fallback == null ? new int[] {8, 14, 20, 26, 30} : fallback.levels()
                     : Arrays.stream(levels)
                             .limit(64)
                             .map(level -> Math.min(CommonConfigService.MAX_APTITUDE_LEVEL, Math.max(1, level)))
