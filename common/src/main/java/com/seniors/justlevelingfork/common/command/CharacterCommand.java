@@ -28,6 +28,10 @@ import java.util.LinkedHashMap;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
+import com.seniors.justlevelingfork.common.feat.FeatDefinition;
+import com.seniors.justlevelingfork.common.feat.FeatManager;
+import com.seniors.justlevelingfork.common.feat.FeatProgressionService;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
 
 public final class CharacterCommand {
 
@@ -91,6 +95,60 @@ public final class CharacterCommand {
                                                                         LongArgumentType.getLong(
                                                                                 context,
                                                                                 "amount"))))))
+                                .then(Commands.literal("advancement")
+
+                                        .then(Commands.literal("get")
+                                                .executes(context ->
+                                                        showAdvancements(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("take")
+
+                                                .then(Commands.argument(
+                                                                "feat",
+                                                                ResourceLocationArgument.id())
+
+                                                        .suggests(
+                                                                CharacterCommand::suggestFeats)
+
+                                                        /*
+                                                         * Supports future feats that do not
+                                                         * require an additional choice.
+                                                         */
+                                                        .executes(context ->
+                                                                takeFeat(
+                                                                        context,
+                                                                        EntityArgument.getPlayer(
+                                                                                context,
+                                                                                "player"),
+                                                                        ResourceLocationArgument.getId(
+                                                                                context,
+                                                                                "feat"),
+                                                                        ""))
+
+                                                        /*
+                                                         * ASI uses this choice for:
+                                                         * strength, dexterity, etc.
+                                                         */
+                                                        .then(Commands.argument(
+                                                                        "choice",
+                                                                        StringArgumentType.word())
+
+                                                                .executes(context ->
+                                                                        takeFeat(
+                                                                                context,
+                                                                                EntityArgument.getPlayer(
+                                                                                        context,
+                                                                                        "player"),
+                                                                                ResourceLocationArgument.getId(
+                                                                                        context,
+                                                                                        "feat"),
+                                                                                StringArgumentType.getString(
+                                                                                        context,
+                                                                                        "choice")))))))
                                 .then(Commands.literal("levelup")
 
                                         .then(Commands.argument(
@@ -641,5 +699,105 @@ public final class CharacterCommand {
                 false);
 
         return showAbilities(context, player);
+    }
+    private static int takeFeat(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player,
+            ResourceLocation featId,
+            String choice) {
+
+        FeatDefinition feat =
+                FeatManager.INSTANCE.get(featId);
+
+        if (feat == null) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Unknown feat: "
+                                    + featId));
+
+            return 0;
+        }
+
+        if (!FeatProgressionService.takeFeat(
+                player,
+                featId,
+                choice)) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not take feat "
+                                    + feat.getName()
+                                    + ". Check pending advancements, "
+                                    + "feat requirements, rank limits, "
+                                    + "and effect choices."));
+
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Selected feat: "
+                                + feat.getName()),
+                false);
+
+        return showAdvancements(
+                context,
+                player);
+    }
+
+    private static int showAdvancements(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        return PlayerProgressService.get(player)
+                .map(progress -> {
+
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Pending Advancements: "
+                                            + progress.getPendingAdvancements()),
+                            false);
+
+                    for (FeatDefinition feat
+                            : FeatManager.INSTANCE.values()) {
+
+                        int rank =
+                                progress.getFeatRank(
+                                        feat.getId().toString());
+
+                        context.getSource().sendSuccess(
+                                () -> Component.literal(
+                                        "- "
+                                                + feat.getName()
+                                                + " ["
+                                                + feat.getId()
+                                                + "] Rank "
+                                                + rank),
+                                false);
+                    }
+
+                    return Command.SINGLE_SUCCESS;
+                })
+                .orElseGet(() -> {
+
+                    context.getSource().sendFailure(
+                            Component.literal(
+                                    "Player progression data not found."));
+
+                    return 0;
+                });
+    }
+
+    private static CompletableFuture<Suggestions> suggestFeats(
+            CommandContext<CommandSourceStack> context,
+            SuggestionsBuilder builder) {
+
+        FeatManager.INSTANCE.values()
+                .forEach(feat ->
+                        builder.suggest(
+                                feat.getId().toString()));
+
+        return builder.buildFuture();
     }
 }

@@ -6,6 +6,6 @@
   "max_rank": 0,
   "effect": {
     "type": "justlevelingfork:ability_score_improvement",
-    "amount": 1
+    "amount": 2
   }
 }

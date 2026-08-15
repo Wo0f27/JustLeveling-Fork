@@ -1,0 +1,11 @@
+{
+  "name": "Test Ability Improvement",
+  "description": "Temporary datapack feat used to test the feat loader.",
+  "minimum_character_level": 2,
+  "repeatable": false,
+  "max_rank": 1,
+  "effect": {
+    "type": "justlevelingfork:ability_score_improvement",
+    "amount": 1
+  }
+}
