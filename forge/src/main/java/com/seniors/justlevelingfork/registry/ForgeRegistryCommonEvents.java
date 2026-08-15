@@ -27,6 +27,8 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import com.seniors.justlevelingfork.common.command.CharacterCommand;
+import com.seniors.justlevelingfork.common.feat.FeatManager;
+import net.minecraftforge.event.AddReloadListenerEvent;
 
 public final class ForgeRegistryCommonEvents {
     private ForgeRegistryCommonEvents() {
@@ -71,6 +73,9 @@ public final class ForgeRegistryCommonEvents {
             }
         });
     }
+
+    @SubscribeEvent
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {event.addListener(FeatManager.INSTANCE);}
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
