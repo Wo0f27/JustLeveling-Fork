@@ -30,11 +30,14 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import com.seniors.justlevelingfork.network.packet.common.ForgeClassLevelUpPacket;
+import com.seniors.justlevelingfork.network.FeatDefinitionsSyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeFeatDefinitionsSyncPacket;
+
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "3";
+    private static final String PROTOCOL_VERSION = "4";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -55,6 +58,13 @@ public final class ForgeServerNetworking {
                 ForgePlayerProgressSyncPacket::toBytes,
                 ForgePlayerProgressSyncPacket::new,
                 ForgePlayerProgressSyncPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeFeatDefinitionsSyncPacket.class,
+                ForgeFeatDefinitionsSyncPacket::toBytes,
+                ForgeFeatDefinitionsSyncPacket::new,
+                ForgeFeatDefinitionsSyncPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
@@ -174,6 +184,8 @@ public final class ForgeServerNetworking {
     public static void syncPlayerProgress(ServerPlayer player, PlayerProgress progress) {
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));
     }
+    public static void syncFeatDefinitions(ServerPlayer player) {if (player == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeFeatDefinitionsSyncPacket(FeatDefinitionsSyncPayload.current()));}
 
     public static void syncLockItems(ServerPlayer player, List<LockItem> lockItems) {
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeLockItemSyncPacket(lockItems));

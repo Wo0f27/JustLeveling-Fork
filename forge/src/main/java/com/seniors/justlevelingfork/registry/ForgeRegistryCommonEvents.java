@@ -29,6 +29,7 @@ import net.minecraftforge.fml.ModList;
 import com.seniors.justlevelingfork.common.command.CharacterCommand;
 import com.seniors.justlevelingfork.common.feat.FeatManager;
 import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
 
 public final class ForgeRegistryCommonEvents {
     private ForgeRegistryCommonEvents() {
@@ -159,5 +160,38 @@ public final class ForgeRegistryCommonEvents {
                 && !ForgeModularItemRestrictions.canUse(serverPlayer, event.getEntity().getMainHandItem()))) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public static void onDatapackSync(
+            OnDatapackSyncEvent event) {
+
+        ServerPlayer player =
+                event.getPlayer();
+
+        /*
+         * Non-null:
+         * one player has joined and needs the
+         * current datapack definitions.
+         */
+        if (player != null) {
+
+            ForgeServerNetworking
+                    .syncFeatDefinitions(player);
+
+            return;
+        }
+
+        /*
+         * Null player:
+         * a server-wide datapack reload occurred.
+         *
+         * Resync every connected player.
+         */
+        event.getPlayerList()
+                .getPlayers()
+                .forEach(
+                        ForgeServerNetworking
+                                ::syncFeatDefinitions);
     }
 }
