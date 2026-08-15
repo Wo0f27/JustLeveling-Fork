@@ -32,12 +32,13 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import com.seniors.justlevelingfork.network.packet.common.ForgeClassLevelUpPacket;
 import com.seniors.justlevelingfork.network.FeatDefinitionsSyncPayload;
 import com.seniors.justlevelingfork.network.packet.client.ForgeFeatDefinitionsSyncPacket;
+import com.seniors.justlevelingfork.network.packet.common.ForgeFeatSelectionPacket;
 
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -124,6 +125,13 @@ public final class ForgeServerNetworking {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         channel.registerMessage(
                 packetId++,
+                ForgeFeatSelectionPacket.class,
+                ForgeFeatSelectionPacket::toBytes,
+                ForgeFeatSelectionPacket::new,
+                ForgeFeatSelectionPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
                 ForgePassiveLevelDownPacket.class,
                 ForgePassiveLevelDownPacket::toBytes,
                 ForgePassiveLevelDownPacket::new,
@@ -160,6 +168,8 @@ public final class ForgeServerNetworking {
 
         PlayerProgressClientRequests.setAptitudeLevelUpSender(aptitudeName ->
                 sendToServer(new ForgeAptitudeLevelUpPacket(aptitudeName)));
+        PlayerProgressClientRequests.setFeatSelectionSender((featId, choice) ->
+                sendToServer(new ForgeFeatSelectionPacket(featId, choice)));
         PlayerProgressClientRequests.setPassiveLevelUpSender(passiveName ->
                 sendToServer(new ForgePassiveLevelUpPacket(passiveName)));
         PlayerProgressClientRequests.setPassiveLevelDownSender(passiveName ->

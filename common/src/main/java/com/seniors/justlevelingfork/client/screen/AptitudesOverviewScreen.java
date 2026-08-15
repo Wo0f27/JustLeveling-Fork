@@ -34,6 +34,7 @@ import com.seniors.justlevelingfork.common.player.AbilityDerivedValues;
 import com.seniors.justlevelingfork.common.player.AbilityScoreService;
 import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
 import com.seniors.justlevelingfork.common.player.ClassProgressionService;
+import com.seniors.justlevelingfork.client.screen.FeatSelectionScreen;
 
 public class AptitudesOverviewScreen extends Screen {
     private static final int WIDTH = 176;
@@ -435,9 +436,16 @@ public class AptitudesOverviewScreen extends Screen {
                 progress.getCharacterLevel()
                         >= ClassProgressionService.MAX_CHARACTER_LEVEL;
 
-        boolean hasLevelUp =
+        boolean hasClassLevelUp =
                 progress.getPendingLevelUps() > 0
                         && !maxLevel;
+
+        boolean hasAdvancement =
+                progress.getPendingAdvancements() > 0;
+
+        boolean hasProgression =
+                hasClassLevelUp
+                        || hasAdvancement;
 
         boolean hover =
                 isMouseWithin(
@@ -452,14 +460,16 @@ public class AptitudesOverviewScreen extends Screen {
         int backgroundColor;
         int plusColor;
 
-        if (maxLevel) {
+        if (maxLevel && !hasAdvancement) {
             borderColor = 0xFF666666;
             backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
             plusColor = 0xFFAAAAAA;
-        } else if (hasLevelUp) {
+
+        } else if (hasProgression) {
             borderColor = hover ? 0xFFB8FF6A : 0xFF6BCB3D;
             backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
             plusColor = 0xFF9AFF3A;
+
         } else {
             borderColor = 0xFF555555;
             backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
@@ -519,18 +529,41 @@ public class AptitudesOverviewScreen extends Screen {
             return;
         }
 
-        if (hasLevelUp) {
-            int pending = progress.getPendingLevelUps();
+        if (hasClassLevelUp) {
+
+            int pending =
+                    progress.getPendingLevelUps();
 
             graphics.renderTooltip(
                     font,
                     Component.literal(
                                     pending == 1
-                                            ? "Level Up Available"
-                                            : pending + " Level Ups Available")
+                                            ? "Character Level Up Available"
+                                            : pending
+                                            + " Character Level Ups Available")
                             .withStyle(ChatFormatting.GREEN),
                     mouseX,
                     mouseY);
+
+            return;
+        }
+
+        if (hasAdvancement) {
+
+            int pending =
+                    progress.getPendingAdvancements();
+
+            graphics.renderTooltip(
+                    font,
+                    Component.literal(
+                                    pending == 1
+                                            ? "Feat Selection Available"
+                                            : pending
+                                            + " Feat Selections Available")
+                            .withStyle(ChatFormatting.GREEN),
+                    mouseX,
+                    mouseY);
+
             return;
         }
 
@@ -800,10 +833,7 @@ public class AptitudesOverviewScreen extends Screen {
             double mouseY) {
 
         // Character level-up button
-        if (progress.getPendingLevelUps() > 0
-                && progress.getCharacterLevel()
-                < ClassProgressionService.MAX_CHARACTER_LEVEL
-                && isMouseWithin(
+        if (isMouseWithin(
                 left + 146,
                 top + 10,
                 mouseX,
@@ -811,10 +841,29 @@ public class AptitudesOverviewScreen extends Screen {
                 18,
                 18)) {
 
-            minecraft.setScreen(
-                    new ClassLevelUpScreen(this));
+            /*
+             * Class level always takes priority.
+             *
+             * Finishing the class level creates the
+             * pending advancement afterward.
+             */
+            if (progress.getPendingLevelUps() > 0
+                    && progress.getCharacterLevel()
+                    < ClassProgressionService.MAX_CHARACTER_LEVEL) {
 
-            return true;
+                minecraft.setScreen(
+                        new ClassLevelUpScreen(this));
+
+                return true;
+            }
+
+            if (progress.getPendingAdvancements() > 0) {
+
+                minecraft.setScreen(
+                        new FeatSelectionScreen(this));
+
+                return true;
+            }
         }
 
         // Title selection button
