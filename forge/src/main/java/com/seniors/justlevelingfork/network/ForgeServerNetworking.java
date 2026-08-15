@@ -29,11 +29,12 @@ import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import com.seniors.justlevelingfork.network.packet.common.ForgeClassLevelUpPacket;
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -139,6 +140,13 @@ public final class ForgeServerNetworking {
                 ForgeOpenEnderChestPacket::new,
                 ForgeOpenEnderChestPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
+                ForgeClassLevelUpPacket.class,
+                ForgeClassLevelUpPacket::toBytes,
+                ForgeClassLevelUpPacket::new,
+                ForgeClassLevelUpPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
 
         PlayerProgressClientRequests.setAptitudeLevelUpSender(aptitudeName ->
                 sendToServer(new ForgeAptitudeLevelUpPacket(aptitudeName)));
@@ -152,6 +160,8 @@ public final class ForgeServerNetworking {
                 sendToServer(new ForgeToggleSkillPacket(skillName, enabled)));
         PlayerProgressClientRequests.setOpenEnderChestSender(() ->
                 sendToServer(new ForgeOpenEnderChestPacket()));
+        PlayerProgressClientRequests.setClassLevelUpSender(classId ->
+                sendToServer(new ForgeClassLevelUpPacket(classId)));
         AptitudeWarningService.setSender(ForgeServerNetworking::sendAptitudeWarning);
         SkillMessageService.setSender(ForgeServerNetworking::sendSkillMessage);
         TitleUnlockService.setSender(ForgeServerNetworking::sendTitleUnlock);

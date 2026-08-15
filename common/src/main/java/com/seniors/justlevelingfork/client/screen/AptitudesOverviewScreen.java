@@ -6,7 +6,6 @@ import com.seniors.justlevelingfork.client.core.SortSkills;
 import com.seniors.justlevelingfork.client.gui.ClientTabs;
 import com.seniors.justlevelingfork.common.config.ClientConfigService;
 import com.seniors.justlevelingfork.common.config.CommonConfigService;
-import com.seniors.justlevelingfork.common.player.AptitudeExperience;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import com.seniors.justlevelingfork.common.player.PlayerProgressClientRequests;
 import com.seniors.justlevelingfork.common.player.PlayerProgressClientState;
@@ -33,6 +32,8 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import com.seniors.justlevelingfork.common.player.AbilityDerivedValues;
 import com.seniors.justlevelingfork.common.player.AbilityScoreService;
+import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
+import com.seniors.justlevelingfork.common.player.ClassProgressionService;
 
 public class AptitudesOverviewScreen extends Screen {
     private static final int WIDTH = 176;
@@ -106,94 +107,439 @@ public class AptitudesOverviewScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderAptitudes(GuiGraphics graphics, PlayerProgress progress, int left, int top, int mouseX, int mouseY) {
+    private void renderAptitudes(
+            GuiGraphics graphics,
+            PlayerProgress progress,
+            int left,
+            int top,
+            int mouseX,
+            int mouseY) {
+
         Minecraft client = Minecraft.getInstance();
+
         if (client.player != null) {
-            drawCentered(graphics, client.player.getName(), left + 88, top + 7, FONT_COLOR);
             drawCentered(
                     graphics,
-                    Component.translatable("screen.aptitude.level", client.player.experienceLevel, AptitudeExperience.getPlayerXP(client.player)),
+                    client.player.getName(),
+                    left + 88,
+                    top + 7,
+                    FONT_COLOR);
+
+            drawCentered(
+                    graphics,
+                    characterProgressText(progress),
                     left + 88,
                     top + 17,
                     FONT_COLOR);
         }
 
         Title title = RegistryTitles.getTitle(progress.playerTitle);
+
         if (title == null) {
             title = RegistryTitles.TITLELESS;
         }
-        Component titleName = Component.translatable(title.getKey());
-        int titleWidth = Math.min(130, font.width(titleName) + 17);
-        int titleX = left + 88 - titleWidth / 2;
-        boolean titleHover = isMouseWithin(titleX - 2, top + 27, mouseX, mouseY, titleWidth + 4, 14);
-        graphics.blit(HandlerResources.SKILL_PAGE[0], titleX - 2, top + 27, titleHover ? 4 : 0, 214, 2, 14);
-        graphics.blit(HandlerResources.SKILL_PAGE[0], titleX, top + 27, 0, titleHover ? 228 : 242, titleWidth, 14);
-        graphics.blit(HandlerResources.SKILL_PAGE[0], titleX + titleWidth, top + 27, titleHover ? 6 : 2, 214, 2, 14);
-        graphics.drawString(font, titleName, titleX + 2, top + 30, WHITE, false);
-        graphics.blit(HandlerResources.SKILL_PAGE[0], titleX + titleWidth - 10, top + 30, 8, 218, 8, 8);
+
+        Component titleName =
+                Component.translatable(title.getKey());
+
+        int titleWidth =
+                Math.min(
+                        130,
+                        font.width(titleName) + 17);
+
+        int titleX =
+                left + 88 - titleWidth / 2;
+
+        boolean titleHover =
+                isMouseWithin(
+                        titleX - 2,
+                        top + 27,
+                        mouseX,
+                        mouseY,
+                        titleWidth + 4,
+                        14);
+
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[0],
+                titleX - 2,
+                top + 27,
+                titleHover ? 4 : 0,
+                214,
+                2,
+                14);
+
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[0],
+                titleX,
+                top + 27,
+                0,
+                titleHover ? 228 : 242,
+                titleWidth,
+                14);
+
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[0],
+                titleX + titleWidth,
+                top + 27,
+                titleHover ? 6 : 2,
+                214,
+                2,
+                14);
+
+        graphics.drawString(
+                font,
+                titleName,
+                titleX + 2,
+                top + 30,
+                WHITE,
+                false);
+
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[0],
+                titleX + titleWidth - 10,
+                top + 30,
+                8,
+                218,
+                8,
+                8);
+
         if (titleHover) {
-            graphics.renderTooltip(font, Component.translatable("screen.title.choose_your_title"), mouseX, mouseY);
+            graphics.renderTooltip(
+                    font,
+                    Component.translatable(
+                            "screen.title.choose_your_title"),
+                    mouseX,
+                    mouseY);
         }
 
-        int xpWidth = client.player == null ? 0 : (int) (client.player.experienceProgress * 151.0F);
-        graphics.blit(HandlerResources.SKILL_PAGE[0], left + 12, top + 43, 0, 166, xpWidth, 5);
+        /*
+         * Character XP bar.
+         *
+         * This no longer uses vanilla Minecraft XP.
+         */
+        int xpWidth =
+                characterXpBarWidth(progress);
 
-        renderAdvancementButton(graphics, left, top, mouseX, mouseY);
+        graphics.blit(
+                HandlerResources.SKILL_PAGE[0],
+                left + 12,
+                top + 43,
+                0,
+                166,
+                xpWidth,
+                5);
 
-        List<Aptitude> aptitudes = sortedAptitudes();
+        /*
+         * One global character level-up button.
+         *
+         * Individual aptitudes no longer have their own + buttons.
+         */
+        renderCharacterLevelButton(
+                graphics,
+                progress,
+                left,
+                top,
+                mouseX,
+                mouseY);
+
+        List<Aptitude> aptitudes =
+                sortedAptitudes();
+
         for (int i = 0; i < aptitudes.size(); i++) {
-            Aptitude aptitude = aptitudes.get(i);
-            int level = progress.getAptitudeLevel(aptitude);
-            int x = left + 12 + i % 2 * 77;
-            int y = top + 50 + i / 2 * 28;
-            boolean hover = isMouseWithin(x, y, mouseX, mouseY, 74, 26);
+
+            Aptitude aptitude =
+                    aptitudes.get(i);
+
+            int level =
+                    progress.getAptitudeLevel(aptitude);
+
+            int x =
+                    left + 12 + i % 2 * 77;
+
+            int y =
+                    top + 50 + i / 2 * 28;
+
+            boolean hover =
+                    isMouseWithin(
+                            x,
+                            y,
+                            mouseX,
+                            mouseY,
+                            74,
+                            26);
+
             if (hover) {
-                graphics.blit(HandlerResources.SKILL_PAGE[0], x, y, 176, 0, 73, 26);
+                graphics.blit(
+                        HandlerResources.SKILL_PAGE[0],
+                        x,
+                        y,
+                        176,
+                        0,
+                        73,
+                        26);
             }
-            graphics.blit(aptitude.getLockedTexture(level, CommonConfigService.aptitudeMaxLevel()), x + 5, y + 5, 0, 0, 16, 16, 16, 16);
-            graphics.drawString(font, Component.translatable(aptitude.getKey() + ".abbreviation").withStyle(ChatFormatting.BOLD), x + 24, y + 5, WHITE, false);
+
+            graphics.blit(
+                    aptitude.getLockedTexture(
+                            level,
+                            CommonConfigService.aptitudeMaxLevel()),
+                    x + 5,
+                    y + 5,
+                    0,
+                    0,
+                    16,
+                    16,
+                    16,
+                    16);
+
             graphics.drawString(
                     font,
-                    Component.translatable("screen.aptitude.experience", twoDigits(level), CommonConfigService.aptitudeMaxLevel()),
+                    Component.translatable(
+                                    aptitude.getKey()
+                                            + ".abbreviation")
+                            .withStyle(
+                                    ChatFormatting.BOLD),
+                    x + 24,
+                    y + 5,
+                    WHITE,
+                    false);
+
+            graphics.drawString(
+                    font,
+                    Component.translatable(
+                            "screen.aptitude.experience",
+                            twoDigits(level),
+                            CommonConfigService
+                                    .aptitudeMaxLevel()),
                     x + 24,
                     y + 14,
                     0xAAAAAA,
                     false);
+
             if (hover) {
-                renderTooltipList(graphics, aptitudeTooltip(progress, aptitude), mouseX, mouseY);
+                renderTooltipList(
+                        graphics,
+                        aptitudeTooltip(
+                                progress,
+                                aptitude),
+                        mouseX,
+                        mouseY);
             }
         }
     }
 
-    private void renderAdvancementButton(
+    private Component characterProgressText(
+            PlayerProgress progress) {
+
+        int level =
+                progress.getCharacterLevel();
+
+        long xp =
+                progress.getCharacterXp();
+
+        if (level <= 0) {
+            return Component.literal(
+                    "Lvl: 0 / "
+                            + ClassProgressionService
+                            .MAX_CHARACTER_LEVEL
+                            + "  XP: "
+                            + xp);
+        }
+
+        if (level >=
+                ClassProgressionService
+                        .MAX_CHARACTER_LEVEL) {
+
+            return Component.literal(
+                    "Lvl: "
+                            + level
+                            + " / "
+                            + ClassProgressionService
+                            .MAX_CHARACTER_LEVEL
+                            + "  XP: MAX");
+        }
+
+        return Component.literal(
+                "Lvl: "
+                        + level
+                        + " / "
+                        + ClassProgressionService
+                        .MAX_CHARACTER_LEVEL
+                        + "  XP: "
+                        + xp);
+    }
+
+    private int characterXpBarWidth(
+            PlayerProgress progress) {
+
+        int level =
+                progress.getCharacterLevel();
+
+        if (level <= 0) {
+            return 0;
+        }
+
+        if (level >=
+                ClassProgressionService
+                        .MAX_CHARACTER_LEVEL) {
+
+            return 151;
+        }
+
+        long currentThreshold =
+                CharacterExperienceService
+                        .xpForLevel(level);
+
+        long nextThreshold =
+                CharacterExperienceService
+                        .xpForLevel(level + 1);
+
+        long required =
+                Math.max(
+                        1L,
+                        nextThreshold
+                                - currentThreshold);
+
+        long earned =
+                Math.max(
+                        0L,
+                        progress.getCharacterXp()
+                                - currentThreshold);
+
+        float fraction =
+                Mth.clamp(
+                        (float) earned
+                                / (float) required,
+                        0.0F,
+                        1.0F);
+
+        return (int) (
+                fraction * 151.0F);
+    }
+
+    private void renderCharacterLevelButton(
             GuiGraphics graphics,
+            PlayerProgress progress,
             int left,
             int top,
             int mouseX,
             int mouseY) {
 
-        int x = left + 153;
-        int y = top + 14;
+        /*
+         * Moved slightly inward from the top-right corner.
+         */
+        int x = left + 146;
+        int y = top + 10;
 
-        // Disabled appearance for now.
-        // Later this will depend on pendingAdvancements > 0.
-        graphics.blit(
-                HandlerResources.SKILL_PAGE[1],
+        boolean maxLevel =
+                progress.getCharacterLevel()
+                        >= ClassProgressionService.MAX_CHARACTER_LEVEL;
+
+        boolean hasLevelUp =
+                progress.getPendingLevelUps() > 0
+                        && !maxLevel;
+
+        boolean hover =
+                isMouseWithin(
+                        x,
+                        y,
+                        mouseX,
+                        mouseY,
+                        18,
+                        18);
+
+        int borderColor;
+        int backgroundColor;
+        int plusColor;
+
+        if (maxLevel) {
+            borderColor = 0xFF666666;
+            backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
+            plusColor = 0xFFAAAAAA;
+        } else if (hasLevelUp) {
+            borderColor = hover ? 0xFFB8FF6A : 0xFF6BCB3D;
+            backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
+            plusColor = 0xFF9AFF3A;
+        } else {
+            borderColor = 0xFF555555;
+            backgroundColor = hover ? 0xFF404040 : 0xFF2B2B2B;
+            plusColor = 0xFF888888;
+        }
+
+        // Outer border
+        graphics.fill(
                 x,
                 y,
-                177,
-                1,
-                6,
-                6);
+                x + 18,
+                y + 18,
+                borderColor);
 
-        if (isMouseWithin(x - 4, y - 4, mouseX, mouseY, 14, 14)) {
+        // Inner plate
+        graphics.fill(
+                x + 1,
+                y + 1,
+                x + 17,
+                y + 17,
+                backgroundColor);
+
+        /*
+         * Draw one custom plus sign using rectangles.
+         * This avoids the overlapping-sprite issue completely.
+         */
+        int cx = x + 9;
+        int cy = y + 9;
+
+        // Horizontal stroke
+        graphics.fill(
+                cx - 4,
+                cy - 1,
+                cx + 5,
+                cy + 1,
+                plusColor);
+
+        // Vertical stroke
+        graphics.fill(
+                cx - 1,
+                cy - 4,
+                cx + 1,
+                cy + 5,
+                plusColor);
+
+        if (!hover) {
+            return;
+        }
+
+        if (maxLevel) {
             graphics.renderTooltip(
                     font,
-                    Component.literal("Advancements")
+                    Component.literal("Maximum Character Level")
                             .withStyle(ChatFormatting.GRAY),
                     mouseX,
                     mouseY);
+            return;
         }
+
+        if (hasLevelUp) {
+            int pending = progress.getPendingLevelUps();
+
+            graphics.renderTooltip(
+                    font,
+                    Component.literal(
+                                    pending == 1
+                                            ? "Level Up Available"
+                                            : pending + " Level Ups Available")
+                            .withStyle(ChatFormatting.GREEN),
+                    mouseX,
+                    mouseY);
+            return;
+        }
+
+        graphics.renderTooltip(
+                font,
+                Component.literal("Earn Character XP to level up")
+                        .withStyle(ChatFormatting.GRAY),
+                mouseX,
+                mouseY);
     }
 
     private void renderSkills(GuiGraphics graphics, PlayerProgress progress, int left, int top, int mouseX, int mouseY) {
@@ -446,24 +792,77 @@ public class AptitudesOverviewScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private boolean handleAptitudeClick(PlayerProgress progress, int left, int top, double mouseX, double mouseY) {
-        if (isMouseWithin(left + 23, top + 27, mouseX, mouseY, 130, 14)) {
+    private boolean handleAptitudeClick(
+            PlayerProgress progress,
+            int left,
+            int top,
+            double mouseX,
+            double mouseY) {
+
+        // Character level-up button
+        if (progress.getPendingLevelUps() > 0
+                && progress.getCharacterLevel()
+                < ClassProgressionService.MAX_CHARACTER_LEVEL
+                && isMouseWithin(
+                left + 146,
+                top + 10,
+                mouseX,
+                mouseY,
+                18,
+                18)) {
+
+            minecraft.setScreen(
+                    new ClassLevelUpScreen(this));
+
+            return true;
+        }
+
+        // Title selection button
+        if (isMouseWithin(
+                left + 23,
+                top + 27,
+                mouseX,
+                mouseY,
+                130,
+                14)) {
+
             page = PAGE_TITLES;
             updateTitleSearchVisibility();
             return true;
         }
-        List<Aptitude> aptitudes = sortedAptitudes();
+
+        // Aptitude cards
+        List<Aptitude> aptitudes =
+                sortedAptitudes();
+
         for (int i = 0; i < aptitudes.size(); i++) {
-            int x = left + 12 + i % 2 * 77;
-            int y = top + 50 + i / 2 * 28;
-            if (isMouseWithin(x, y, mouseX, mouseY, 74, 26)) {
-                selectedAptitude = aptitudes.get(i).getName();
+
+            int x =
+                    left + 12 + i % 2 * 77;
+
+            int y =
+                    top + 50 + i / 2 * 28;
+
+            if (isMouseWithin(
+                    x,
+                    y,
+                    mouseX,
+                    mouseY,
+                    74,
+                    26)) {
+
+                selectedAptitude =
+                        aptitudes.get(i).getName();
+
                 skillPage = 0;
                 page = PAGE_SKILLS;
+
                 updateTitleSearchVisibility();
+
                 return true;
             }
         }
+
         return false;
     }
 

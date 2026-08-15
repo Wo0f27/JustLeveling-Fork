@@ -7,14 +7,17 @@ import com.seniors.justlevelingfork.registry.title.Title;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
 
 public final class PlayerProgressClientRequests {
     private static Consumer<String> aptitudeLevelUpSender = ignored -> {};
     private static Consumer<String> passiveLevelUpSender = ignored -> {};
     private static Consumer<String> passiveLevelDownSender = ignored -> {};
+    private static Consumer<String> classLevelUpSender = ignored -> {};
     private static Consumer<String> setPlayerTitleSender = ignored -> {};
     private static BiConsumer<String, Boolean> setToggleSkillSender = (ignored, enabled) -> {};
     private static Runnable openEnderChestSender = () -> {};
+
 
     private PlayerProgressClientRequests() {
     }
@@ -49,6 +52,12 @@ public final class PlayerProgressClientRequests {
         }
     }
 
+    public static void setClassLevelUpSender(Consumer<String> sender) {
+        classLevelUpSender =
+                Optional.ofNullable(sender)
+                        .orElse(ignored -> {});
+    }
+
     public static void requestAptitudeLevelUp(String aptitudeName) {
         if (hasText(aptitudeName)) {
             aptitudeLevelUpSender.accept(aptitudeName);
@@ -58,6 +67,18 @@ public final class PlayerProgressClientRequests {
     public static void requestPassiveLevelUp(Passive passive) {
         if (passive != null) {
             requestPassiveLevelUp(passive.getName());
+        }
+    }
+
+    public static void requestClassLevelUp(ResourceLocation classId) {
+        if (classId != null) {
+            requestClassLevelUp(classId.toString());
+        }
+    }
+
+    public static void requestClassLevelUp(String classId) {
+        if (hasText(classId)) {
+            classLevelUpSender.accept(classId);
         }
     }
 
