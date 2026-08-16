@@ -38,7 +38,7 @@ import com.seniors.justlevelingfork.network.packet.common.ForgeFeatSelectionPack
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "5";
+    private static final String PROTOCOL_VERSION = "6";
 
     private static int packetId;
     private static SimpleChannel channel;

@@ -64,8 +64,12 @@ public final class FeatProgressionService {
             return false;
         }
 
-        if (progress.getCharacterLevel()
-                < feat.getMinimumCharacterLevel()) {
+        if (!FeatPrerequisiteService
+                .meetsPrerequisites(
+                        player,
+                        progress,
+                        feat)) {
+
             return false;
         }
 

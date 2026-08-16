@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import java.util.Map;
 
 public record FeatDefinitionsSyncPayload(
         List<Definition> definitions) {
@@ -52,7 +53,10 @@ public record FeatDefinitionsSyncPayload(
                             feat.getMinimumCharacterLevel(),
                             feat.isRepeatable(),
                             feat.getMaxRank(),
-                            feat.getEffectType()));
+                            feat.getEffectType(),
+                            feat.getPrerequisites().abilities(),
+                            feat.getPrerequisites().classes(),
+                            feat.getPrerequisites().feats()));
 
             if (result.size() >= MAX_DEFINITIONS) {
                 break;
@@ -62,6 +66,8 @@ public record FeatDefinitionsSyncPayload(
         return new FeatDefinitionsSyncPayload(
                 result);
     }
+
+
 
     public void write(
             FriendlyByteBuf buffer) {
@@ -98,7 +104,54 @@ public record FeatDefinitionsSyncPayload(
             buffer.writeUtf(
                     definition.effectType().toString(),
                     MAX_ID_LENGTH);
+            writeStringRequirements(
+                    buffer,
+                    definition.abilityRequirements());
+
+            writeResourceRequirements(
+                    buffer,
+                    definition.classRequirements());
+
+            writeResourceRequirements(
+                    buffer,
+                    definition.featRequirements());
         }
+    }
+
+    private static void writeStringRequirements(
+            FriendlyByteBuf buffer,
+            Map<String, Integer> requirements) {
+
+        buffer.writeVarInt(
+                requirements.size());
+
+        requirements.forEach((id, value) -> {
+
+            buffer.writeUtf(
+                    id,
+                    MAX_ID_LENGTH);
+
+            buffer.writeVarInt(
+                    value);
+        });
+    }
+
+    private static void writeResourceRequirements(
+            FriendlyByteBuf buffer,
+            Map<ResourceLocation, Integer> requirements) {
+
+        buffer.writeVarInt(
+                requirements.size());
+
+        requirements.forEach((id, value) -> {
+
+            buffer.writeUtf(
+                    id.toString(),
+                    MAX_ID_LENGTH);
+
+            buffer.writeVarInt(
+                    value);
+        });
     }
 
     public static FeatDefinitionsSyncPayload read(
@@ -146,6 +199,15 @@ public record FeatDefinitionsSyncPayload(
                     ResourceLocation.tryParse(
                             buffer.readUtf(
                                     MAX_ID_LENGTH));
+            Map<String, Integer> abilityRequirements =
+                    readStringRequirements(buffer);
+
+            Map<ResourceLocation, Integer> classRequirements =
+                    readResourceRequirements(buffer);
+
+            Map<ResourceLocation, Integer> featRequirements =
+                    readResourceRequirements(buffer);
+
 
             if (id == null
                     || effectType == null) {
@@ -162,11 +224,84 @@ public record FeatDefinitionsSyncPayload(
                             minimumCharacterLevel,
                             repeatable,
                             maxRank,
-                            effectType));
+                            effectType,
+                            abilityRequirements,
+                            classRequirements,
+                            featRequirements));
         }
 
         return new FeatDefinitionsSyncPayload(
                 definitions);
+    }
+
+    private static Map<String, Integer> readStringRequirements(
+            FriendlyByteBuf buffer) {
+
+        int count =
+                buffer.readVarInt();
+
+        if (count < 0 || count > 64) {
+            throw new IllegalArgumentException(
+                    "Invalid feat prerequisite count: "
+                            + count);
+        }
+
+        Map<String, Integer> result =
+                new java.util.LinkedHashMap<>();
+
+        for (int i = 0; i < count; i++) {
+
+            String id =
+                    buffer.readUtf(
+                            MAX_ID_LENGTH);
+
+            int value =
+                    buffer.readVarInt();
+
+            result.put(
+                    id,
+                    value);
+        }
+
+        return result;
+    }
+
+    private static Map<ResourceLocation, Integer> readResourceRequirements(
+            FriendlyByteBuf buffer) {
+
+        int count =
+                buffer.readVarInt();
+
+        if (count < 0 || count > 64) {
+            throw new IllegalArgumentException(
+                    "Invalid feat prerequisite count: "
+                            + count);
+        }
+
+        Map<ResourceLocation, Integer> result =
+                new java.util.LinkedHashMap<>();
+
+        for (int i = 0; i < count; i++) {
+
+            ResourceLocation id =
+                    ResourceLocation.tryParse(
+                            buffer.readUtf(
+                                    MAX_ID_LENGTH));
+
+            int value =
+                    buffer.readVarInt();
+
+            if (id == null) {
+                throw new IllegalArgumentException(
+                        "Invalid synced prerequisite id.");
+            }
+
+            result.put(
+                    id,
+                    value);
+        }
+
+        return result;
     }
 
     /*
@@ -193,6 +328,30 @@ public record FeatDefinitionsSyncPayload(
             int minimumCharacterLevel,
             boolean repeatable,
             int maxRank,
-            ResourceLocation effectType) {
+            ResourceLocation effectType,
+            Map<String, Integer> abilityRequirements,
+            Map<ResourceLocation, Integer> classRequirements,
+            Map<ResourceLocation, Integer> featRequirements) {
+
+        public Definition {
+
+            abilityRequirements =
+                    Map.copyOf(
+                            abilityRequirements == null
+                                    ? Map.of()
+                                    : abilityRequirements);
+
+            classRequirements =
+                    Map.copyOf(
+                            classRequirements == null
+                                    ? Map.of()
+                                    : classRequirements);
+
+            featRequirements =
+                    Map.copyOf(
+                            featRequirements == null
+                                    ? Map.of()
+                                    : featRequirements);
+        }
     }
 }

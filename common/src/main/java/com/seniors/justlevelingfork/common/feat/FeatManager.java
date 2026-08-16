@@ -14,6 +14,8 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import com.seniors.justlevelingfork.registry.RegistryAptitudes;
+import java.util.Locale;
 
 public final class FeatManager
         extends SimpleJsonResourceReloadListener {
@@ -104,12 +106,6 @@ public final class FeatManager
                         "description",
                         "");
 
-        int minimumCharacterLevel =
-                GsonHelper.getAsInt(
-                        json,
-                        "minimum_character_level",
-                        1);
-
         boolean repeatable =
                 GsonHelper.getAsBoolean(
                         json,
@@ -139,21 +135,202 @@ public final class FeatManager
                             + id);
         }
 
-        /*
-         * Keep the entire effect object.
-         *
-         * The appropriate Java effect handler will
-         * interpret the remaining fields later.
-         */
+        FeatPrerequisites prerequisites =
+                parsePrerequisites(
+                        id,
+                        json);
+
         return new FeatDefinition(
                 id,
                 name,
                 description,
-                minimumCharacterLevel,
                 repeatable,
                 maxRank,
                 effectType,
-                effect);
+                effect,
+                prerequisites);
+    }
+
+    private FeatPrerequisites parsePrerequisites(
+            ResourceLocation featId,
+            JsonObject json) {
+
+        JsonObject prerequisites;
+
+        if (json.has("prerequisites")
+                && json.get("prerequisites").isJsonObject()) {
+
+            prerequisites =
+                    json.getAsJsonObject(
+                            "prerequisites");
+
+        } else {
+
+            prerequisites =
+                    new JsonObject();
+        }
+
+        /*
+         * Backwards compatibility:
+         *
+         * Old feat JSON can still use:
+         * "minimum_character_level": 2
+         *
+         * New JSON should put it inside:
+         * "prerequisites".
+         */
+        int minimumCharacterLevel;
+
+        if (prerequisites.has(
+                "minimum_character_level")) {
+
+            minimumCharacterLevel =
+                    GsonHelper.getAsInt(
+                            prerequisites,
+                            "minimum_character_level",
+                            1);
+
+        } else {
+
+            minimumCharacterLevel =
+                    GsonHelper.getAsInt(
+                            json,
+                            "minimum_character_level",
+                            1);
+        }
+
+        Map<String, Integer> abilities =
+                parseAbilityRequirements(
+                        featId,
+                        prerequisites);
+
+        Map<ResourceLocation, Integer> classes =
+                parseResourceRequirements(
+                        prerequisites,
+                        "classes");
+
+        Map<ResourceLocation, Integer> feats =
+                parseResourceRequirements(
+                        prerequisites,
+                        "feats");
+
+        return new FeatPrerequisites(
+                minimumCharacterLevel,
+                abilities,
+                classes,
+                feats);
+    }
+
+    private Map<String, Integer> parseAbilityRequirements(
+            ResourceLocation featId,
+            JsonObject prerequisites) {
+
+        if (!prerequisites.has("abilities")
+                || !prerequisites
+                .get("abilities")
+                .isJsonObject()) {
+
+            return Map.of();
+        }
+
+        Map<String, Integer> result =
+                new LinkedHashMap<>();
+
+        JsonObject abilities =
+                prerequisites.getAsJsonObject(
+                        "abilities");
+
+        abilities.entrySet().forEach(entry -> {
+
+            String aptitudeName =
+                    entry.getKey()
+                            .toLowerCase(Locale.ROOT);
+
+            if (RegistryAptitudes.getAptitude(
+                    aptitudeName) == null) {
+
+                throw new IllegalArgumentException(
+                        "Unknown ability '"
+                                + entry.getKey()
+                                + "' in feat "
+                                + featId);
+            }
+
+            int requiredScore =
+                    entry.getValue()
+                            .getAsInt();
+
+            if (requiredScore <= 0) {
+
+                throw new IllegalArgumentException(
+                        "Ability requirement must be positive in feat "
+                                + featId);
+            }
+
+            result.put(
+                    aptitudeName,
+                    requiredScore);
+        });
+
+        return result;
+    }
+
+    private Map<ResourceLocation, Integer> parseResourceRequirements(
+            JsonObject prerequisites,
+            String key) {
+
+        if (!prerequisites.has(key)
+                || !prerequisites
+                .get(key)
+                .isJsonObject()) {
+
+            return Map.of();
+        }
+
+        Map<ResourceLocation, Integer> result =
+                new LinkedHashMap<>();
+
+        JsonObject object =
+                prerequisites.getAsJsonObject(key);
+
+        object.entrySet().forEach(entry -> {
+
+            String rawId =
+                    entry.getKey();
+
+            if (!rawId.contains(":")) {
+                rawId =
+                        Constants.MOD_ID
+                                + ":"
+                                + rawId;
+            }
+
+            ResourceLocation id =
+                    ResourceLocation.tryParse(
+                            rawId);
+
+            if (id == null) {
+                throw new IllegalArgumentException(
+                        "Invalid requirement id: "
+                                + entry.getKey());
+            }
+
+            int required =
+                    entry.getValue()
+                            .getAsInt();
+
+            if (required <= 0) {
+                throw new IllegalArgumentException(
+                        "Requirement value must be positive for "
+                                + id);
+            }
+
+            result.put(
+                    id,
+                    required);
+        });
+
+        return result;
     }
 
     public FeatDefinition get(ResourceLocation id) {

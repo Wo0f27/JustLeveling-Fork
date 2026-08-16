@@ -1,11 +1,15 @@
 {
   "name": "Ability Score Improvement",
   "description": "Increase one of your six ability scores.",
-  "minimum_character_level": 2,
   "repeatable": true,
   "max_rank": 0,
+
+  "prerequisites": {
+    "minimum_character_level": 2
+  },
+
   "effect": {
     "type": "justlevelingfork:ability_score_improvement",
-    "amount": 2
+    "amount": 1
   }
 }

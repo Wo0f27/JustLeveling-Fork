@@ -8,40 +8,38 @@ public final class FeatDefinition {
     private final ResourceLocation id;
     private final String name;
     private final String description;
-    private final int minimumCharacterLevel;
     private final boolean repeatable;
     private final int maxRank;
     private final ResourceLocation effectType;
     private final JsonObject effectData;
+    private final FeatPrerequisites prerequisites;
 
     public FeatDefinition(
             ResourceLocation id,
             String name,
             String description,
-            int minimumCharacterLevel,
             boolean repeatable,
             int maxRank,
             ResourceLocation effectType,
-            JsonObject effectData) {
+            JsonObject effectData,
+            FeatPrerequisites prerequisites) {
 
         this.id = id;
         this.name = name;
         this.description = description;
-        this.minimumCharacterLevel =
-                Math.max(1, minimumCharacterLevel);
         this.repeatable = repeatable;
-        this.maxRank =
-                Math.max(0, maxRank);
+        this.maxRank = Math.max(0, maxRank);
         this.effectType = effectType;
 
-        /*
-         * Keep our own copy so callers cannot mutate
-         * the original parsed JSON object.
-         */
         this.effectData =
                 effectData == null
                         ? new JsonObject()
                         : effectData.deepCopy();
+
+        this.prerequisites =
+                prerequisites == null
+                        ? FeatPrerequisites.empty()
+                        : prerequisites;
     }
 
     public ResourceLocation getId() {
@@ -57,16 +55,13 @@ public final class FeatDefinition {
     }
 
     public int getMinimumCharacterLevel() {
-        return minimumCharacterLevel;
+        return prerequisites.minimumCharacterLevel();
     }
 
     public boolean isRepeatable() {
         return repeatable;
     }
 
-    /*
-     * 0 = unlimited ranks.
-     */
     public int getMaxRank() {
         return maxRank;
     }
@@ -77,6 +72,10 @@ public final class FeatDefinition {
 
     public JsonObject getEffectData() {
         return effectData.deepCopy();
+    }
+
+    public FeatPrerequisites getPrerequisites() {
+        return prerequisites;
     }
 
     public boolean canGainRank(int currentRank) {
