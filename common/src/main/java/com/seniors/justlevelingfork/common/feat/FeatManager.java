@@ -16,6 +16,9 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import java.util.Locale;
+import com.google.gson.JsonArray;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class FeatManager
         extends SimpleJsonResourceReloadListener {
@@ -118,22 +121,10 @@ public final class FeatManager
                         "max_rank",
                         repeatable ? 0 : 1);
 
-        JsonObject effect =
-                GsonHelper.getAsJsonObject(
-                        json,
-                        "effect");
-
-        ResourceLocation effectType =
-                ResourceLocation.tryParse(
-                        GsonHelper.getAsString(
-                                effect,
-                                "type"));
-
-        if (effectType == null) {
-            throw new IllegalArgumentException(
-                    "Invalid feat effect type for "
-                            + id);
-        }
+        List<FeatEffectDefinition> effects =
+                parseEffects(
+                        id,
+                        json);
 
         FeatPrerequisites prerequisites =
                 parsePrerequisites(
@@ -146,9 +137,108 @@ public final class FeatManager
                 description,
                 repeatable,
                 maxRank,
-                effectType,
-                effect,
+                effects,
                 prerequisites);
+    }
+
+    private List<FeatEffectDefinition> parseEffects(
+            ResourceLocation featId,
+            JsonObject json) {
+
+        /*
+         * New format:
+         *
+         * "effects": [
+         *   { ... },
+         *   { ... }
+         * ]
+         */
+        if (json.has("effects")) {
+
+            if (!json.get("effects").isJsonArray()) {
+
+                throw new IllegalArgumentException(
+                        "'effects' must be an array in feat "
+                                + featId);
+            }
+
+            JsonArray array =
+                    json.getAsJsonArray(
+                            "effects");
+
+            if (array.isEmpty()) {
+
+                throw new IllegalArgumentException(
+                        "Feat must contain at least one effect: "
+                                + featId);
+            }
+
+            List<FeatEffectDefinition> effects =
+                    new ArrayList<>();
+
+            for (JsonElement element : array) {
+
+                if (!element.isJsonObject()) {
+
+                    throw new IllegalArgumentException(
+                            "Feat effect must be an object in "
+                                    + featId);
+                }
+
+                effects.add(
+                        parseEffect(
+                                featId,
+                                element.getAsJsonObject()));
+            }
+
+            return List.copyOf(
+                    effects);
+        }
+
+        /*
+         * Legacy format:
+         *
+         * "effect": {
+         *   ...
+         * }
+         *
+         * Existing datapacks remain valid.
+         */
+        if (json.has("effect")
+                && json.get("effect").isJsonObject()) {
+
+            return List.of(
+                    parseEffect(
+                            featId,
+                            json.getAsJsonObject(
+                                    "effect")));
+        }
+
+        throw new IllegalArgumentException(
+                "Feat has no effect or effects: "
+                        + featId);
+    }
+
+    private FeatEffectDefinition parseEffect(
+            ResourceLocation featId,
+            JsonObject effect) {
+
+        ResourceLocation effectType =
+                ResourceLocation.tryParse(
+                        GsonHelper.getAsString(
+                                effect,
+                                "type"));
+
+        if (effectType == null) {
+
+            throw new IllegalArgumentException(
+                    "Invalid feat effect type for "
+                            + featId);
+        }
+
+        return new FeatEffectDefinition(
+                effectType,
+                effect);
     }
 
     private FeatPrerequisites parsePrerequisites(

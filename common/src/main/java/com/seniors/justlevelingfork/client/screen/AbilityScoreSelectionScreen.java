@@ -70,7 +70,7 @@ public class AbilityScoreSelectionScreen extends Screen {
         drawCentered(
                 graphics,
                 Component.literal(
-                                "Ability Score Improvement")
+                                feat.name())
                         .withStyle(
                                 ChatFormatting.BOLD),
                 left + WIDTH / 2,
@@ -404,7 +404,7 @@ public class AbilityScoreSelectionScreen extends Screen {
                 0xFF353535);
 
         Component text =
-                Component.literal("< Back");
+                Component.literal("Back");
 
         graphics.drawString(
                 font,

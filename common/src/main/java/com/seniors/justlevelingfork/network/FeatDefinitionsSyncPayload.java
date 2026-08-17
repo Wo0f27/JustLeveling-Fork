@@ -2,12 +2,13 @@ package com.seniors.justlevelingfork.network;
 
 import com.seniors.justlevelingfork.common.feat.FeatClientState;
 import com.seniors.justlevelingfork.common.feat.FeatDefinition;
+import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 import com.seniors.justlevelingfork.common.feat.FeatManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import java.util.Map;
 
 public record FeatDefinitionsSyncPayload(
         List<Definition> definitions) {
@@ -17,6 +18,8 @@ public record FeatDefinitionsSyncPayload(
     private static final int MAX_ID_LENGTH = 256;
     private static final int MAX_NAME_LENGTH = 128;
     private static final int MAX_DESCRIPTION_LENGTH = 1024;
+    private static final int MAX_EFFECTS = 32;
+    private static final int MAX_REQUIREMENTS = 64;
 
     public FeatDefinitionsSyncPayload {
 
@@ -41,7 +44,8 @@ public record FeatDefinitionsSyncPayload(
 
             if (feat == null
                     || feat.getId() == null
-                    || feat.getEffectType() == null) {
+                    || feat.getEffects().isEmpty()) {
+
                 continue;
             }
 
@@ -53,7 +57,11 @@ public record FeatDefinitionsSyncPayload(
                             feat.getMinimumCharacterLevel(),
                             feat.isRepeatable(),
                             feat.getMaxRank(),
-                            feat.getEffectType(),
+                            feat.getEffects()
+                                    .stream()
+                                    .map(
+                                            FeatEffectDefinition::getType)
+                                    .toList(),
                             feat.getPrerequisites().abilities(),
                             feat.getPrerequisites().classes(),
                             feat.getPrerequisites().feats()));
@@ -66,8 +74,6 @@ public record FeatDefinitionsSyncPayload(
         return new FeatDefinitionsSyncPayload(
                 result);
     }
-
-
 
     public void write(
             FriendlyByteBuf buffer) {
@@ -101,9 +107,10 @@ public record FeatDefinitionsSyncPayload(
             buffer.writeVarInt(
                     definition.maxRank());
 
-            buffer.writeUtf(
-                    definition.effectType().toString(),
-                    MAX_ID_LENGTH);
+            writeEffectTypes(
+                    buffer,
+                    definition.effectTypes());
+
             writeStringRequirements(
                     buffer,
                     definition.abilityRequirements());
@@ -116,6 +123,19 @@ public record FeatDefinitionsSyncPayload(
                     buffer,
                     definition.featRequirements());
         }
+    }
+
+    private static void writeEffectTypes(
+            FriendlyByteBuf buffer,
+            List<ResourceLocation> effectTypes) {
+
+        buffer.writeVarInt(
+                effectTypes.size());
+
+        effectTypes.forEach(effectType ->
+                buffer.writeUtf(
+                        effectType.toString(),
+                        MAX_ID_LENGTH));
     }
 
     private static void writeStringRequirements(
@@ -195,22 +215,23 @@ public record FeatDefinitionsSyncPayload(
             int maxRank =
                     buffer.readVarInt();
 
-            ResourceLocation effectType =
-                    ResourceLocation.tryParse(
-                            buffer.readUtf(
-                                    MAX_ID_LENGTH));
+            List<ResourceLocation> effectTypes =
+                    readEffectTypes(
+                            buffer);
+
             Map<String, Integer> abilityRequirements =
-                    readStringRequirements(buffer);
+                    readStringRequirements(
+                            buffer);
 
             Map<ResourceLocation, Integer> classRequirements =
-                    readResourceRequirements(buffer);
+                    readResourceRequirements(
+                            buffer);
 
             Map<ResourceLocation, Integer> featRequirements =
-                    readResourceRequirements(buffer);
+                    readResourceRequirements(
+                            buffer);
 
-
-            if (id == null
-                    || effectType == null) {
+            if (id == null) {
 
                 throw new IllegalArgumentException(
                         "Invalid synced feat definition.");
@@ -224,7 +245,7 @@ public record FeatDefinitionsSyncPayload(
                             minimumCharacterLevel,
                             repeatable,
                             maxRank,
-                            effectType,
+                            effectTypes,
                             abilityRequirements,
                             classRequirements,
                             featRequirements));
@@ -234,13 +255,56 @@ public record FeatDefinitionsSyncPayload(
                 definitions);
     }
 
+    private static List<ResourceLocation> readEffectTypes(
+            FriendlyByteBuf buffer) {
+
+        int count =
+                buffer.readVarInt();
+
+        if (count <= 0
+                || count > MAX_EFFECTS) {
+
+            throw new IllegalArgumentException(
+                    "Invalid synced feat effect count: "
+                            + count);
+        }
+
+        List<ResourceLocation> result =
+                new ArrayList<>(
+                        count);
+
+        for (int i = 0;
+             i < count;
+             i++) {
+
+            ResourceLocation id =
+                    ResourceLocation.tryParse(
+                            buffer.readUtf(
+                                    MAX_ID_LENGTH));
+
+            if (id == null) {
+
+                throw new IllegalArgumentException(
+                        "Invalid synced feat effect id.");
+            }
+
+            result.add(
+                    id);
+        }
+
+        return List.copyOf(
+                result);
+    }
+
     private static Map<String, Integer> readStringRequirements(
             FriendlyByteBuf buffer) {
 
         int count =
                 buffer.readVarInt();
 
-        if (count < 0 || count > 64) {
+        if (count < 0
+                || count > MAX_REQUIREMENTS) {
+
             throw new IllegalArgumentException(
                     "Invalid feat prerequisite count: "
                             + count);
@@ -272,7 +336,9 @@ public record FeatDefinitionsSyncPayload(
         int count =
                 buffer.readVarInt();
 
-        if (count < 0 || count > 64) {
+        if (count < 0
+                || count > MAX_REQUIREMENTS) {
+
             throw new IllegalArgumentException(
                     "Invalid feat prerequisite count: "
                             + count);
@@ -292,6 +358,7 @@ public record FeatDefinitionsSyncPayload(
                     buffer.readVarInt();
 
             if (id == null) {
+
                 throw new IllegalArgumentException(
                         "Invalid synced prerequisite id.");
             }
@@ -328,12 +395,18 @@ public record FeatDefinitionsSyncPayload(
             int minimumCharacterLevel,
             boolean repeatable,
             int maxRank,
-            ResourceLocation effectType,
+            List<ResourceLocation> effectTypes,
             Map<String, Integer> abilityRequirements,
             Map<ResourceLocation, Integer> classRequirements,
             Map<ResourceLocation, Integer> featRequirements) {
 
         public Definition {
+
+            effectTypes =
+                    List.copyOf(
+                            effectTypes == null
+                                    ? List.of()
+                                    : effectTypes);
 
             abilityRequirements =
                     Map.copyOf(

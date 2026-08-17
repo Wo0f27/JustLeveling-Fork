@@ -1,8 +1,12 @@
 package com.seniors.justlevelingfork.common.feat.effect;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.seniors.justlevelingfork.common.feat.FeatDefinition;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -10,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 
 public final class AttributeModifierFeatEffect
         implements FeatEffect {
@@ -25,38 +30,47 @@ public final class AttributeModifierFeatEffect
             ServerPlayer player,
             PlayerProgress progress,
             FeatDefinition feat,
+            FeatEffectDefinition effect,
             String choice) {
 
         if (player == null
                 || progress == null
-                || feat == null) {
+                || feat == null
+                || effect == null) {
 
             return false;
         }
 
-        ParsedModifier parsed =
-                parse(feat);
+        List<ParsedModifier> modifiers =
+                parseAll(
+                        effect);
 
-        if (parsed == null) {
+        if (modifiers.isEmpty()) {
             return false;
         }
 
-        if (!BuiltInRegistries.ATTRIBUTE.containsKey(
-                parsed.attributeId())) {
+        for (ParsedModifier parsed
+                : modifiers) {
 
-            return false;
+            if (!BuiltInRegistries.ATTRIBUTE
+                    .containsKey(
+                            parsed.attributeId())) {
+
+                return false;
+            }
+
+            Attribute attribute =
+                    BuiltInRegistries.ATTRIBUTE.get(
+                            parsed.attributeId());
+
+            if (attribute == null
+                    || player.getAttribute(attribute) == null) {
+
+                return false;
+            }
         }
 
-        Attribute attribute =
-                BuiltInRegistries.ATTRIBUTE.get(
-                        parsed.attributeId());
-
-        /*
-         * The attribute may exist globally but not actually
-         * be present on Player.
-         */
-        return attribute != null
-                && player.getAttribute(attribute) != null;
+        return true;
     }
 
     @Override
@@ -64,38 +78,119 @@ public final class AttributeModifierFeatEffect
             ServerPlayer player,
             PlayerProgress progress,
             FeatDefinition feat,
+            FeatEffectDefinition effect,
             String choice) {
 
         /*
          * Intentionally empty.
          *
-         * Attribute modifiers are derived from the player's
-         * stored feat ranks by FeatAttributeModifierService.
-         *
-         * FeatProgressionService increments the rank inside
-         * PlayerProgressService.update(...), and the refresh
-         * happens afterward.
-         *
-         * This also lets /reload alter existing modifiers.
+         * FeatAttributeModifierService derives these
+         * modifiers from stored feat ranks.
          */
     }
 
-    public static ParsedModifier parse(
-            FeatDefinition feat) {
+    /**
+     * Parses every attribute modifier defined by a feat.
+     *
+     * Preferred format:
+     *
+     * "modifiers": [
+     *   { ... },
+     *   { ... }
+     * ]
+     *
+     * Legacy format is still supported:
+     *
+     * "attribute": "...",
+     * "operation": "...",
+     * "amount": 4
+     */
+    public static List<ParsedModifier> parseAll(
+            FeatEffectDefinition effectDefinition) {
 
-        if (feat == null) {
-            return null;
+        if (effectDefinition == null) {
+            return List.of();
         }
 
-        try {
+        JsonObject effect =
+                effectDefinition.getData();
 
-            JsonObject effect =
-                    feat.getEffectData();
+        if (effect == null) {
+            return List.of();
+        }
+
+        /*
+         * New multi-modifier format.
+         */
+        if (effect.has("modifiers")) {
+
+            JsonElement modifiersElement =
+                    effect.get("modifiers");
+
+            if (modifiersElement == null
+                    || !modifiersElement.isJsonArray()) {
+
+                return List.of();
+            }
+
+            JsonArray array =
+                    modifiersElement.getAsJsonArray();
+
+            if (array.isEmpty()) {
+                return List.of();
+            }
+
+            List<ParsedModifier> result =
+                    new ArrayList<>();
+
+            for (JsonElement element : array) {
+
+                if (element == null
+                        || !element.isJsonObject()) {
+
+                    return List.of();
+                }
+
+                ParsedModifier parsed =
+                        parseModifier(
+                                element.getAsJsonObject());
+
+                /*
+                 * Be strict:
+                 * one invalid modifier invalidates the whole effect.
+                 */
+                if (parsed == null) {
+                    return List.of();
+                }
+
+                result.add(parsed);
+            }
+
+            return List.copyOf(result);
+        }
+
+        /*
+         * Backward-compatible single-modifier format.
+         */
+        ParsedModifier legacy =
+                parseModifier(effect);
+
+        if (legacy == null) {
+            return List.of();
+        }
+
+        return List.of(legacy);
+    }
+
+    private static ParsedModifier parseModifier(
+            JsonObject json) {
+
+        try {
 
             ResourceLocation attributeId =
                     ResourceLocation.tryParse(
                             GsonHelper.getAsString(
-                                    effect,
+                                    json,
                                     "attribute"));
 
             if (attributeId == null) {
@@ -104,7 +199,7 @@ public final class AttributeModifierFeatEffect
 
             double amount =
                     GsonHelper.getAsDouble(
-                            effect,
+                            json,
                             "amount");
 
             if (!Double.isFinite(amount)
@@ -115,13 +210,14 @@ public final class AttributeModifierFeatEffect
 
             String operationName =
                     GsonHelper.getAsString(
-                                    effect,
+                                    json,
                                     "operation",
                                     "addition")
                             .toLowerCase(Locale.ROOT);
 
             AttributeModifier.Operation operation =
-                    parseOperation(operationName);
+                    parseOperation(
+                            operationName);
 
             if (operation == null) {
                 return null;

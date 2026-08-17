@@ -619,8 +619,8 @@ public class FeatSelectionScreen extends Screen {
              * Other effect types can currently be submitted
              * immediately with an empty choice.
              */
-            if (isAbilityScoreImprovement(
-                    feat.effectType())) {
+            if (hasAbilityScoreImprovement(
+                    feat)) {
 
                 minecraft.setScreen(
                         new AbilityScoreSelectionScreen(
@@ -785,14 +785,21 @@ public class FeatSelectionScreen extends Screen {
                 || rank < feat.maxRank();
     }
 
-    private static boolean isAbilityScoreImprovement(
-            ResourceLocation effectType) {
+    private static boolean hasAbilityScoreImprovement(
+            FeatDefinitionsSyncPayload.Definition feat) {
 
-        return effectType != null
-                && effectType.toString()
-                .equals(
-                        "justlevelingfork:"
-                                + "ability_score_improvement");
+        if (feat == null) {
+            return false;
+        }
+
+        return feat.effectTypes()
+                .stream()
+                .anyMatch(effectType ->
+                        effectType != null
+                                && effectType.toString()
+                                .equals(
+                                        "justlevelingfork:"
+                                                + "ability_score_improvement"));
     }
 
     private List<FeatDefinitionsSyncPayload.Definition> sortedFeats() {

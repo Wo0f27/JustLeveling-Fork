@@ -8,6 +8,7 @@ import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.GsonHelper;
+import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 
 public final class AbilityScoreImprovementFeatEffect
         implements FeatEffect {
@@ -23,11 +24,13 @@ public final class AbilityScoreImprovementFeatEffect
             ServerPlayer player,
             PlayerProgress progress,
             FeatDefinition feat,
+            FeatEffectDefinition effect,
             String choice) {
 
         if (player == null
                 || progress == null
                 || feat == null
+                || effect == null
                 || choice == null
                 || choice.isBlank()) {
 
@@ -35,33 +38,28 @@ public final class AbilityScoreImprovementFeatEffect
         }
 
         Aptitude aptitude =
-                RegistryAptitudes.getAptitude(choice);
+                RegistryAptitudes.getAptitude(
+                        choice);
 
         if (aptitude == null) {
             return false;
         }
 
         int amount =
-                getAmount(feat);
+                getAmount(
+                        effect);
 
         if (amount <= 0) {
             return false;
         }
 
         int currentLevel =
-                progress.getAptitudeLevel(aptitude);
+                progress.getAptitudeLevel(
+                        aptitude);
 
-        /*
-         * Do not partially apply ASI.
-         *
-         * Example:
-         * current 29
-         * JSON amount 2
-         *
-         * must fail rather than silently becoming 30.
-         */
         return currentLevel + amount
-                <= CommonConfigService.aptitudeMaxLevel();
+                <= CommonConfigService
+                .aptitudeMaxLevel();
     }
 
     @Override
@@ -69,20 +67,26 @@ public final class AbilityScoreImprovementFeatEffect
             ServerPlayer player,
             PlayerProgress progress,
             FeatDefinition feat,
+            FeatEffectDefinition effect,
             String choice) {
 
         Aptitude aptitude =
-                RegistryAptitudes.getAptitude(choice);
+                RegistryAptitudes.getAptitude(
+                        choice);
 
-        if (aptitude == null) {
+        if (aptitude == null
+                || effect == null) {
+
             return;
         }
 
         int amount =
-                getAmount(feat);
+                getAmount(
+                        effect);
 
         int currentLevel =
-                progress.getAptitudeLevel(aptitude);
+                progress.getAptitudeLevel(
+                        aptitude);
 
         progress.setAptitudeLevel(
                 aptitude,
@@ -90,10 +94,10 @@ public final class AbilityScoreImprovementFeatEffect
     }
 
     private int getAmount(
-            FeatDefinition feat) {
+            FeatEffectDefinition effectDefinition) {
 
         JsonObject effect =
-                feat.getEffectData();
+                effectDefinition.getData();
 
         return GsonHelper.getAsInt(
                 effect,

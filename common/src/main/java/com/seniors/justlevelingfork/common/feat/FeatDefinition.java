@@ -1,6 +1,7 @@
 package com.seniors.justlevelingfork.common.feat;
 
 import com.google.gson.JsonObject;
+import java.util.List;
 import net.minecraft.resources.ResourceLocation;
 
 public final class FeatDefinition {
@@ -10,8 +11,9 @@ public final class FeatDefinition {
     private final String description;
     private final boolean repeatable;
     private final int maxRank;
-    private final ResourceLocation effectType;
-    private final JsonObject effectData;
+
+    private final List<FeatEffectDefinition> effects;
+
     private final FeatPrerequisites prerequisites;
 
     public FeatDefinition(
@@ -20,8 +22,7 @@ public final class FeatDefinition {
             String description,
             boolean repeatable,
             int maxRank,
-            ResourceLocation effectType,
-            JsonObject effectData,
+            List<FeatEffectDefinition> effects,
             FeatPrerequisites prerequisites) {
 
         this.id = id;
@@ -29,12 +30,12 @@ public final class FeatDefinition {
         this.description = description;
         this.repeatable = repeatable;
         this.maxRank = Math.max(0, maxRank);
-        this.effectType = effectType;
 
-        this.effectData =
-                effectData == null
-                        ? new JsonObject()
-                        : effectData.deepCopy();
+        this.effects =
+                List.copyOf(
+                        effects == null
+                                ? List.of()
+                                : effects);
 
         this.prerequisites =
                 prerequisites == null
@@ -66,19 +67,47 @@ public final class FeatDefinition {
         return maxRank;
     }
 
+    public List<FeatEffectDefinition> getEffects() {
+        return effects;
+    }
+
+    public boolean hasEffectType(
+            ResourceLocation effectType) {
+
+        if (effectType == null) {
+            return false;
+        }
+
+        return effects.stream()
+                .anyMatch(effect ->
+                        effectType.equals(
+                                effect.getType()));
+    }
+
+    /*
+     * Compatibility helpers while the rest of JLF
+     * transitions from one effect to multiple effects.
+     */
     public ResourceLocation getEffectType() {
-        return effectType;
+
+        return effects.isEmpty()
+                ? null
+                : effects.get(0).getType();
     }
 
     public JsonObject getEffectData() {
-        return effectData.deepCopy();
+
+        return effects.isEmpty()
+                ? new JsonObject()
+                : effects.get(0).getData();
     }
 
     public FeatPrerequisites getPrerequisites() {
         return prerequisites;
     }
 
-    public boolean canGainRank(int currentRank) {
+    public boolean canGainRank(
+            int currentRank) {
 
         if (currentRank <= 0) {
             return true;

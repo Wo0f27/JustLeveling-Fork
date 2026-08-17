@@ -7,6 +7,7 @@ import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,20 +20,15 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 public final class FeatAttributeModifierService {
 
     /*
-     * Runtime record of transient modifiers that JLF applied.
-     *
      * player UUID
      *   -> modifier UUID
      *      -> attribute ID
-     *
-     * Transient modifiers themselves are intentionally not
-     * persisted. They are reconstructed from PlayerProgress
-     * and the currently loaded feat datapacks.
      */
     private static final Map<
             UUID,
             Map<UUID, ResourceLocation>>
-            APPLIED = new HashMap<>();
+            APPLIED =
+            new HashMap<>();
 
     private FeatAttributeModifierService() {
     }
@@ -43,18 +39,12 @@ public final class FeatAttributeModifierService {
 
         if (player == null
                 || progress == null) {
+
             return;
         }
 
         /*
-         * Always remove the previous derived state first.
-         *
-         * This allows:
-         * - datapack amount changes
-         * - operation changes
-         * - attribute changes
-         * - feat resets
-         * - removed datapacks
+         * Rebuild all derived feat modifiers from scratch.
          */
         clear(player);
 
@@ -65,9 +55,7 @@ public final class FeatAttributeModifierService {
                 : FeatManager.INSTANCE.values()) {
 
             if (feat == null
-                    || feat.getId() == null
-                    || !FeatEffectRegistry.ATTRIBUTE_MODIFIER
-                    .equals(feat.getEffectType())) {
+                    || feat.getId() == null) {
 
                 continue;
             }
@@ -80,100 +68,141 @@ public final class FeatAttributeModifierService {
                 continue;
             }
 
-            AttributeModifierFeatEffect.ParsedModifier parsed =
-                    AttributeModifierFeatEffect.parse(
-                            feat);
+            List<FeatEffectDefinition> effects =
+                    feat.getEffects();
 
-            if (parsed == null) {
+            for (int effectIndex = 0;
+                 effectIndex < effects.size();
+                 effectIndex++) {
 
-                Constants.LOG.warn(
-                        "Could not apply attribute modifier feat {} because its effect data is invalid.",
-                        feat.getId());
+                FeatEffectDefinition effectDefinition =
+                        effects.get(
+                                effectIndex);
 
-                continue;
+                if (!FeatEffectRegistry.ATTRIBUTE_MODIFIER
+                        .equals(
+                                effectDefinition.getType())) {
+
+                    continue;
+                }
+
+                List<AttributeModifierFeatEffect.ParsedModifier>
+                        modifiers =
+                        AttributeModifierFeatEffect.parseAll(
+                                effectDefinition);
+
+                if (modifiers.isEmpty()) {
+
+                    Constants.LOG.warn(
+                            "Could not apply attribute modifier effect {} in feat {} because its data is invalid.",
+                            effectIndex,
+                            feat.getId());
+
+                    continue;
+                }
+
+                for (int modifierIndex = 0;
+                     modifierIndex < modifiers.size();
+                     modifierIndex++) {
+
+                    applyModifier(
+                            player,
+                            feat,
+                            modifiers.get(modifierIndex),
+                            rank,
+                            effectIndex,
+                            modifierIndex,
+                            applied);
+                }
             }
+        }
+    }
 
-            if (!BuiltInRegistries.ATTRIBUTE.containsKey(
-                    parsed.attributeId())) {
+    private static void applyModifier(
+            ServerPlayer player,
+            FeatDefinition feat,
+            AttributeModifierFeatEffect.ParsedModifier parsed,
+            int rank,
+            int effectIndex,
+            int modifierIndex,
+            Map<UUID, ResourceLocation> applied){
 
-                Constants.LOG.warn(
-                        "Feat {} references unknown attribute {}.",
-                        feat.getId(),
-                        parsed.attributeId());
+        if (!BuiltInRegistries.ATTRIBUTE.containsKey(
+                parsed.attributeId())) {
 
-                continue;
-            }
-
-            Attribute attribute =
-                    BuiltInRegistries.ATTRIBUTE.get(
-                            parsed.attributeId());
-
-            if (attribute == null) {
-                continue;
-            }
-
-            AttributeInstance instance =
-                    player.getAttribute(
-                            attribute);
-
-            if (instance == null) {
-
-                Constants.LOG.warn(
-                        "Feat {} references attribute {} which is not present on this player.",
-                        feat.getId(),
-                        parsed.attributeId());
-
-                continue;
-            }
-
-            /*
-             * Repeatable feats scale linearly by rank.
-             *
-             * Example:
-             *
-             * amount = 2
-             * rank   = 3
-             *
-             * total modifier = 6
-             */
-            double totalAmount =
-                    parsed.amount()
-                            * rank;
-
-            UUID modifierId =
-                    modifierUuid(
-                            feat.getId(),
-                            parsed.attributeId());
-
-            AttributeModifier modifier =
-                    new AttributeModifier(
-                            modifierId,
-                            "JLF feat: "
-                                    + feat.getId(),
-                            totalAmount,
-                            parsed.operation());
-
-            /*
-             * Defensive removal in case something triggered
-             * an unusual refresh path.
-             */
-            instance.removeModifier(
-                    modifierId);
-
-            instance.addTransientModifier(
-                    modifier);
-
-            applied.put(
-                    modifierId,
+            Constants.LOG.warn(
+                    "Feat {} references unknown attribute {}.",
+                    feat.getId(),
                     parsed.attributeId());
+
+            return;
         }
 
-        if (!applied.isEmpty()) {
+        Attribute attribute =
+                BuiltInRegistries.ATTRIBUTE.get(
+                        parsed.attributeId());
 
-            APPLIED.put(
-                    player.getUUID(),
-                    applied);
+        if (attribute == null) {
+            return;
         }
+
+        AttributeInstance instance =
+                player.getAttribute(
+                        attribute);
+
+        if (instance == null) {
+
+            Constants.LOG.warn(
+                    "Feat {} references attribute {} which is not present on this player.",
+                    feat.getId(),
+                    parsed.attributeId());
+
+            return;
+        }
+
+        /*
+         * Repeatable feats scale linearly with rank.
+         */
+        double totalAmount =
+                parsed.amount()
+                        * rank;
+
+        /*
+         * Index is included because one feat may now contain
+         * more than one modifier, including multiple modifiers
+         * targeting the same attribute.
+         */
+        UUID modifierId =
+                modifierUuid(
+                        feat.getId(),
+                        parsed.attributeId(),
+                        effectIndex,
+                        modifierIndex);
+
+        AttributeModifier modifier =
+                new AttributeModifier(
+                        modifierId,
+                        "JLF feat: "
+                                + feat.getId()
+                                + " #"
+                                + effectIndex
+                                + ":"
+                                + modifierIndex,
+                        totalAmount,
+                        parsed.operation());
+
+        /*
+         * Defensive cleanup.
+         */
+        instance.removeModifier(
+                modifierId);
+
+        instance.addTransientModifier(
+                modifier);
+
+        applied.put(
+                modifierId,
+                parsed.attributeId());
     }
 
     public static void clear(
@@ -193,43 +222,50 @@ public final class FeatAttributeModifierService {
             return;
         }
 
-        applied.forEach((modifierId, attributeId) -> {
+        applied.forEach(
+                (modifierId, attributeId) -> {
 
-            if (!BuiltInRegistries.ATTRIBUTE.containsKey(
-                    attributeId)) {
+                    if (!BuiltInRegistries.ATTRIBUTE
+                            .containsKey(attributeId)) {
 
-                return;
-            }
+                        return;
+                    }
 
-            Attribute attribute =
-                    BuiltInRegistries.ATTRIBUTE.get(
-                            attributeId);
+                    Attribute attribute =
+                            BuiltInRegistries.ATTRIBUTE.get(
+                                    attributeId);
 
-            if (attribute == null) {
-                return;
-            }
+                    if (attribute == null) {
+                        return;
+                    }
 
-            AttributeInstance instance =
-                    player.getAttribute(
-                            attribute);
+                    AttributeInstance instance =
+                            player.getAttribute(
+                                    attribute);
 
-            if (instance != null) {
+                    if (instance != null) {
 
-                instance.removeModifier(
-                        modifierId);
-            }
-        });
+                        instance.removeModifier(
+                                modifierId);
+                    }
+                });
     }
 
     private static UUID modifierUuid(
             ResourceLocation featId,
-            ResourceLocation attributeId) {
+            ResourceLocation attributeId,
+            int effectIndex,
+            int modifierIndex) {
 
         String key =
                 "justlevelingfork:feat_attribute/"
                         + featId
                         + "/"
-                        + attributeId;
+                        + attributeId
+                        + "/"
+                        + effectIndex
+                        + "/"
+                        + modifierIndex;
 
         return UUID.nameUUIDFromBytes(
                 key.getBytes(

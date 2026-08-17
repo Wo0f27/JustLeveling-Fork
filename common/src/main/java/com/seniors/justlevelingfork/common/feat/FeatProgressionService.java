@@ -6,6 +6,7 @@ import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 
 public final class FeatProgressionService {
 
@@ -80,20 +81,38 @@ public final class FeatProgressionService {
         if (!feat.canGainRank(currentRank)) {
             return false;
         }
-
-        FeatEffect effect =
-                FeatEffectRegistry.get(
-                        feat.getEffectType());
-
-        if (effect == null) {
+        if (feat.getEffects().isEmpty()) {
             return false;
         }
 
-        return effect.canApply(
-                player,
-                progress,
-                feat,
-                choice == null ? "" : choice);
+        String safeChoice =
+                choice == null
+                        ? ""
+                        : choice;
+
+        for (FeatEffectDefinition effectDefinition
+                : feat.getEffects()) {
+
+            FeatEffect effect =
+                    FeatEffectRegistry.get(
+                            effectDefinition.getType());
+
+            if (effect == null) {
+                return false;
+            }
+
+            if (!effect.canApply(
+                    player,
+                    progress,
+                    feat,
+                    effectDefinition,
+                    safeChoice)) {
+
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static boolean takeFeat(
@@ -112,15 +131,14 @@ public final class FeatProgressionService {
         FeatDefinition feat =
                 FeatManager.INSTANCE.get(featId);
 
-        FeatEffect effect =
-                FeatEffectRegistry.get(
-                        feat.getEffectType());
 
         PlayerProgress progress =
                 PlayerProgressService.get(player)
                         .orElse(null);
 
-        if (progress == null || effect == null) {
+        if (progress == null
+                || feat.getEffects().isEmpty()) {
+
             return false;
         }
 
@@ -140,11 +158,28 @@ public final class FeatProgressionService {
                     /*
                      * Apply the actual datapack-defined effect.
                      */
-                    effect.apply(
-                            player,
-                            updated,
-                            feat,
-                            safeChoice);
+                    for (FeatEffectDefinition effectDefinition
+                            : feat.getEffects()) {
+
+                        FeatEffect effect =
+                                FeatEffectRegistry.get(
+                                        effectDefinition.getType());
+
+                        /*
+                         * canTakeFeat(...) already validated all
+                         * handlers immediately before this.
+                         */
+                        if (effect == null) {
+                            continue;
+                        }
+
+                        effect.apply(
+                                player,
+                                updated,
+                                feat,
+                                effectDefinition,
+                                safeChoice);
+                    }
 
                     /*
                      * Record ownership/rank.
