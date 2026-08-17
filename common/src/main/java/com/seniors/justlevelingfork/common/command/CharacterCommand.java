@@ -150,7 +150,7 @@ public final class CharacterCommand {
                                                          */
                                                         .then(Commands.argument(
                                                                         "choice",
-                                                                        StringArgumentType.word())
+                                                                StringArgumentType.greedyString())
 
                                                                 .executes(context ->
                                                                         takeFeat(

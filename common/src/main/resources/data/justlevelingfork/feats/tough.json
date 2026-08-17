@@ -1,0 +1,13 @@
+{
+  "name": "Tough",
+  "description": "Your maximum health increases by 2 for every Character Level.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "effect": {
+    "type": "justlevelingfork:attribute_modifier",
+    "attribute": "minecraft:generic.max_health",
+    "operation": "addition",
+    "amount_per_character_level": 2.0
+  }
+}

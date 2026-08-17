@@ -200,10 +200,24 @@ public final class AttributeModifierFeatEffect
             double amount =
                     GsonHelper.getAsDouble(
                             json,
-                            "amount");
+                            "amount",
+                            0.0D);
+
+            double amountPerCharacterLevel =
+                    GsonHelper.getAsDouble(
+                            json,
+                            "amount_per_character_level",
+                            0.0D);
 
             if (!Double.isFinite(amount)
-                    || amount == 0.0D) {
+                    || !Double.isFinite(
+                    amountPerCharacterLevel)) {
+
+                return null;
+            }
+
+            if (amount == 0.0D
+                    && amountPerCharacterLevel == 0.0D) {
 
                 return null;
             }
@@ -226,6 +240,7 @@ public final class AttributeModifierFeatEffect
             return new ParsedModifier(
                     attributeId,
                     amount,
+                    amountPerCharacterLevel,
                     operation);
 
         } catch (Exception ignored) {
@@ -259,6 +274,7 @@ public final class AttributeModifierFeatEffect
     public record ParsedModifier(
             ResourceLocation attributeId,
             double amount,
+            double amountPerCharacterLevel,
             AttributeModifier.Operation operation) {
     }
 }

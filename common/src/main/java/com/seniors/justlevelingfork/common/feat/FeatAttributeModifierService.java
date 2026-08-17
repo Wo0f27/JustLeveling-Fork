@@ -110,6 +110,7 @@ public final class FeatAttributeModifierService {
                             feat,
                             modifiers.get(modifierIndex),
                             rank,
+                            progress.getCharacterLevel(),
                             effectIndex,
                             modifierIndex,
                             applied);
@@ -123,9 +124,10 @@ public final class FeatAttributeModifierService {
             FeatDefinition feat,
             AttributeModifierFeatEffect.ParsedModifier parsed,
             int rank,
+            int characterLevel,
             int effectIndex,
             int modifierIndex,
-            Map<UUID, ResourceLocation> applied){
+            Map<UUID, ResourceLocation> applied) {
 
         if (!BuiltInRegistries.ATTRIBUTE.containsKey(
                 parsed.attributeId())) {
@@ -163,8 +165,15 @@ public final class FeatAttributeModifierService {
         /*
          * Repeatable feats scale linearly with rank.
          */
-        double totalAmount =
+        double amountForCurrentLevel =
                 parsed.amount()
+                        + parsed.amountPerCharacterLevel()
+                        * Math.max(
+                        0,
+                        characterLevel);
+
+        double totalAmount =
+                amountForCurrentLevel
                         * rank;
 
         /*
