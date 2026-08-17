@@ -1,11 +1,17 @@
 {
-  "name": "Test Ability Improvement",
-  "description": "Temporary datapack feat used to test the feat loader.",
-  "minimum_character_level": 2,
+  "name": "Restricted Ability Test",
+  "description": "Only Strength or Dexterity may be increased.",
   "repeatable": false,
   "max_rank": 1,
+
   "effect": {
     "type": "justlevelingfork:ability_score_improvement",
-    "amount": 1
+    "points": 1,
+    "max_score": 20,
+
+    "allowed_abilities": [
+      "strength",
+      "dexterity"
+    ]
   }
 }

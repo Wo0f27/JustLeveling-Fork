@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.seniors.justlevelingfork.common.feat.effect.FeatEffectRegistry;
+import java.util.Locale;
+import net.minecraft.util.GsonHelper;
 
 public record FeatDefinitionsSyncPayload(
         List<Definition> definitions) {
@@ -49,6 +55,10 @@ public record FeatDefinitionsSyncPayload(
                 continue;
             }
 
+            AbilityScoreChoice abilityScoreChoice =
+                    findAbilityScoreChoice(
+                            feat);
+
             result.add(
                     new Definition(
                             feat.getId(),
@@ -62,6 +72,7 @@ public record FeatDefinitionsSyncPayload(
                                     .map(
                                             FeatEffectDefinition::getType)
                                     .toList(),
+                            abilityScoreChoice,
                             feat.getPrerequisites().abilities(),
                             feat.getPrerequisites().classes(),
                             feat.getPrerequisites().feats()));
@@ -73,6 +84,91 @@ public record FeatDefinitionsSyncPayload(
 
         return new FeatDefinitionsSyncPayload(
                 result);
+    }
+
+    private static AbilityScoreChoice findAbilityScoreChoice(
+            FeatDefinition feat) {
+
+        for (FeatEffectDefinition effect
+                : feat.getEffects()) {
+
+            if (!FeatEffectRegistry
+                    .ABILITY_SCORE_IMPROVEMENT
+                    .equals(effect.getType())) {
+
+                continue;
+            }
+
+            JsonObject data =
+                    effect.getData();
+
+            int points;
+
+            if (data.has("points")) {
+
+                points =
+                        GsonHelper.getAsInt(
+                                data,
+                                "points",
+                                1);
+
+            } else {
+
+                /*
+                 * Legacy support.
+                 */
+                points =
+                        GsonHelper.getAsInt(
+                                data,
+                                "amount",
+                                1);
+            }
+
+            int maxScore =
+                    GsonHelper.getAsInt(
+                            data,
+                            "max_score",
+                            20);
+
+            List<String> allowedAbilities =
+                    new ArrayList<>();
+
+            if (data.has("allowed_abilities")
+                    && data.get("allowed_abilities")
+                    .isJsonArray()) {
+
+                JsonArray array =
+                        data.getAsJsonArray(
+                                "allowed_abilities");
+
+                for (JsonElement element : array) {
+
+                    if (element == null
+                            || !element.isJsonPrimitive()) {
+
+                        continue;
+                    }
+
+                    String name =
+                            element.getAsString()
+                                    .toLowerCase(
+                                            Locale.ROOT);
+
+                    if (!name.isBlank()) {
+
+                        allowedAbilities.add(
+                                name);
+                    }
+                }
+            }
+
+            return new AbilityScoreChoice(
+                    Math.max(1, points),
+                    Math.max(1, maxScore),
+                    allowedAbilities);
+        }
+
+        return null;
     }
 
     public void write(
@@ -111,6 +207,10 @@ public record FeatDefinitionsSyncPayload(
                     buffer,
                     definition.effectTypes());
 
+            writeAbilityScoreChoice(
+                    buffer,
+                    definition.abilityScoreChoice());
+
             writeStringRequirements(
                     buffer,
                     definition.abilityRequirements());
@@ -122,6 +222,35 @@ public record FeatDefinitionsSyncPayload(
             writeResourceRequirements(
                     buffer,
                     definition.featRequirements());
+        }
+    }
+
+    private static void writeAbilityScoreChoice(
+            FriendlyByteBuf buffer,
+            AbilityScoreChoice choice) {
+
+        buffer.writeBoolean(
+                choice != null);
+
+        if (choice == null) {
+            return;
+        }
+
+        buffer.writeVarInt(
+                choice.points());
+
+        buffer.writeVarInt(
+                choice.maxScore());
+
+        buffer.writeVarInt(
+                choice.allowedAbilities().size());
+
+        for (String ability
+                : choice.allowedAbilities()) {
+
+            buffer.writeUtf(
+                    ability,
+                    32);
         }
     }
 
@@ -191,6 +320,8 @@ public record FeatDefinitionsSyncPayload(
         List<Definition> definitions =
                 new ArrayList<>(count);
 
+
+
         for (int i = 0; i < count; i++) {
 
             ResourceLocation id =
@@ -217,6 +348,10 @@ public record FeatDefinitionsSyncPayload(
 
             List<ResourceLocation> effectTypes =
                     readEffectTypes(
+                            buffer);
+
+            AbilityScoreChoice abilityScoreChoice =
+                    readAbilityScoreChoice(
                             buffer);
 
             Map<String, Integer> abilityRequirements =
@@ -246,6 +381,7 @@ public record FeatDefinitionsSyncPayload(
                             repeatable,
                             maxRank,
                             effectTypes,
+                            abilityScoreChoice,
                             abilityRequirements,
                             classRequirements,
                             featRequirements));
@@ -253,6 +389,52 @@ public record FeatDefinitionsSyncPayload(
 
         return new FeatDefinitionsSyncPayload(
                 definitions);
+    }
+
+    private static AbilityScoreChoice readAbilityScoreChoice(
+            FriendlyByteBuf buffer) {
+
+        boolean present =
+                buffer.readBoolean();
+
+        if (!present) {
+            return null;
+        }
+
+        int points =
+                buffer.readVarInt();
+
+        int maxScore =
+                buffer.readVarInt();
+
+        int allowedCount =
+                buffer.readVarInt();
+
+        if (allowedCount < 0
+                || allowedCount > 16) {
+
+            throw new IllegalArgumentException(
+                    "Invalid ability choice count: "
+                            + allowedCount);
+        }
+
+        List<String> allowed =
+                new ArrayList<>(
+                        allowedCount);
+
+        for (int i = 0;
+             i < allowedCount;
+             i++) {
+
+            allowed.add(
+                    buffer.readUtf(
+                            32));
+        }
+
+        return new AbilityScoreChoice(
+                points,
+                maxScore,
+                allowed);
     }
 
     private static List<ResourceLocation> readEffectTypes(
@@ -396,6 +578,7 @@ public record FeatDefinitionsSyncPayload(
             boolean repeatable,
             int maxRank,
             List<ResourceLocation> effectTypes,
+            AbilityScoreChoice abilityScoreChoice,
             Map<String, Integer> abilityRequirements,
             Map<ResourceLocation, Integer> classRequirements,
             Map<ResourceLocation, Integer> featRequirements) {
@@ -425,6 +608,30 @@ public record FeatDefinitionsSyncPayload(
                             featRequirements == null
                                     ? Map.of()
                                     : featRequirements);
+        }
+    }
+    public record AbilityScoreChoice(
+            int points,
+            int maxScore,
+            List<String> allowedAbilities) {
+
+        public AbilityScoreChoice {
+
+            points =
+                    Math.max(
+                            1,
+                            points);
+
+            maxScore =
+                    Math.max(
+                            1,
+                            maxScore);
+
+            allowedAbilities =
+                    List.copyOf(
+                            allowedAbilities == null
+                                    ? List.of()
+                                    : allowedAbilities);
         }
     }
 }
