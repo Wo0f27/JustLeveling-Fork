@@ -10,6 +10,9 @@ public final class FeatEffectRegistry {
     private static final Map<ResourceLocation, FeatEffect> EFFECTS =
             new LinkedHashMap<>();
 
+    public static final ResourceLocation ATTRIBUTE_MODIFIER =
+            id("attribute_modifier");
+
     public static final ResourceLocation ABILITY_SCORE_IMPROVEMENT =
             id("ability_score_improvement");
 
@@ -17,6 +20,10 @@ public final class FeatEffectRegistry {
         register(
                 ABILITY_SCORE_IMPROVEMENT,
                 AbilityScoreImprovementFeatEffect.INSTANCE);
+
+        register(
+                ATTRIBUTE_MODIFIER,
+                AttributeModifierFeatEffect.INSTANCE);
     }
 
     private FeatEffectRegistry() {
@@ -63,4 +70,6 @@ public final class FeatEffectRegistry {
                 Constants.MOD_ID,
                 path);
     }
+
+
 }

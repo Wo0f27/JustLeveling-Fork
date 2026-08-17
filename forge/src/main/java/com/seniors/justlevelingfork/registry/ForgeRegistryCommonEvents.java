@@ -30,6 +30,8 @@ import com.seniors.justlevelingfork.common.command.CharacterCommand;
 import com.seniors.justlevelingfork.common.feat.FeatManager;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.OnDatapackSyncEvent;
+import com.seniors.justlevelingfork.common.feat.FeatAttributeModifierService;
+import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 
 public final class ForgeRegistryCommonEvents {
     private ForgeRegistryCommonEvents() {
@@ -170,28 +172,43 @@ public final class ForgeRegistryCommonEvents {
                 event.getPlayer();
 
         /*
-         * Non-null:
-         * one player has joined and needs the
-         * current datapack definitions.
+         * One player joined.
          */
         if (player != null) {
 
-            ForgeServerNetworking
-                    .syncFeatDefinitions(player);
+            refreshFeatDatapackState(
+                    player);
 
             return;
         }
 
         /*
-         * Null player:
-         * a server-wide datapack reload occurred.
-         *
-         * Resync every connected player.
+         * Server-wide /reload.
          */
         event.getPlayerList()
                 .getPlayers()
                 .forEach(
-                        ForgeServerNetworking
-                                ::syncFeatDefinitions);
+                        ForgeRegistryCommonEvents
+                                ::refreshFeatDatapackState);
+    }
+
+    private static void refreshFeatDatapackState(
+            ServerPlayer player) {
+
+        /*
+         * Recalculate any attribute modifiers using
+         * the freshly loaded datapack definitions.
+         */
+        PlayerProgressService.get(player)
+                .ifPresent(progress ->
+                        FeatAttributeModifierService.refresh(
+                                player,
+                                progress));
+
+        /*
+         * Then update the client's feat list/UI.
+         */
+        ForgeServerNetworking
+                .syncFeatDefinitions(player);
     }
 }
