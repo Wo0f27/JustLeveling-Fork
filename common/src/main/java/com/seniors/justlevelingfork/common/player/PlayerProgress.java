@@ -366,7 +366,7 @@ public class PlayerProgress {
         clearTransientState();
     }
 
-    private void resetCharacterProgression() {
+    public void resetCharacterProgression() {
         characterXp = 0L;
         pendingLevelUps = 0;
         pendingAdvancements = 0;

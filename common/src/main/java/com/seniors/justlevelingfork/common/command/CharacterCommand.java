@@ -56,6 +56,20 @@ public final class CharacterCommand {
                                                         EntityArgument.getPlayer(
                                                                 context,
                                                                 "player"))))
+
+                                /*
+                                 * Fully resets the new character progression system.
+                                 *
+                                 * /character <player> reset
+                                 */
+                                .then(Commands.literal("reset")
+                                        .executes(context ->
+                                                resetCharacter(
+                                                        context,
+                                                        EntityArgument.getPlayer(
+                                                                context,
+                                                                "player"))))
+
                                 .then(Commands.literal("xp")
 
                                         .then(Commands.literal("get")
@@ -95,6 +109,7 @@ public final class CharacterCommand {
                                                                         LongArgumentType.getLong(
                                                                                 context,
                                                                                 "amount"))))))
+
                                 .then(Commands.literal("advancement")
 
                                         .then(Commands.literal("get")
@@ -149,6 +164,7 @@ public final class CharacterCommand {
                                                                                 StringArgumentType.getString(
                                                                                         context,
                                                                                         "choice")))))))
+
                                 .then(Commands.literal("levelup")
 
                                         .then(Commands.argument(
@@ -169,7 +185,9 @@ public final class CharacterCommand {
                                                                         "class")))))
 
                                 .then(Commands.literal("class")
+
                                         .then(Commands.literal("set")
+
                                                 .then(Commands.argument(
                                                                 "class",
                                                                 StringArgumentType.word())
@@ -273,6 +291,11 @@ public final class CharacterCommand {
                                                                                                                         context,
                                                                                                                         "charisma"))))))))))
 
+                                        /*
+                                         * Only resets the starting ability assignment.
+                                         *
+                                         * /character <player> abilities reset
+                                         */
                                         .then(Commands.literal("reset")
                                                 .executes(context ->
                                                         resetAbilities(
@@ -280,7 +303,6 @@ public final class CharacterCommand {
                                                                 EntityArgument.getPlayer(
                                                                         context,
                                                                         "player")))))));
-
     }
 
     private static int setClassLevel(
@@ -799,5 +821,53 @@ public final class CharacterCommand {
                                 feat.getId().toString()));
 
         return builder.buildFuture();
+    }
+
+    private static int resetCharacter(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        boolean success =
+                PlayerProgressService.update(
+                        player,
+                        progress -> {
+
+                            /*
+                             * Reset Character XP, classes,
+                             * subclasses, feats, pending choices,
+                             * and starting-ability state.
+                             */
+                            progress.resetCharacterProgression();
+
+                            /*
+                             * Return all six raw aptitudes to 1,
+                             * which corresponds to ability score 10.
+                             */
+                            for (Aptitude aptitude
+                                    : CharacterInitializationService.aptitudes()) {
+
+                                progress.setAptitudeLevel(
+                                        aptitude,
+                                        1);
+                            }
+                        });
+
+        if (!success) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Could not reset character progression."));
+
+            return 0;
+        }
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Character progression reset."),
+                false);
+
+        return showCharacter(
+                context,
+                player);
     }
 }

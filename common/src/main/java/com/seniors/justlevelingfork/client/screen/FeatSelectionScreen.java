@@ -13,6 +13,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import com.seniors.justlevelingfork.common.player.AbilityScoreClientState;
+import java.util.Locale;
+import java.util.Map;
 
 public class FeatSelectionScreen extends Screen {
 
@@ -303,16 +306,10 @@ public class FeatSelectionScreen extends Screen {
                                     ChatFormatting.GRAY));
         }
 
-        if (progress.getCharacterLevel()
-                < feat.minimumCharacterLevel()) {
-
-            tooltip.add(
-                    Component.literal(
-                                    "Requires Character Level "
-                                            + feat.minimumCharacterLevel())
-                            .withStyle(
-                                    ChatFormatting.RED));
-        }
+        appendPrerequisiteTooltip(
+                tooltip,
+                progress,
+                feat);
 
         if (!canGainRank(
                 progress,
@@ -334,6 +331,201 @@ public class FeatSelectionScreen extends Screen {
                 tooltip,
                 mouseX,
                 mouseY);
+    }
+
+    private void appendPrerequisiteTooltip(
+            List<Component> tooltip,
+            PlayerProgress progress,
+            FeatDefinitionsSyncPayload.Definition feat) {
+
+        boolean hasPrerequisites =
+                feat.minimumCharacterLevel() > 1
+                        || !feat.abilityRequirements().isEmpty()
+                        || !feat.classRequirements().isEmpty()
+                        || !feat.featRequirements().isEmpty();
+
+        if (!hasPrerequisites) {
+            return;
+        }
+
+        tooltip.add(
+                Component.literal("Requirements:")
+                        .withStyle(
+                                ChatFormatting.GOLD));
+
+        /*
+         * Character Level
+         */
+        if (feat.minimumCharacterLevel() > 1) {
+
+            int current =
+                    progress.getCharacterLevel();
+
+            boolean met =
+                    current
+                            >= feat.minimumCharacterLevel();
+
+            tooltip.add(
+                    requirementLine(
+                            met,
+                            "Character Level "
+                                    + current
+                                    + " (requires "
+                                    + feat.minimumCharacterLevel()
+                                    + ")"));
+        }
+
+        /*
+         * Ability scores
+         */
+        for (Map.Entry<String, Integer> requirement
+                : feat.abilityRequirements().entrySet()) {
+
+            Integer current =
+                    AbilityScoreClientState.get(
+                            requirement.getKey());
+
+            String abilityName =
+                    requirement.getKey()
+                            .toUpperCase(
+                                    Locale.ROOT);
+
+            if (current == null) {
+
+                tooltip.add(
+                        Component.literal(
+                                        "[?] "
+                                                + abilityName
+                                                + " (requires "
+                                                + requirement.getValue()
+                                                + ")")
+                                .withStyle(
+                                        ChatFormatting.YELLOW));
+
+                continue;
+            }
+
+            tooltip.add(
+                    requirementLine(
+                            current
+                                    >= requirement.getValue(),
+                            abilityName
+                                    + " "
+                                    + current
+                                    + " (requires "
+                                    + requirement.getValue()
+                                    + ")"));
+        }
+
+        /*
+         * Class levels
+         */
+        for (Map.Entry<ResourceLocation, Integer> requirement
+                : feat.classRequirements().entrySet()) {
+
+            int current =
+                    progress.getClassLevel(
+                            requirement.getKey()
+                                    .toString());
+
+            tooltip.add(
+                    requirementLine(
+                            current
+                                    >= requirement.getValue(),
+                            displayResourceName(
+                                    requirement.getKey())
+                                    + " "
+                                    + current
+                                    + " (requires "
+                                    + requirement.getValue()
+                                    + ")"));
+        }
+
+        /*
+         * Required feats
+         */
+        for (Map.Entry<ResourceLocation, Integer> requirement
+                : feat.featRequirements().entrySet()) {
+
+            int current =
+                    progress.getFeatRank(
+                            requirement.getKey()
+                                    .toString());
+
+            FeatDefinitionsSyncPayload.Definition requiredFeat =
+                    FeatClientState.get(
+                            requirement.getKey());
+
+            String featName =
+                    requiredFeat != null
+                            ? requiredFeat.name()
+                            : requirement.getKey()
+                            .toString();
+
+            tooltip.add(
+                    requirementLine(
+                            current
+                                    >= requirement.getValue(),
+                            featName
+                                    + " Rank "
+                                    + current
+                                    + " (requires "
+                                    + requirement.getValue()
+                                    + ")"));
+        }
+    }
+
+    private Component requirementLine(
+            boolean met,
+            String text) {
+
+        return Component.literal(
+                        (met ? "[OK] " : "[X] ")
+                                + text)
+                .withStyle(
+                        met
+                                ? ChatFormatting.GREEN
+                                : ChatFormatting.RED);
+    }
+
+    private static String displayResourceName(
+            ResourceLocation id) {
+
+        String path =
+                id.getPath()
+                        .replace('_', ' ');
+
+        if (path.isEmpty()) {
+            return id.toString();
+        }
+
+        String[] words =
+                path.split(" ");
+
+        StringBuilder result =
+                new StringBuilder();
+
+        for (String word : words) {
+
+            if (word.isEmpty()) {
+                continue;
+            }
+
+            if (!result.isEmpty()) {
+                result.append(' ');
+            }
+
+            result.append(
+                    Character.toUpperCase(
+                            word.charAt(0)));
+
+            if (word.length() > 1) {
+                result.append(
+                        word.substring(1));
+            }
+        }
+
+        return result.toString();
     }
 
     @Override
@@ -495,14 +687,80 @@ public class FeatSelectionScreen extends Screen {
         return false;
     }
 
+    private boolean meetsClientPrerequisites(
+            PlayerProgress progress,
+            FeatDefinitionsSyncPayload.Definition feat) {
+
+        if (progress.getCharacterLevel()
+                < feat.minimumCharacterLevel()) {
+
+            return false;
+        }
+
+        /*
+         * Effective ability scores are synchronized
+         * from the authoritative server.
+         *
+         * If the snapshot has not arrived yet,
+         * don't falsely lock the feat. The server
+         * still performs the final validation.
+         */
+        for (Map.Entry<String, Integer> requirement
+                : feat.abilityRequirements().entrySet()) {
+
+            Integer current =
+                    AbilityScoreClientState.get(
+                            requirement.getKey());
+
+            if (current != null
+                    && current < requirement.getValue()) {
+
+                return false;
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, Integer> requirement
+                : feat.classRequirements().entrySet()) {
+
+            int current =
+                    progress.getClassLevel(
+                            requirement.getKey()
+                                    .toString());
+
+            if (current
+                    < requirement.getValue()) {
+
+                return false;
+            }
+        }
+
+        for (Map.Entry<ResourceLocation, Integer> requirement
+                : feat.featRequirements().entrySet()) {
+
+            int current =
+                    progress.getFeatRank(
+                            requirement.getKey()
+                                    .toString());
+
+            if (current
+                    < requirement.getValue()) {
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private boolean isClientAvailable(
             PlayerProgress progress,
             FeatDefinitionsSyncPayload.Definition feat) {
 
         return progress.getPendingAdvancements() > 0
-                && progress.getCharacterLevel()
-                >= feat.minimumCharacterLevel()
                 && canGainRank(
+                progress,
+                feat)
+                && meetsClientPrerequisites(
                 progress,
                 feat);
     }

@@ -33,12 +33,14 @@ import com.seniors.justlevelingfork.network.packet.common.ForgeClassLevelUpPacke
 import com.seniors.justlevelingfork.network.FeatDefinitionsSyncPayload;
 import com.seniors.justlevelingfork.network.packet.client.ForgeFeatDefinitionsSyncPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeFeatSelectionPacket;
+import com.seniors.justlevelingfork.network.AbilityScoresSyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeAbilityScoresSyncPacket;
 
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "6";
+    private static final String PROTOCOL_VERSION = "7";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -73,6 +75,13 @@ public final class ForgeServerNetworking {
                 ForgeSkillMessagePacket::toBytes,
                 ForgeSkillMessagePacket::new,
                 ForgeSkillMessagePacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeAbilityScoresSyncPacket.class,
+                ForgeAbilityScoresSyncPacket::toBytes,
+                ForgeAbilityScoresSyncPacket::new,
+                ForgeAbilityScoresSyncPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
@@ -187,13 +196,18 @@ public final class ForgeServerNetworking {
         TitleUnlockService.setSender(ForgeServerNetworking::sendTitleUnlock);
     }
 
+
+
     public static void sendToServer(Object message) {
         channel.sendToServer(message);
     }
 
+    public static void syncAbilityScores(ServerPlayer player, PlayerProgress progress) {if (player == null || progress == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeAbilityScoresSyncPacket(AbilityScoresSyncPayload.current(player, progress)));}
+
     public static void syncPlayerProgress(ServerPlayer player, PlayerProgress progress) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));
-    }
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));syncAbilityScores(player, progress);}
+
     public static void syncFeatDefinitions(ServerPlayer player) {if (player == null) {return;}
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeFeatDefinitionsSyncPacket(FeatDefinitionsSyncPayload.current()));}
 
