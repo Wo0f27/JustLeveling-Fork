@@ -36,6 +36,7 @@ import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
 import com.seniors.justlevelingfork.common.proficiency.ArmorClassificationService;
 import java.util.stream.Collectors;
 import net.minecraft.world.item.ItemStack;
+import com.seniors.justlevelingfork.common.proficiency.ArmorProficiencyService;
 
 public final class CharacterCommand {
 
@@ -58,6 +59,24 @@ public final class CharacterCommand {
 
                                                 .executes(context ->
                                                         classifyHeldArmor(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("proficiencies")
+
+                                                .executes(context ->
+                                                        showArmorProficiencies(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("check")
+
+                                                .executes(context ->
+                                                        checkHeldArmorProficiency(
                                                                 context,
                                                                 EntityArgument.getPlayer(
                                                                         context,
@@ -931,6 +950,114 @@ public final class CharacterCommand {
                         stack.getHoverName().getString()
                                 + " -> "
                                 + finalCategories),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+    private static int showArmorProficiencies(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        String classProficiencies =
+                ArmorProficiencyService
+                        .getClassProficiencies(player)
+                        .stream()
+                        .sorted()
+                        .map(ArmorCategory::name)
+                        .collect(
+                                Collectors.joining(", "));
+
+        String effectiveProficiencies =
+                ArmorProficiencyService
+                        .getProficiencies(player)
+                        .stream()
+                        .sorted()
+                        .map(ArmorCategory::name)
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (classProficiencies.isBlank()) {
+            classProficiencies = "NONE";
+        }
+
+        if (effectiveProficiencies.isBlank()) {
+            effectiveProficiencies = "NONE";
+        }
+
+        String finalClassProficiencies =
+                classProficiencies;
+
+        String finalEffectiveProficiencies =
+                effectiveProficiencies;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Class Armor Proficiencies: "
+                                + finalClassProficiencies),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Effective Armor Proficiencies: "
+                                + finalEffectiveProficiencies),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int checkHeldArmorProficiency(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        ItemStack stack =
+                player.getMainHandItem();
+
+        if (stack.isEmpty()) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Hold an item in your main hand."));
+
+            return 0;
+        }
+
+        String categories =
+                ArmorClassificationService
+                        .getCategories(stack)
+                        .stream()
+                        .sorted()
+                        .map(ArmorCategory::name)
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (categories.isBlank()) {
+
+            context.getSource().sendSuccess(
+                    () -> Component.literal(
+                            stack.getHoverName().getString()
+                                    + " -> UNCLASSIFIED"),
+                    false);
+
+            return Command.SINGLE_SUCCESS;
+        }
+
+        boolean proficient =
+                ArmorProficiencyService.isProficient(
+                        player,
+                        stack);
+
+        String finalCategories =
+                categories;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        stack.getHoverName().getString()
+                                + " -> "
+                                + finalCategories
+                                + " -> "
+                                + (proficient
+                                ? "PROFICIENT"
+                                : "NOT PROFICIENT")),
                 false);
 
         return Command.SINGLE_SUCCESS;
