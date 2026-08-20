@@ -24,6 +24,13 @@ public final class PlayerTickEffects {
             return;
         }
 
+        if (player.tickCount % 5 == 0) {
+            PlayerProgressService.get(player).ifPresent(progress ->
+                    ExternalAbilityBonusService.refreshDerivedAttributesIfChanged(
+                            player,
+                            progress));
+        }
+
         dropLockedHeldItem(player, player.getMainHandItem());
         dropLockedHeldItem(player, player.getOffhandItem());
         dropLockedArmor(player);

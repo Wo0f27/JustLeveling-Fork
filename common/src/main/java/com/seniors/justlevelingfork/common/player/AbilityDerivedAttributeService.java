@@ -5,6 +5,7 @@ import com.seniors.justlevelingfork.registry.RegistryAttributes;
 import java.util.UUID;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 
 public final class AbilityDerivedAttributeService {
 
@@ -68,23 +69,35 @@ public final class AbilityDerivedAttributeService {
             return;
         }
 
-        int strengthModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.STRENGTH));
+        int strengthModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.STRENGTH);
 
-        int dexterityModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.DEXTERITY));
+        int dexterityModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.DEXTERITY);
 
-        int constitutionModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.CONSTITUTION));
+        int constitutionModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.CONSTITUTION);
 
-        int intelligenceModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.INTELLIGENCE));
+        int intelligenceModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.INTELLIGENCE);
 
-        int wisdomModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.WISDOM));
+        int wisdomModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.WISDOM);
 
-        int charismaModifier = AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(RegistryAptitudes.CHARISMA));
+        int charismaModifier = effectiveModifier(
+                player,
+                progress,
+                RegistryAptitudes.CHARISMA);
 
         applyStrength(player, strengthModifier);
         applyDexterity(player, dexterityModifier);
@@ -224,5 +237,18 @@ public final class AbilityDerivedAttributeService {
                 modifier * 0.05D,
                 CHA_COOLDOWN_REDUCTION_UUID,
                 modifier != 0);
+    }
+
+    private static int effectiveModifier(
+            ServerPlayer player,
+            PlayerProgress progress,
+            Aptitude aptitude) {
+
+        int externalBonus =
+                ExternalAbilityBonusService.getBonus(player, aptitude);
+
+        return AbilityScoreService.abilityModifier(
+                progress.getAptitudeLevel(aptitude),
+                externalBonus);
     }
 }
