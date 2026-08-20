@@ -9,8 +9,25 @@ import net.minecraft.world.level.block.Block;
 
 public class RegistryTags {
     public static class Items {
+
+        public static final TagKey<Item> ARMOR_LIGHT =
+                tag("armor/light");
+
+        public static final TagKey<Item> ARMOR_MEDIUM =
+                tag("armor/medium");
+
+        public static final TagKey<Item> ARMOR_HEAVY =
+                tag("armor/heavy");
+
+        public static final TagKey<Item> SHIELDS =
+                tag("armor/shields");
+
         public static TagKey<Item> tag(String name) {
-            return TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, name));
+            return TagKey.create(
+                    Registries.ITEM,
+                    new ResourceLocation(
+                            Constants.MOD_ID,
+                            name));
         }
     }
 

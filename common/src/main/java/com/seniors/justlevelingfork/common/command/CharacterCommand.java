@@ -32,6 +32,10 @@ import com.seniors.justlevelingfork.common.feat.FeatDefinition;
 import com.seniors.justlevelingfork.common.feat.FeatManager;
 import com.seniors.justlevelingfork.common.feat.FeatProgressionService;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
+import com.seniors.justlevelingfork.common.proficiency.ArmorClassificationService;
+import java.util.stream.Collectors;
+import net.minecraft.world.item.ItemStack;
 
 public final class CharacterCommand {
 
@@ -48,6 +52,16 @@ public final class CharacterCommand {
                         .then(Commands.argument(
                                         "player",
                                         EntityArgument.player())
+                                .then(Commands.literal("armor")
+
+                                        .then(Commands.literal("classify")
+
+                                                .executes(context ->
+                                                        classifyHeldArmor(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player")))))
 
                                 .then(Commands.literal("get")
                                         .executes(context ->
@@ -879,5 +893,46 @@ public final class CharacterCommand {
         return showCharacter(
                 context,
                 player);
+    }
+    private static int classifyHeldArmor(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        ItemStack stack =
+                player.getMainHandItem();
+
+        if (stack.isEmpty()) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Hold an item in your main hand."));
+
+            return 0;
+        }
+
+        String categories =
+                ArmorClassificationService
+                        .getCategories(stack)
+                        .stream()
+                        .map(ArmorCategory::name)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (categories.isBlank()) {
+            categories = "UNCLASSIFIED";
+        }
+
+        String finalCategories =
+                categories;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        stack.getHoverName().getString()
+                                + " -> "
+                                + finalCategories),
+                false);
+
+        return Command.SINGLE_SUCCESS;
     }
 }
