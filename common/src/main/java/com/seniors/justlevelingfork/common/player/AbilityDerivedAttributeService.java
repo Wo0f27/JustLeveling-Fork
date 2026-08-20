@@ -5,7 +5,6 @@ import com.seniors.justlevelingfork.registry.RegistryAttributes;
 import java.util.UUID;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 
 public final class AbilityDerivedAttributeService {
 
@@ -69,32 +68,32 @@ public final class AbilityDerivedAttributeService {
             return;
         }
 
-        int strengthModifier = effectiveModifier(
+        int strengthModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.STRENGTH);
 
-        int dexterityModifier = effectiveModifier(
+        int dexterityModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.DEXTERITY);
 
-        int constitutionModifier = effectiveModifier(
+        int constitutionModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.CONSTITUTION);
 
-        int intelligenceModifier = effectiveModifier(
+        int intelligenceModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.INTELLIGENCE);
 
-        int wisdomModifier = effectiveModifier(
+        int wisdomModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.WISDOM);
 
-        int charismaModifier = effectiveModifier(
+        int charismaModifier = AbilityScoreBonusService.getAbilityModifier(
                 player,
                 progress,
                 RegistryAptitudes.CHARISMA);
@@ -237,18 +236,5 @@ public final class AbilityDerivedAttributeService {
                 modifier * 0.05D,
                 CHA_COOLDOWN_REDUCTION_UUID,
                 modifier != 0);
-    }
-
-    private static int effectiveModifier(
-            ServerPlayer player,
-            PlayerProgress progress,
-            Aptitude aptitude) {
-
-        int externalBonus =
-                ExternalAbilityBonusService.getBonus(player, aptitude);
-
-        return AbilityScoreService.abilityModifier(
-                progress.getAptitudeLevel(aptitude),
-                externalBonus);
     }
 }

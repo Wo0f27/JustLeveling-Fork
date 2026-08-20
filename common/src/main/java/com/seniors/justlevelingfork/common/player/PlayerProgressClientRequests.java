@@ -7,14 +7,19 @@ import com.seniors.justlevelingfork.registry.title.Title;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
+import java.util.function.BiConsumer;
 
 public final class PlayerProgressClientRequests {
     private static Consumer<String> aptitudeLevelUpSender = ignored -> {};
     private static Consumer<String> passiveLevelUpSender = ignored -> {};
     private static Consumer<String> passiveLevelDownSender = ignored -> {};
+    private static Consumer<String> classLevelUpSender = ignored -> {};
     private static Consumer<String> setPlayerTitleSender = ignored -> {};
+    private static BiConsumer<String, String> featSelectionSender = (featId, choice) -> {};
     private static BiConsumer<String, Boolean> setToggleSkillSender = (ignored, enabled) -> {};
     private static Runnable openEnderChestSender = () -> {};
+
 
     private PlayerProgressClientRequests() {
     }
@@ -43,10 +48,24 @@ public final class PlayerProgressClientRequests {
         openEnderChestSender = Optional.ofNullable(sender).orElse(() -> {});
     }
 
+    public static void setFeatSelectionSender(
+            BiConsumer<String, String> sender) {
+
+        featSelectionSender =
+                Optional.ofNullable(sender)
+                        .orElse((featId, choice) -> {});
+    }
+
     public static void requestAptitudeLevelUp(Aptitude aptitude) {
         if (aptitude != null) {
             requestAptitudeLevelUp(aptitude.getName());
         }
+    }
+
+    public static void setClassLevelUpSender(Consumer<String> sender) {
+        classLevelUpSender =
+                Optional.ofNullable(sender)
+                        .orElse(ignored -> {});
     }
 
     public static void requestAptitudeLevelUp(String aptitudeName) {
@@ -58,6 +77,18 @@ public final class PlayerProgressClientRequests {
     public static void requestPassiveLevelUp(Passive passive) {
         if (passive != null) {
             requestPassiveLevelUp(passive.getName());
+        }
+    }
+
+    public static void requestClassLevelUp(ResourceLocation classId) {
+        if (classId != null) {
+            requestClassLevelUp(classId.toString());
+        }
+    }
+
+    public static void requestClassLevelUp(String classId) {
+        if (hasText(classId)) {
+            classLevelUpSender.accept(classId);
         }
     }
 
@@ -109,5 +140,31 @@ public final class PlayerProgressClientRequests {
 
     private static boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    public static void requestFeatSelection(
+            ResourceLocation featId,
+            String choice) {
+
+        if (featId == null) {
+            return;
+        }
+
+        requestFeatSelection(
+                featId.toString(),
+                choice);
+    }
+
+    public static void requestFeatSelection(
+            String featId,
+            String choice) {
+
+        if (!hasText(featId)) {
+            return;
+        }
+
+        featSelectionSender.accept(
+                featId,
+                choice == null ? "" : choice);
     }
 }

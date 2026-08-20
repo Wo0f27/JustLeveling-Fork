@@ -55,7 +55,7 @@ public final class ExternalAbilityBonusService {
         BonusSnapshot previous = LAST_BONUSES.put(player, current);
 
         if (!current.equals(previous)) {
-            AbilityDerivedAttributeService.refresh(player, progress);
+            PlayerProgressService.sync(player);
         }
     }
 
@@ -79,8 +79,7 @@ public final class ExternalAbilityBonusService {
                 uuid,
                 enabled);
 
-        PlayerProgressService.get(player).ifPresent(progress ->
-                AbilityDerivedAttributeService.refresh(player, progress));
+        PlayerProgressService.sync(player);
     }
 
     private static Attribute getAttribute(Aptitude aptitude) {

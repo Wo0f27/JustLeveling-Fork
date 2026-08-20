@@ -26,6 +26,12 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import com.seniors.justlevelingfork.common.command.CharacterCommand;
+import com.seniors.justlevelingfork.common.feat.FeatManager;
+import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.event.OnDatapackSyncEvent;
+import com.seniors.justlevelingfork.common.feat.FeatAttributeModifierService;
+import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 
 public final class ForgeRegistryCommonEvents {
     private ForgeRegistryCommonEvents() {
@@ -47,6 +53,7 @@ public final class ForgeRegistryCommonEvents {
                 ForgeLockItemStore.instance()::reload,
                 player -> ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems()));
         AptitudeLevelCommand.register(event.getDispatcher());
+        CharacterCommand.register(event.getDispatcher());
         TitleCommand.register(event.getDispatcher());
         TitleConfigReloadCommand.register(
                 event.getDispatcher(),
@@ -69,6 +76,9 @@ public final class ForgeRegistryCommonEvents {
             }
         });
     }
+
+    @SubscribeEvent
+    public static void onAddReloadListeners(AddReloadListenerEvent event) {event.addListener(FeatManager.INSTANCE);}
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -152,5 +162,53 @@ public final class ForgeRegistryCommonEvents {
                 && !ForgeModularItemRestrictions.canUse(serverPlayer, event.getEntity().getMainHandItem()))) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public static void onDatapackSync(
+            OnDatapackSyncEvent event) {
+
+        ServerPlayer player =
+                event.getPlayer();
+
+        /*
+         * One player joined.
+         */
+        if (player != null) {
+
+            refreshFeatDatapackState(
+                    player);
+
+            return;
+        }
+
+        /*
+         * Server-wide /reload.
+         */
+        event.getPlayerList()
+                .getPlayers()
+                .forEach(
+                        ForgeRegistryCommonEvents
+                                ::refreshFeatDatapackState);
+    }
+
+    private static void refreshFeatDatapackState(
+            ServerPlayer player) {
+
+        /*
+         * Recalculate any attribute modifiers using
+         * the freshly loaded datapack definitions.
+         */
+        PlayerProgressService.get(player)
+                .ifPresent(progress ->
+                        FeatAttributeModifierService.refresh(
+                                player,
+                                progress));
+
+        /*
+         * Then update the client's feat list/UI.
+         */
+        ForgeServerNetworking
+                .syncFeatDefinitions(player);
     }
 }

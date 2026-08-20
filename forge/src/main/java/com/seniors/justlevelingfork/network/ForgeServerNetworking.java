@@ -29,11 +29,18 @@ import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+import com.seniors.justlevelingfork.network.packet.common.ForgeClassLevelUpPacket;
+import com.seniors.justlevelingfork.network.FeatDefinitionsSyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeFeatDefinitionsSyncPacket;
+import com.seniors.justlevelingfork.network.packet.common.ForgeFeatSelectionPacket;
+import com.seniors.justlevelingfork.network.AbilityScoresSyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeAbilityScoresSyncPacket;
+
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "9";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -57,10 +64,24 @@ public final class ForgeServerNetworking {
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
+                ForgeFeatDefinitionsSyncPacket.class,
+                ForgeFeatDefinitionsSyncPacket::toBytes,
+                ForgeFeatDefinitionsSyncPacket::new,
+                ForgeFeatDefinitionsSyncPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
                 ForgeSkillMessagePacket.class,
                 ForgeSkillMessagePacket::toBytes,
                 ForgeSkillMessagePacket::new,
                 ForgeSkillMessagePacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeAbilityScoresSyncPacket.class,
+                ForgeAbilityScoresSyncPacket::toBytes,
+                ForgeAbilityScoresSyncPacket::new,
+                ForgeAbilityScoresSyncPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
@@ -113,6 +134,13 @@ public final class ForgeServerNetworking {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         channel.registerMessage(
                 packetId++,
+                ForgeFeatSelectionPacket.class,
+                ForgeFeatSelectionPacket::toBytes,
+                ForgeFeatSelectionPacket::new,
+                ForgeFeatSelectionPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
                 ForgePassiveLevelDownPacket.class,
                 ForgePassiveLevelDownPacket::toBytes,
                 ForgePassiveLevelDownPacket::new,
@@ -139,9 +167,18 @@ public final class ForgeServerNetworking {
                 ForgeOpenEnderChestPacket::new,
                 ForgeOpenEnderChestPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
+                ForgeClassLevelUpPacket.class,
+                ForgeClassLevelUpPacket::toBytes,
+                ForgeClassLevelUpPacket::new,
+                ForgeClassLevelUpPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
 
         PlayerProgressClientRequests.setAptitudeLevelUpSender(aptitudeName ->
                 sendToServer(new ForgeAptitudeLevelUpPacket(aptitudeName)));
+        PlayerProgressClientRequests.setFeatSelectionSender((featId, choice) ->
+                sendToServer(new ForgeFeatSelectionPacket(featId, choice)));
         PlayerProgressClientRequests.setPassiveLevelUpSender(passiveName ->
                 sendToServer(new ForgePassiveLevelUpPacket(passiveName)));
         PlayerProgressClientRequests.setPassiveLevelDownSender(passiveName ->
@@ -152,18 +189,27 @@ public final class ForgeServerNetworking {
                 sendToServer(new ForgeToggleSkillPacket(skillName, enabled)));
         PlayerProgressClientRequests.setOpenEnderChestSender(() ->
                 sendToServer(new ForgeOpenEnderChestPacket()));
+        PlayerProgressClientRequests.setClassLevelUpSender(classId ->
+                sendToServer(new ForgeClassLevelUpPacket(classId)));
         AptitudeWarningService.setSender(ForgeServerNetworking::sendAptitudeWarning);
         SkillMessageService.setSender(ForgeServerNetworking::sendSkillMessage);
         TitleUnlockService.setSender(ForgeServerNetworking::sendTitleUnlock);
     }
 
+
+
     public static void sendToServer(Object message) {
         channel.sendToServer(message);
     }
 
+    public static void syncAbilityScores(ServerPlayer player, PlayerProgress progress) {if (player == null || progress == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeAbilityScoresSyncPacket(AbilityScoresSyncPayload.current(player, progress)));}
+
     public static void syncPlayerProgress(ServerPlayer player, PlayerProgress progress) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));
-    }
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));syncAbilityScores(player, progress);}
+
+    public static void syncFeatDefinitions(ServerPlayer player) {if (player == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeFeatDefinitionsSyncPacket(FeatDefinitionsSyncPayload.current()));}
 
     public static void syncLockItems(ServerPlayer player, List<LockItem> lockItems) {
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeLockItemSyncPacket(lockItems));

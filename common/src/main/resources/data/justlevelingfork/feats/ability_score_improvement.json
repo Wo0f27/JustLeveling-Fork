@@ -1,0 +1,12 @@
+{
+  "name": "Ability Improvement",
+  "description": "Increase one ability by 2, or two abilities by 1.",
+  "repeatable": true,
+  "max_rank": 0,
+
+  "effect": {
+    "type": "justlevelingfork:ability_score_improvement",
+    "points": 2,
+    "max_score": 20
+  }
+}

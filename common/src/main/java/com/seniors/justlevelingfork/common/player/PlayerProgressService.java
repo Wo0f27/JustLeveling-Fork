@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import com.seniors.justlevelingfork.common.feat.FeatAttributeModifierService;
 
 
 public final class PlayerProgressService {
@@ -49,13 +50,16 @@ public final class PlayerProgressService {
         return APTITUDE_LEVEL_PROVIDER;
     }
 
-    public static int getAbilityScore(ServerPlayer player, Aptitude aptitude) {
+    public static int getAbilityScore(
+            ServerPlayer player,
+            Aptitude aptitude) {
+
         if (aptitude == null) {
             return 10;
         }
 
         int externalBonus =
-                ExternalAbilityBonusService.getBonus(player, aptitude);
+                AbilityScoreBonusService.getExternalBonus(player, aptitude);
 
         return get(player)
                 .map(progress -> AbilityScoreService.abilityScore(
@@ -64,13 +68,16 @@ public final class PlayerProgressService {
                 .orElse(10 + externalBonus);
     }
 
-    public static int getAbilityModifier(ServerPlayer player, Aptitude aptitude) {
+    public static int getAbilityModifier(
+            ServerPlayer player,
+            Aptitude aptitude) {
+
         if (aptitude == null) {
             return 0;
         }
 
         int externalBonus =
-                ExternalAbilityBonusService.getBonus(player, aptitude);
+                AbilityScoreBonusService.getExternalBonus(player, aptitude);
 
         return get(player)
                 .map(progress -> AbilityScoreService.abilityModifier(
@@ -123,7 +130,14 @@ public final class PlayerProgressService {
         return get(player)
                 .map(progress -> {
                     mutation.accept(progress);
-                    AbilityDerivedAttributeService.refresh(player, progress);
+
+                    AbilityDerivedAttributeService.refresh(
+                            player,
+                            progress);
+
+                    FeatAttributeModifierService.refresh(
+                            player,
+                            progress);
 
                     if (refreshTitles) {
                         refreshUnlockedTitles(player, progress);
@@ -140,6 +154,7 @@ public final class PlayerProgressService {
         return get(player)
                 .map(progress -> {
                     AbilityDerivedAttributeService.refresh(player, progress);
+                    FeatAttributeModifierService.refresh(player, progress);
                     refreshUnlockedTitles(player, progress);
                     normalizeSelectedTitle(player, progress);
                     changeListener.accept(player, progress);
