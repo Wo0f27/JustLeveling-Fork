@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntUnaryOperator;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 
 public class PlayerProgress {
     private static final int MAX_PERSISTED_APTITUDE_LEVEL = 1000;
@@ -33,6 +34,11 @@ public class PlayerProgress {
     // Multiclass progression.
     // Keys are namespaced class IDs, e.g. "justlevelingfork:fighter".
     public final Map<String, Integer> classLevels = new HashMap<>();
+    // The class chosen when this character was first created.
+    //
+    // This is intentionally stored separately from classLevels because
+    // multiclass proficiency rules may depend on which class came first.
+    public String startingClass = "";
     // One subclass per class, e.g.
     // "justlevelingfork:fighter" -> "justlevelingfork:battle_master"
     public final Map<String, String> subclasses = new HashMap<>();
@@ -130,6 +136,28 @@ public class PlayerProgress {
         }
 
         return Math.max(0, classLevels.getOrDefault(classId, 0));
+    }
+
+    public String getStartingClass() {
+        return startingClass == null
+                ? ""
+                : startingClass;
+    }
+
+    public void setStartingClass(String classId) {
+
+        if (classId == null || classId.isBlank()) {
+            startingClass = "";
+            return;
+        }
+
+        ResourceLocation id =
+                ResourceLocation.tryParse(classId);
+
+        startingClass =
+                id == null
+                        ? ""
+                        : id.toString();
     }
 
     public boolean hasClass(String classId) {
@@ -261,6 +289,7 @@ public class PlayerProgress {
         tag.putInt("pendingLevelUps", pendingLevelUps);
         tag.putInt("pendingAdvancements", pendingAdvancements);
         tag.putBoolean("startingAbilitiesAssigned", startingAbilitiesAssigned);
+        tag.putString("startingClass", getStartingClass());
 
         CompoundTag classLevelsTag = new CompoundTag();
         classLevels.forEach(classLevelsTag::putInt);
@@ -297,6 +326,51 @@ public class PlayerProgress {
                 classLevels.put(classId, level);
             }
         });
+
+        /*
+         * Starting class was introduced after classLevels.
+         *
+         * New saves persist it explicitly.
+         */
+        startingClass = "";
+
+        if (tag.contains("startingClass")) {
+
+            ResourceLocation storedStartingClass =
+                    ResourceLocation.tryParse(
+                            tag.getString("startingClass"));
+
+            if (storedStartingClass != null) {
+                startingClass =
+                        storedStartingClass.toString();
+            }
+        }
+
+        /*
+         * Backward compatibility:
+         *
+         * If an old save has exactly one class, it is safe to infer
+         * that this was the starting class.
+         *
+         * If an old save is already multiclassed, we deliberately
+         * do NOT guess based on HashMap iteration order.
+         */
+        if (startingClass.isBlank()
+                && classLevels.size() == 1) {
+
+            String onlyClass =
+                    classLevels.keySet()
+                            .iterator()
+                            .next();
+
+            ResourceLocation inferred =
+                    ResourceLocation.tryParse(
+                            onlyClass);
+
+            if (inferred != null) {
+                startingClass = inferred.toString();
+            }
+        }
 
         CompoundTag subclassesTag = tag.getCompound("subclasses");
         subclassesTag.getAllKeys().forEach(classId -> {
@@ -354,6 +428,7 @@ public class PlayerProgress {
         characterXp = source.characterXp;
         pendingLevelUps = source.pendingLevelUps;
         pendingAdvancements = source.pendingAdvancements;
+        startingClass = source.getStartingClass();
 
         classLevels.clear();
         classLevels.putAll(source.classLevels);
@@ -371,6 +446,7 @@ public class PlayerProgress {
         pendingLevelUps = 0;
         pendingAdvancements = 0;
         startingAbilitiesAssigned = false;
+        startingClass = "";
 
         classLevels.clear();
         subclasses.clear();

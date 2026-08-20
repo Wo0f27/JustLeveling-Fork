@@ -62,55 +62,19 @@ public final class CharacterInitializationService {
             return null;
         }
 
-        if (classId.equals(RegistryClasses.BARBARIAN)) {
-            return assignment(15, 13, 14, 10, 12, 11);
+        CharacterClassDefinition definition =
+                RegistryClasses.getDefinition(
+                        classId);
+
+        if (definition == null
+                || definition
+                .recommendedAbilityScores()
+                .isEmpty()) {
+            return null;
         }
 
-        if (classId.equals(RegistryClasses.BARD)) {
-            return assignment(10, 14, 13, 11, 12, 15);
-        }
-
-        if (classId.equals(RegistryClasses.CLERIC)) {
-            return assignment(13, 12, 14, 10, 15, 11);
-        }
-
-        if (classId.equals(RegistryClasses.DRUID)) {
-            return assignment(11, 13, 14, 12, 15, 10);
-        }
-
-        if (classId.equals(RegistryClasses.FIGHTER)) {
-            return assignment(15, 13, 14, 10, 12, 11);
-        }
-
-        if (classId.equals(RegistryClasses.MONK)) {
-            return assignment(12, 15, 13, 11, 14, 10);
-        }
-
-        if (classId.equals(RegistryClasses.PALADIN)) {
-            return assignment(15, 11, 13, 10, 12, 14);
-        }
-
-        if (classId.equals(RegistryClasses.RANGER)) {
-            return assignment(12, 15, 13, 10, 14, 11);
-        }
-
-        if (classId.equals(RegistryClasses.ROGUE)) {
-            return assignment(10, 15, 14, 11, 13, 12);
-        }
-
-        if (classId.equals(RegistryClasses.SORCERER)) {
-            return assignment(10, 13, 14, 11, 12, 15);
-        }
-
-        if (classId.equals(RegistryClasses.WARLOCK)) {
-            return assignment(10, 13, 14, 11, 12, 15);
-        }
-
-        if (classId.equals(RegistryClasses.WIZARD)) {
-            return assignment(10, 13, 14, 15, 12, 11);
-        }
-
-        return null;
+        return new LinkedHashMap<>(
+                definition.recommendedAbilityScores());
     }
 
     private static Map<Aptitude, Integer> assignment(
@@ -137,9 +101,28 @@ public final class CharacterInitializationService {
     public static ResourceLocation getStartingClass(
             PlayerProgress progress) {
 
-        if (progress == null
-                || progress.getCharacterLevel() != 1
-                || progress.classLevels.size() != 1) {
+        if (progress == null) {
+            return null;
+        }
+
+        /*
+         * Preferred path: use the explicitly persisted starting
+         * class introduced by the class-definition foundation.
+         */
+        ResourceLocation stored =
+                ResourceLocation.tryParse(
+                        progress.getStartingClass());
+
+        if (stored != null) {
+            return stored;
+        }
+
+        /*
+         * Legacy/in-memory fallback.
+         *
+         * Only infer when exactly one class exists.
+         */
+        if (progress.classLevels.size() != 1) {
             return null;
         }
 
@@ -148,11 +131,12 @@ public final class CharacterInitializationService {
                         .iterator()
                         .next();
 
-        if (entry.getValue() != 1) {
+        if (entry.getValue() <= 0) {
             return null;
         }
 
-        return ResourceLocation.tryParse(entry.getKey());
+        return ResourceLocation.tryParse(
+                entry.getKey());
     }
 
     public static Map<Aptitude, Integer>

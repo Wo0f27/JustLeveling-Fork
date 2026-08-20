@@ -431,6 +431,16 @@ public final class CharacterCommand {
 
                         return Command.SINGLE_SUCCESS;
                     }
+                    String startingClass =
+                            progress.getStartingClass();
+
+                    context.getSource().sendSuccess(
+                            () -> Component.literal(
+                                    "Starting Class: "
+                                            + (startingClass.isBlank()
+                                            ? "Unknown"
+                                            : startingClass)),
+                            false);
 
                     context.getSource().sendSuccess(
                             () -> Component.literal(

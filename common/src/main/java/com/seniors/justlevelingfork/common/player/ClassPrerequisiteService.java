@@ -1,14 +1,12 @@
 package com.seniors.justlevelingfork.common.player;
 
-import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import com.seniors.justlevelingfork.registry.RegistryClasses;
+import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class ClassPrerequisiteService {
-
-    private static final int MULTICLASS_SCORE_REQUIREMENT = 13;
 
     private ClassPrerequisiteService() {
     }
@@ -24,8 +22,10 @@ public final class ClassPrerequisiteService {
             return false;
         }
 
-        // D&D multiclassing requires meeting the prerequisite
-        // of every class the character already has.
+        /*
+         * D&D multiclassing requires meeting the prerequisite
+         * of every class the character already has.
+         */
         for (Map.Entry<String, Integer> entry
                 : progress.classLevels.entrySet()) {
 
@@ -34,7 +34,8 @@ public final class ClassPrerequisiteService {
             }
 
             ResourceLocation existingClass =
-                    ResourceLocation.tryParse(entry.getKey());
+                    ResourceLocation.tryParse(
+                            entry.getKey());
 
             if (existingClass != null
                     && !meetsClassRequirement(
@@ -45,7 +46,10 @@ public final class ClassPrerequisiteService {
             }
         }
 
-        // And the prerequisite of the class being entered.
+        /*
+         * The character must also meet the prerequisite
+         * of the class being entered.
+         */
         return meetsClassRequirement(
                 player,
                 progress,
@@ -61,67 +65,40 @@ public final class ClassPrerequisiteService {
             return false;
         }
 
-        if (classId.equals(RegistryClasses.BARBARIAN)) {
-            return score(player, progress, RegistryAptitudes.STRENGTH) >= 13;
+        CharacterClassDefinition definition =
+                RegistryClasses.getDefinition(
+                        classId);
+
+        /*
+         * Preserve the previous behavior for unknown/addon
+         * classes until a public class-registration API exists.
+         */
+        if (definition == null) {
+            return true;
         }
 
-        if (classId.equals(RegistryClasses.BARD)) {
-            return score(player, progress, RegistryAptitudes.CHARISMA) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.CLERIC)) {
-            return score(player, progress, RegistryAptitudes.WISDOM) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.DRUID)) {
-            return score(player, progress, RegistryAptitudes.WISDOM) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.FIGHTER)) {
-            return score(player, progress, RegistryAptitudes.STRENGTH) >= 13
-                    || score(player, progress, RegistryAptitudes.DEXTERITY) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.MONK)) {
-            return score(player, progress, RegistryAptitudes.DEXTERITY) >= 13
-                    && score(player, progress, RegistryAptitudes.WISDOM) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.PALADIN)) {
-            return score(player, progress, RegistryAptitudes.STRENGTH) >= 13
-                    && score(player, progress, RegistryAptitudes.CHARISMA) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.RANGER)) {
-            return score(player, progress, RegistryAptitudes.DEXTERITY) >= 13
-                    && score(player, progress, RegistryAptitudes.WISDOM) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.ROGUE)) {
-            return score(player, progress, RegistryAptitudes.DEXTERITY) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.SORCERER)) {
-            return score(player, progress, RegistryAptitudes.CHARISMA) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.WARLOCK)) {
-            return score(player, progress, RegistryAptitudes.CHARISMA) >= 13;
-        }
-
-        if (classId.equals(RegistryClasses.WIZARD)) {
-            return score(player, progress, RegistryAptitudes.INTELLIGENCE) >= 13;
-        }
-
-        // Unknown/addon classes currently have no prerequisite.
-        return true;
+        return definition
+                .multiclassRequirement()
+                .meets(
+                        aptitude ->
+                                score(
+                                        player,
+                                        progress,
+                                        aptitude));
     }
 
     private static int score(
             ServerPlayer player,
             PlayerProgress progress,
-            com.seniors.justlevelingfork.registry.aptitude.Aptitude aptitude) {
+            Aptitude aptitude) {
 
+        /*
+         * IMPORTANT:
+         * This intentionally uses the effective score.
+         *
+         * External ancestry bonuses therefore continue
+         * counting toward multiclass requirements.
+         */
         return AbilityScoreBonusService.getAbilityScore(
                 player,
                 progress,

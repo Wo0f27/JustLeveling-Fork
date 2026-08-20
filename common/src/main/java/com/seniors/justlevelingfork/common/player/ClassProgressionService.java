@@ -16,6 +16,20 @@ public final class ClassProgressionService {
                 .orElse(0);
     }
 
+    public static ResourceLocation getStartingClass(
+            ServerPlayer player) {
+
+        if (player == null) {
+            return null;
+        }
+
+        return PlayerProgressService.get(player)
+                .map(progress ->
+                        ResourceLocation.tryParse(
+                                progress.getStartingClass()))
+                .orElse(null);
+    }
+
     public static int getClassLevel(
             ServerPlayer player,
             ResourceLocation classId) {
@@ -61,6 +75,9 @@ public final class ClassProgressionService {
                 player,
                 updated -> {
 
+                    updated.setStartingClass(
+                            classId.toString());
+
                     updated.setClassLevel(
                             classId.toString(),
                             1);
@@ -94,6 +111,9 @@ public final class ClassProgressionService {
         int currentClassLevel =
                 progress.getClassLevel(classId.toString());
 
+        boolean assigningInitialClass =
+                progress.getCharacterLevel() == 0;
+
         if (currentClassLevel == 0
                 && progress.getCharacterLevel() > 0
                 && !ClassPrerequisiteService.canMulticlassInto(
@@ -105,9 +125,17 @@ public final class ClassProgressionService {
 
         return PlayerProgressService.update(
                 player,
-                updated -> updated.setClassLevel(
-                        classId.toString(),
-                        currentClassLevel + 1));
+                updated -> {
+
+                    if (assigningInitialClass) {
+                        updated.setStartingClass(
+                                classId.toString());
+                    }
+
+                    updated.setClassLevel(
+                            classId.toString(),
+                            currentClassLevel + 1);
+                });
     }
 
     public static boolean setClassLevel(
@@ -126,8 +154,13 @@ public final class ClassProgressionService {
             return false;
         }
 
+        boolean assigningInitialClass =
+                progress.getCharacterLevel() == 0
+                        && level > 0;
+
         int currentClassLevel =
-                progress.getClassLevel(classId.toString());
+                progress.getClassLevel(
+                        classId.toString());
 
         boolean enteringNewClass =
                 currentClassLevel == 0
@@ -143,17 +176,27 @@ public final class ClassProgressionService {
         }
 
         int otherClassLevels =
-                progress.getCharacterLevel() - currentClassLevel;
+                progress.getCharacterLevel()
+                        - currentClassLevel;
 
-        if (otherClassLevels + level > MAX_CHARACTER_LEVEL) {
+        if (otherClassLevels + level
+                > MAX_CHARACTER_LEVEL) {
             return false;
         }
 
         return PlayerProgressService.update(
                 player,
-                updated -> updated.setClassLevel(
-                        classId.toString(),
-                        level));
+                updated -> {
+
+                    if (assigningInitialClass) {
+                        updated.setStartingClass(
+                                classId.toString());
+                    }
+
+                    updated.setClassLevel(
+                            classId.toString(),
+                            level);
+                });
     }
 
     public static String getSubclass(
