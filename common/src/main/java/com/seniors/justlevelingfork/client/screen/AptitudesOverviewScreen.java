@@ -35,6 +35,7 @@ import com.seniors.justlevelingfork.common.player.AbilityScoreService;
 import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
 import com.seniors.justlevelingfork.common.player.ClassProgressionService;
 import com.seniors.justlevelingfork.client.screen.FeatSelectionScreen;
+import com.seniors.justlevelingfork.common.player.AbilityScoreClientState;
 
 public class AptitudesOverviewScreen extends Screen {
     private static final int WIDTH = 176;
@@ -254,6 +255,22 @@ public class AptitudesOverviewScreen extends Screen {
             int level =
                     progress.getAptitudeLevel(aptitude);
 
+            int baseAbilityScore =
+                    AbilityScoreService.abilityScore(level);
+
+            Integer syncedAbilityScore =
+                    AbilityScoreClientState.get(aptitude);
+
+            int abilityScore =
+                    syncedAbilityScore != null
+                            ? syncedAbilityScore
+                            : baseAbilityScore;
+
+            int abilityModifier =
+                    Math.floorDiv(
+                            abilityScore - 10,
+                            2);
+
             int x =
                     left + 12 + i % 2 * 77;
 
@@ -307,11 +324,12 @@ public class AptitudesOverviewScreen extends Screen {
 
             graphics.drawString(
                     font,
-                    Component.translatable(
-                            "screen.aptitude.experience",
-                            twoDigits(level),
-                            CommonConfigService
-                                    .aptitudeMaxLevel()),
+                    Component.literal(
+                            abilityScore
+                                    + " ("
+                                    + (abilityModifier >= 0 ? "+" : "")
+                                    + abilityModifier
+                                    + ")"),
                     x + 24,
                     y + 14,
                     0xAAAAAA,
@@ -578,15 +596,32 @@ public class AptitudesOverviewScreen extends Screen {
     private void renderSkills(GuiGraphics graphics, PlayerProgress progress, int left, int top, int mouseX, int mouseY) {
         Aptitude aptitude = selectedAptitude();
         int aptitudeLevel = progress.getAptitudeLevel(aptitude);
+        int baseAbilityScore =
+                AbilityScoreService.abilityScore(aptitudeLevel);
+
+        Integer syncedAbilityScore =
+                AbilityScoreClientState.get(aptitude);
+
+        int abilityScore =
+                syncedAbilityScore != null
+                        ? syncedAbilityScore
+                        : baseAbilityScore;
+
+        int abilityModifier =
+                Math.floorDiv(
+                        abilityScore - 10,
+                        2);
         graphics.blit(aptitude.getLockedTexture(aptitudeLevel, CommonConfigService.aptitudeMaxLevel()), left + 12, top + 9, 0, 0, 16, 16, 16, 16);
         graphics.drawString(font, Component.translatable(aptitude.getKey()).withStyle(ChatFormatting.BOLD), left + 34, top + 8, FONT_COLOR, false);
         graphics.drawString(
                 font,
-                Component.translatable(
-                        "screen.skill.level_and_rank",
-                        twoDigits(aptitudeLevel),
-                        CommonConfigService.aptitudeMaxLevel(),
-                        aptitude.getRank(aptitudeLevel, CommonConfigService.aptitudeMaxLevel())),
+                Component.literal(
+                        "Score "
+                                + abilityScore
+                                + " ("
+                                + (abilityModifier >= 0 ? "+" : "")
+                                + abilityModifier
+                                + ")"),
                 left + 34,
                 top + 18,
                 FONT_COLOR,
@@ -617,9 +652,27 @@ public class AptitudesOverviewScreen extends Screen {
     }
 
     private List<Component> aptitudeTooltip(PlayerProgress progress, Aptitude aptitude) {
-        int aptitudeLevel = progress.getAptitudeLevel(aptitude);
-        int abilityScore = AbilityScoreService.abilityScore(aptitudeLevel);
-        int modifier = AbilityScoreService.abilityModifier(aptitudeLevel);
+        int aptitudeLevel =
+                progress.getAptitudeLevel(aptitude);
+
+        int baseAbilityScore =
+                AbilityScoreService.abilityScore(aptitudeLevel);
+
+        Integer syncedAbilityScore =
+                AbilityScoreClientState.get(aptitude);
+
+        int abilityScore =
+                syncedAbilityScore != null
+                        ? syncedAbilityScore
+                        : baseAbilityScore;
+
+        int externalBonus =
+                abilityScore - baseAbilityScore;
+
+        int modifier =
+                Math.floorDiv(
+                        abilityScore - 10,
+                        2);
 
         List<Component> lines = new ArrayList<>();
 
@@ -628,6 +681,17 @@ public class AptitudesOverviewScreen extends Screen {
 
         lines.add(Component.literal("Ability Score: " + abilityScore)
                 .withStyle(ChatFormatting.WHITE));
+        if (externalBonus != 0) {
+            lines.add(Component.literal(
+                            "Base Score: " + baseAbilityScore)
+                    .withStyle(ChatFormatting.GRAY));
+
+            lines.add(Component.literal(
+                            "External Bonus: "
+                                    + (externalBonus > 0 ? "+" : "")
+                                    + externalBonus)
+                    .withStyle(ChatFormatting.GREEN));
+        }
 
         lines.add(Component.literal(
                         "Modifier: " + (modifier >= 0 ? "+" : "") + modifier)

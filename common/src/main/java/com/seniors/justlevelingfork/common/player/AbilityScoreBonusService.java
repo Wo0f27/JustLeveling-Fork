@@ -46,7 +46,9 @@ public final class AbilityScoreBonusService {
             return 0;
         }
 
-        int total = 0;
+        int total = ExternalAbilityBonusService.getBonus(
+                player,
+                aptitude);
 
         for (Map.Entry<ResourceLocation, Provider> entry : PROVIDERS.entrySet()) {
             try {
