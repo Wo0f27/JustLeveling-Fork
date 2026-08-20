@@ -8,8 +8,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.player.Player;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public final class ExternalAbilityBonusService {
+
+    private static final Map<ServerPlayer, BonusSnapshot> LAST_BONUSES =
+            new WeakHashMap<>();
+
 
     private ExternalAbilityBonusService() {
     }
@@ -28,6 +34,29 @@ public final class ExternalAbilityBonusService {
         }
 
         return (int) Math.round(instance.getValue());
+    }
+
+    public static void refreshDerivedAttributesIfChanged(
+            ServerPlayer player,
+            PlayerProgress progress) {
+
+        if (player == null || progress == null) {
+            return;
+        }
+
+        BonusSnapshot current = new BonusSnapshot(
+                getBonus(player, RegistryAptitudes.STRENGTH),
+                getBonus(player, RegistryAptitudes.DEXTERITY),
+                getBonus(player, RegistryAptitudes.CONSTITUTION),
+                getBonus(player, RegistryAptitudes.INTELLIGENCE),
+                getBonus(player, RegistryAptitudes.WISDOM),
+                getBonus(player, RegistryAptitudes.CHARISMA));
+
+        BonusSnapshot previous = LAST_BONUSES.put(player, current);
+
+        if (!current.equals(previous)) {
+            AbilityDerivedAttributeService.refresh(player, progress);
+        }
     }
 
     public static void applyPermanentAddition(
@@ -80,5 +109,14 @@ public final class ExternalAbilityBonusService {
         }
 
         return null;
+    }
+
+    private record BonusSnapshot(
+            int strength,
+            int dexterity,
+            int constitution,
+            int intelligence,
+            int wisdom,
+            int charisma) {
     }
 }
