@@ -24,6 +24,26 @@ public final class RegistryAttributes {
     public static final Attribute ENTITY_REACH = register("entity_reach");
     public static final Attribute BLOCK_REACH = register("block_reach");
 
+
+    public static final Attribute ABILITY_BONUS_STRENGTH =
+            registerSigned("ability_bonus_strength");
+
+    public static final Attribute ABILITY_BONUS_DEXTERITY =
+            registerSigned("ability_bonus_dexterity");
+
+    public static final Attribute ABILITY_BONUS_CONSTITUTION =
+            registerSigned("ability_bonus_constitution");
+
+    public static final Attribute ABILITY_BONUS_INTELLIGENCE =
+            registerSigned("ability_bonus_intelligence");
+
+    public static final Attribute ABILITY_BONUS_WISDOM =
+            registerSigned("ability_bonus_wisdom");
+
+    public static final Attribute ABILITY_BONUS_CHARISMA =
+            registerSigned("ability_bonus_charisma");
+
+
     private static final Map<ResourceLocation, Attribute> ATTRIBUTES_BY_ID = new LinkedHashMap<>();
 
     private RegistryAttributes() {
@@ -92,6 +112,15 @@ public final class RegistryAttributes {
                 .setSyncable(true);
     }
 
+    private static Attribute registerSigned(String name) {
+        return new RangedAttribute(
+                "attribute.name." + Constants.MOD_ID + "." + name,
+                0.0D,
+                -1024.0D,
+                1024.0D)
+                .setSyncable(true);
+    }
+
     private static void ensureLoaded() {
         if (!ATTRIBUTES_BY_ID.isEmpty()) {
             return;
@@ -104,6 +133,12 @@ public final class RegistryAttributes {
         put("magic_resist", MAGIC_RESIST);
         put("entity_reach", ENTITY_REACH);
         put("block_reach", BLOCK_REACH);
+        put("ability_bonus_strength", ABILITY_BONUS_STRENGTH);
+        put("ability_bonus_dexterity", ABILITY_BONUS_DEXTERITY);
+        put("ability_bonus_constitution", ABILITY_BONUS_CONSTITUTION);
+        put("ability_bonus_intelligence", ABILITY_BONUS_INTELLIGENCE);
+        put("ability_bonus_wisdom", ABILITY_BONUS_WISDOM);
+        put("ability_bonus_charisma", ABILITY_BONUS_CHARISMA);
     }
 
     private static void put(String name, Attribute attribute) {

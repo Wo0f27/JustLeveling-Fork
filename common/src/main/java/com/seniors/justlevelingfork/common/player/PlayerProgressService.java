@@ -54,10 +54,14 @@ public final class PlayerProgressService {
             return 10;
         }
 
+        int externalBonus =
+                ExternalAbilityBonusService.getBonus(player, aptitude);
+
         return get(player)
                 .map(progress -> AbilityScoreService.abilityScore(
-                        progress.getAptitudeLevel(aptitude)))
-                .orElse(10);
+                        progress.getAptitudeLevel(aptitude),
+                        externalBonus))
+                .orElse(10 + externalBonus);
     }
 
     public static int getAbilityModifier(ServerPlayer player, Aptitude aptitude) {
@@ -65,10 +69,14 @@ public final class PlayerProgressService {
             return 0;
         }
 
+        int externalBonus =
+                ExternalAbilityBonusService.getBonus(player, aptitude);
+
         return get(player)
                 .map(progress -> AbilityScoreService.abilityModifier(
-                        progress.getAptitudeLevel(aptitude)))
-                .orElse(0);
+                        progress.getAptitudeLevel(aptitude),
+                        externalBonus))
+                .orElse(Math.floorDiv(externalBonus, 2));
     }
 
     public static int getAbilityScore(
