@@ -75,9 +75,10 @@ public final class ArmorProficiencyService {
      *
      * This combines:
      *
-     * 1. Starting-class armor proficiencies
-     * 2. Multiclass armor proficiencies
-     * 3. Registered proficiency providers
+     * 1. Baseline Garb proficiency
+     * 2. Starting-class armor proficiencies
+     * 3. Multiclass armor proficiencies
+     * 4. Registered proficiency providers
      */
     public static Set<ArmorCategory> getProficiencies(
             ServerPlayer player) {
@@ -89,6 +90,13 @@ public final class ArmorProficiencyService {
         EnumSet<ArmorCategory> result =
                 EnumSet.noneOf(
                         ArmorCategory.class);
+
+        /*
+         * Garb represents ordinary clothing and class-oriented
+         * unarmored equipment. Every character can use it.
+         */
+        result.add(
+                ArmorCategory.GARB);
 
         PlayerProgress progress =
                 PlayerProgressService.get(player)

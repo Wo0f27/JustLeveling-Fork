@@ -10,6 +10,9 @@ import net.minecraft.world.level.block.Block;
 public class RegistryTags {
     public static class Items {
 
+        public static final TagKey<Item> ARMOR_GARB =
+                tag("armor/garb");
+
         public static final TagKey<Item> ARMOR_LIGHT =
                 tag("armor/light");
 

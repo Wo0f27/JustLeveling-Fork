@@ -11,6 +11,12 @@ public final class ArmorClassificationService {
     private ArmorClassificationService() {
     }
 
+    public static boolean isGarb(ItemStack stack) {
+        return valid(stack)
+                && stack.is(
+                RegistryTags.Items.ARMOR_GARB);
+    }
+
     public static boolean isLight(ItemStack stack) {
         return valid(stack)
                 && stack.is(
@@ -36,14 +42,14 @@ public final class ArmorClassificationService {
     }
 
     /**
-     * Returns every JLF armor category assigned to this item.
+     * Returns every JLF worn-equipment category assigned
+     * to this item.
      *
-     * Normally an armor piece should have exactly one of
-     * LIGHT, MEDIUM or HEAVY.
+     * Normally a worn item should have exactly one of
+     * GARB, LIGHT, MEDIUM or HEAVY.
      *
-     * We return a set rather than assuming exclusivity so
-     * datapack mistakes or unusual addon equipment remain
-     * observable rather than silently choosing one category.
+     * Shields are classified separately but returned by
+     * this general classification method when applicable.
      */
     public static Set<ArmorCategory> getCategories(
             ItemStack stack) {
@@ -55,6 +61,10 @@ public final class ArmorClassificationService {
         EnumSet<ArmorCategory> categories =
                 EnumSet.noneOf(
                         ArmorCategory.class);
+        if (isGarb(stack)) {
+            categories.add(
+                    ArmorCategory.GARB);
+        }
 
         if (isLight(stack)) {
             categories.add(

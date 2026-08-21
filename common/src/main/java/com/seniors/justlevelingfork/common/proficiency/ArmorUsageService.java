@@ -10,10 +10,11 @@ public final class ArmorUsageService {
 
     private ArmorUsageService() {
     }
-
     /**
-     * Returns all armor categories currently worn in the
-     * player's normal Minecraft armor slots.
+     * Returns all classified worn-equipment categories in
+     * the player's normal Minecraft armor slots.
+     *
+     * This includes Garb, Light, Medium and Heavy.
      *
      * Shields are intentionally excluded because they are
      * handled separately as held equipment.
@@ -51,8 +52,23 @@ public final class ArmorUsageService {
     public static boolean isWearingAnyArmor(
             ServerPlayer player) {
 
-        return !getWornArmorCategories(player)
-                .isEmpty();
+        Set<ArmorCategory> categories =
+                getWornArmorCategories(player);
+
+        return categories.contains(
+                ArmorCategory.LIGHT)
+                || categories.contains(
+                ArmorCategory.MEDIUM)
+                || categories.contains(
+                ArmorCategory.HEAVY);
+    }
+
+    public static boolean isWearingGarb(
+            ServerPlayer player) {
+
+        return isWearingArmorCategory(
+                player,
+                ArmorCategory.GARB);
     }
 
     public static boolean isWearingArmorCategory(
@@ -100,7 +116,8 @@ public final class ArmorUsageService {
 
             for (ArmorCategory category : categories) {
 
-                if (category == ArmorCategory.SHIELD) {
+                if (category == ArmorCategory.SHIELD
+                        || category == ArmorCategory.GARB) {
                     continue;
                 }
 

@@ -1163,6 +1163,15 @@ public final class CharacterCommand {
 
         context.getSource().sendSuccess(
                 () -> Component.literal(
+                        "Wearing Garb: "
+                                + (ArmorUsageService
+                                .isWearingGarb(player)
+                                ? "YES"
+                                : "NO")),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
                         "Worn Armor Categories: "
                                 + finalWornCategories),
                 false);
