@@ -17,6 +17,11 @@ public final class RegistryWeaponProficiencies {
 
     public static final ResourceLocation MARTIAL =
             id("weapons/martial");
+    /*
+     * Custom caster weapon categories.
+     */
+    public static final ResourceLocation CASTING_STAFF =
+            type("casting_staff");
 
     /*
      * Simple melee weapons.
@@ -153,6 +158,7 @@ public final class RegistryWeaponProficiencies {
             List.of(
                     SIMPLE,
                     MARTIAL,
+                    CASTING_STAFF,
 
                     CLUB,
                     DAGGER,

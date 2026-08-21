@@ -182,7 +182,8 @@ public final class RegistryClasses {
                                 ArmorCategory.MEDIUM,
                                 ArmorCategory.SHIELD),
                 weapons(
-                        RegistryWeaponProficiencies.SIMPLE),
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.CASTING_STAFF),
                 weapons()));
 
         /*
@@ -215,6 +216,7 @@ public final class RegistryClasses {
                         RegistryWeaponProficiencies.JAVELIN,
                         RegistryWeaponProficiencies.MACE,
                         RegistryWeaponProficiencies.QUARTERSTAFF,
+                        RegistryWeaponProficiencies.CASTING_STAFF,
                         RegistryWeaponProficiencies.SCIMITAR,
                         RegistryWeaponProficiencies.SICKLE,
                         RegistryWeaponProficiencies.SLING,
@@ -373,7 +375,7 @@ public final class RegistryClasses {
                                 RegistryWeaponProficiencies.DAGGER,
                                 RegistryWeaponProficiencies.DART,
                                 RegistryWeaponProficiencies.SLING,
-                                RegistryWeaponProficiencies.QUARTERSTAFF,
+                                RegistryWeaponProficiencies.CASTING_STAFF,
                                 RegistryWeaponProficiencies.LIGHT_CROSSBOW),
                         weapons()));
 
@@ -393,9 +395,9 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT),
                         weapons(
-                                RegistryWeaponProficiencies.SIMPLE),
-                        weapons(
-                                RegistryWeaponProficiencies.SIMPLE)));
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.CASTING_STAFF),
+                        weapons()));
 
         /*
          * WIZARD
@@ -414,7 +416,7 @@ public final class RegistryClasses {
                                 RegistryWeaponProficiencies.DAGGER,
                                 RegistryWeaponProficiencies.DART,
                                 RegistryWeaponProficiencies.SLING,
-                                RegistryWeaponProficiencies.QUARTERSTAFF,
+                                RegistryWeaponProficiencies.CASTING_STAFF,
                                 RegistryWeaponProficiencies.LIGHT_CROSSBOW),
                         weapons()));
 
