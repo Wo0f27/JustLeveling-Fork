@@ -2,17 +2,18 @@ package com.seniors.justlevelingfork.common.player;
 
 import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
-import net.minecraft.resources.ResourceLocation;
-
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.resources.ResourceLocation;
 
 public record CharacterClassDefinition(
         ResourceLocation id,
         Map<Aptitude, Integer> recommendedAbilityScores,
         ClassAbilityRequirement multiclassRequirement,
         Set<ArmorCategory> startingArmorProficiencies,
-        Set<ArmorCategory> multiclassArmorProficiencies) {
+        Set<ArmorCategory> multiclassArmorProficiencies,
+        Set<ResourceLocation> startingWeaponProficiencies,
+        Set<ResourceLocation> multiclassWeaponProficiencies) {
 
     public CharacterClassDefinition {
 
@@ -43,5 +44,17 @@ public record CharacterClassDefinition(
                         multiclassArmorProficiencies == null
                                 ? Set.of()
                                 : multiclassArmorProficiencies);
+
+        startingWeaponProficiencies =
+                Set.copyOf(
+                        startingWeaponProficiencies == null
+                                ? Set.of()
+                                : startingWeaponProficiencies);
+
+        multiclassWeaponProficiencies =
+                Set.copyOf(
+                        multiclassWeaponProficiencies == null
+                                ? Set.of()
+                                : multiclassWeaponProficiencies);
     }
 }

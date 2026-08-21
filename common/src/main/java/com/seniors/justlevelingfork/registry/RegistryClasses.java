@@ -130,7 +130,14 @@ public final class RegistryClasses {
                                 ArmorCategory.MEDIUM,
                                 ArmorCategory.SHIELD),
                         armor(
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.MARTIAL),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.MARTIAL)));
+
 
         /*
          * BARD
@@ -146,7 +153,14 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT),
                         armor(
-                                ArmorCategory.LIGHT)));
+                                ArmorCategory.LIGHT),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.HAND_CROSSBOW,
+                        RegistryWeaponProficiencies.LONGSWORD,
+                        RegistryWeaponProficiencies.RAPIER,
+                        RegistryWeaponProficiencies.SHORTSWORD),
+                weapons()));
 
         /*
          * CLERIC
@@ -166,7 +180,10 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT,
                                 ArmorCategory.MEDIUM,
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE),
+                weapons()));
 
         /*
          * DRUID
@@ -190,7 +207,19 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT,
                                 ArmorCategory.MEDIUM,
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                weapons(
+                        RegistryWeaponProficiencies.CLUB,
+                        RegistryWeaponProficiencies.DAGGER,
+                        RegistryWeaponProficiencies.DART,
+                        RegistryWeaponProficiencies.JAVELIN,
+                        RegistryWeaponProficiencies.MACE,
+                        RegistryWeaponProficiencies.QUARTERSTAFF,
+                        RegistryWeaponProficiencies.SCIMITAR,
+                        RegistryWeaponProficiencies.SICKLE,
+                        RegistryWeaponProficiencies.SLING,
+                        RegistryWeaponProficiencies.SPEAR),
+                weapons()));
 
         /*
          * FIGHTER
@@ -217,7 +246,13 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT,
                                 ArmorCategory.MEDIUM,
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.MARTIAL),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.MARTIAL)));
 
         /*
          * MONK
@@ -232,7 +267,13 @@ public final class RegistryClasses {
                                 RegistryAptitudes.DEXTERITY,
                                 RegistryAptitudes.WISDOM),
                         armor(),
-                        armor()));
+                        armor(),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.SHORTSWORD),
+                weapons(
+                        RegistryWeaponProficiencies.SIMPLE,
+                        RegistryWeaponProficiencies.SHORTSWORD)));
 
         /*
          * PALADIN
@@ -257,7 +298,13 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT,
                                 ArmorCategory.MEDIUM,
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.MARTIAL),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.MARTIAL)));
 
         /*
          * RANGER
@@ -278,7 +325,13 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT,
                                 ArmorCategory.MEDIUM,
-                                ArmorCategory.SHIELD)));
+                                ArmorCategory.SHIELD),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.MARTIAL),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.MARTIAL)));
 
         /*
          * ROGUE
@@ -294,7 +347,14 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT),
                         armor(
-                                ArmorCategory.LIGHT)));
+                                ArmorCategory.LIGHT),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE,
+                                RegistryWeaponProficiencies.HAND_CROSSBOW,
+                                RegistryWeaponProficiencies.LONGSWORD,
+                                RegistryWeaponProficiencies.RAPIER,
+                                RegistryWeaponProficiencies.SHORTSWORD),
+                        weapons()));
 
         /*
          * SORCERER
@@ -308,7 +368,14 @@ public final class RegistryClasses {
                                 13,
                                 RegistryAptitudes.CHARISMA),
                         armor(),
-                        armor()));
+                        armor(),
+                        weapons(
+                                RegistryWeaponProficiencies.DAGGER,
+                                RegistryWeaponProficiencies.DART,
+                                RegistryWeaponProficiencies.SLING,
+                                RegistryWeaponProficiencies.QUARTERSTAFF,
+                                RegistryWeaponProficiencies.LIGHT_CROSSBOW),
+                        weapons()));
 
         /*
          * WARLOCK
@@ -324,7 +391,11 @@ public final class RegistryClasses {
                         armor(
                                 ArmorCategory.LIGHT),
                         armor(
-                                ArmorCategory.LIGHT)));
+                                ArmorCategory.LIGHT),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE),
+                        weapons(
+                                RegistryWeaponProficiencies.SIMPLE)));
 
         /*
          * WIZARD
@@ -338,7 +409,14 @@ public final class RegistryClasses {
                                 13,
                                 RegistryAptitudes.INTELLIGENCE),
                         armor(),
-                        armor()));
+                        armor(),
+                        weapons(
+                                RegistryWeaponProficiencies.DAGGER,
+                                RegistryWeaponProficiencies.DART,
+                                RegistryWeaponProficiencies.SLING,
+                                RegistryWeaponProficiencies.QUARTERSTAFF,
+                                RegistryWeaponProficiencies.LIGHT_CROSSBOW),
+                        weapons()));
 
         return Map.copyOf(result);
     }
@@ -348,14 +426,18 @@ public final class RegistryClasses {
             Map<Aptitude, Integer> recommendedAbilityScores,
             ClassAbilityRequirement multiclassRequirement,
             Set<ArmorCategory> startingArmor,
-            Set<ArmorCategory> multiclassArmor) {
+            Set<ArmorCategory> multiclassArmor,
+            Set<ResourceLocation> startingWeapons,
+            Set<ResourceLocation> multiclassWeapons) {
 
         return new CharacterClassDefinition(
                 id,
                 recommendedAbilityScores,
                 multiclassRequirement,
                 startingArmor,
-                multiclassArmor);
+                multiclassArmor,
+                startingWeapons,
+                multiclassWeapons);
     }
 
     private static Map<Aptitude, Integer> scores(
@@ -404,6 +486,17 @@ public final class RegistryClasses {
         }
 
         return Set.of(categories);
+    }
+
+    private static Set<ResourceLocation> weapons(
+            ResourceLocation... proficiencies) {
+
+        if (proficiencies == null
+                || proficiencies.length == 0) {
+            return Set.of();
+        }
+
+        return Set.of(proficiencies);
     }
 
     private static ResourceLocation id(String path) {

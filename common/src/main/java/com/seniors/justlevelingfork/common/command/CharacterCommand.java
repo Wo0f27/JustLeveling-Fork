@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import net.minecraft.world.item.ItemStack;
 import com.seniors.justlevelingfork.common.proficiency.ArmorProficiencyService;
 import com.seniors.justlevelingfork.common.proficiency.WeaponClassificationService;
+import com.seniors.justlevelingfork.common.proficiency.WeaponProficiencyService;
 
 public final class CharacterCommand {
 
@@ -61,6 +62,24 @@ public final class CharacterCommand {
 
                                                 .executes(context ->
                                                         classifyHeldWeapon(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("proficiencies")
+
+                                                .executes(context ->
+                                                        showWeaponProficiencies(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("check")
+
+                                                .executes(context ->
+                                                        checkHeldWeaponProficiency(
                                                                 context,
                                                                 EntityArgument.getPlayer(
                                                                         context,
@@ -1196,6 +1215,139 @@ public final class CharacterCommand {
                         stack.getHoverName().getString()
                                 + " -> "
                                 + finalClassifications),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+    private static int showWeaponProficiencies(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        String classProficiencies =
+                WeaponProficiencyService
+                        .getClassProficiencies(player)
+                        .stream()
+                        .map(ResourceLocation::toString)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        String effectiveProficiencies =
+                WeaponProficiencyService
+                        .getProficiencies(player)
+                        .stream()
+                        .map(ResourceLocation::toString)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (classProficiencies.isBlank()) {
+            classProficiencies = "NONE";
+        }
+
+        if (effectiveProficiencies.isBlank()) {
+            effectiveProficiencies = "NONE";
+        }
+
+        String finalClassProficiencies =
+                classProficiencies;
+
+        String finalEffectiveProficiencies =
+                effectiveProficiencies;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Class Weapon Proficiencies: "
+                                + finalClassProficiencies),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Effective Weapon Proficiencies: "
+                                + finalEffectiveProficiencies),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+    private static int checkHeldWeaponProficiency(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        ItemStack stack =
+                player.getMainHandItem();
+
+        if (stack.isEmpty()) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Hold an item in your main hand."));
+
+            return 0;
+        }
+
+        String classifications =
+                WeaponClassificationService
+                        .getClassifications(stack)
+                        .stream()
+                        .map(ResourceLocation::toString)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (classifications.isBlank()) {
+
+            context.getSource().sendSuccess(
+                    () -> Component.literal(
+                            stack.getHoverName().getString()
+                                    + " -> UNCLASSIFIED"),
+                    false);
+
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String matching =
+                WeaponProficiencyService
+                        .getMatchingProficiencies(
+                                player,
+                                stack)
+                        .stream()
+                        .map(ResourceLocation::toString)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        boolean proficient =
+                WeaponProficiencyService.isProficient(
+                        player,
+                        stack);
+
+        String finalClassifications =
+                classifications;
+
+        String finalMatching =
+                matching.isBlank()
+                        ? "NONE"
+                        : matching;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        stack.getHoverName().getString()
+                                + " -> "
+                                + (proficient
+                                ? "PROFICIENT"
+                                : "NOT PROFICIENT")),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Classifications: "
+                                + finalClassifications),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Matching Proficiencies: "
+                                + finalMatching),
                 false);
 
         return Command.SINGLE_SUCCESS;
