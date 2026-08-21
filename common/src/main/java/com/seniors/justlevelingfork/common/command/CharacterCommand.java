@@ -9,6 +9,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.seniors.justlevelingfork.common.player.ClassProgressionService;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
+import com.seniors.justlevelingfork.common.proficiency.ArmorUsageService;
 import com.seniors.justlevelingfork.registry.RegistryClasses;
 import java.util.Comparator;
 import java.util.Map;
@@ -37,6 +38,7 @@ import com.seniors.justlevelingfork.common.proficiency.ArmorClassificationServic
 import java.util.stream.Collectors;
 import net.minecraft.world.item.ItemStack;
 import com.seniors.justlevelingfork.common.proficiency.ArmorProficiencyService;
+import com.seniors.justlevelingfork.common.proficiency.WeaponClassificationService;
 
 public final class CharacterCommand {
 
@@ -53,10 +55,19 @@ public final class CharacterCommand {
                         .then(Commands.argument(
                                         "player",
                                         EntityArgument.player())
-                                .then(Commands.literal("armor")
+                                .then(Commands.literal("weapon")
 
                                         .then(Commands.literal("classify")
 
+                                                .executes(context ->
+                                                        classifyHeldWeapon(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player")))))
+                                .then(Commands.literal("armor")
+
+                                        .then(Commands.literal("classify")
                                                 .executes(context ->
                                                         classifyHeldArmor(
                                                                 context,
@@ -65,7 +76,6 @@ public final class CharacterCommand {
                                                                         "player"))))
 
                                         .then(Commands.literal("proficiencies")
-
                                                 .executes(context ->
                                                         showArmorProficiencies(
                                                                 context,
@@ -74,9 +84,16 @@ public final class CharacterCommand {
                                                                         "player"))))
 
                                         .then(Commands.literal("check")
-
                                                 .executes(context ->
                                                         checkHeldArmorProficiency(
+                                                                context,
+                                                                EntityArgument.getPlayer(
+                                                                        context,
+                                                                        "player"))))
+
+                                        .then(Commands.literal("worn")
+                                                .executes(context ->
+                                                        showWornArmor(
                                                                 context,
                                                                 EntityArgument.getPlayer(
                                                                         context,
@@ -1058,6 +1075,127 @@ public final class CharacterCommand {
                                 + (proficient
                                 ? "PROFICIENT"
                                 : "NOT PROFICIENT")),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+    private static int showWornArmor(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        String wornCategories =
+                ArmorUsageService
+                        .getWornArmorCategories(player)
+                        .stream()
+                        .sorted()
+                        .map(ArmorCategory::name)
+                        .collect(
+                                Collectors.joining(", "));
+
+        String nonProficientCategories =
+                ArmorUsageService
+                        .getNonProficientWornArmorCategories(
+                                player)
+                        .stream()
+                        .sorted()
+                        .map(ArmorCategory::name)
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (wornCategories.isBlank()) {
+            wornCategories = "NONE";
+        }
+
+        if (nonProficientCategories.isBlank()) {
+            nonProficientCategories = "NONE";
+        }
+
+        boolean usingShield =
+                ArmorUsageService.isUsingShield(
+                        player);
+
+        boolean nonProficientShield =
+                ArmorUsageService
+                        .isUsingNonProficientShield(
+                                player);
+
+        String finalWornCategories =
+                wornCategories;
+
+        String finalNonProficientCategories =
+                nonProficientCategories;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Wearing Any Armor: "
+                                + (ArmorUsageService
+                                .isWearingAnyArmor(player)
+                                ? "YES"
+                                : "NO")),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Worn Armor Categories: "
+                                + finalWornCategories),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Non-Proficient Worn Armor: "
+                                + finalNonProficientCategories),
+                false);
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        "Shield In Use: "
+                                + (!usingShield
+                                ? "NO"
+                                : nonProficientShield
+                                ? "YES -> NOT PROFICIENT"
+                                : "YES -> PROFICIENT")),
+                false);
+
+        return Command.SINGLE_SUCCESS;
+    }
+    private static int classifyHeldWeapon(
+            CommandContext<CommandSourceStack> context,
+            ServerPlayer player) {
+
+        ItemStack stack =
+                player.getMainHandItem();
+
+        if (stack.isEmpty()) {
+
+            context.getSource().sendFailure(
+                    Component.literal(
+                            "Hold an item in your main hand."));
+
+            return 0;
+        }
+
+        String classifications =
+                WeaponClassificationService
+                        .getClassifications(stack)
+                        .stream()
+                        .map(ResourceLocation::toString)
+                        .sorted()
+                        .collect(
+                                Collectors.joining(", "));
+
+        if (classifications.isBlank()) {
+            classifications =
+                    "UNCLASSIFIED";
+        }
+
+        String finalClassifications =
+                classifications;
+
+        context.getSource().sendSuccess(
+                () -> Component.literal(
+                        stack.getHoverName().getString()
+                                + " -> "
+                                + finalClassifications),
                 false);
 
         return Command.SINGLE_SUCCESS;
