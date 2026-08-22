@@ -5,6 +5,10 @@ import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyProfile;
+import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyService;
+import java.util.Locale;
+import net.minecraft.network.chat.Component;
 
 public final class CharacterAdminService {
 
@@ -17,6 +21,8 @@ public final class CharacterAdminService {
         return player != null
                 && player.hasPermissions(2);
     }
+
+
 
     public static boolean resetCharacter(
             ServerPlayer player) {
@@ -191,5 +197,128 @@ public final class CharacterAdminService {
                 .addExperience(
                         player,
                         amount);
+    }
+
+    public static boolean sendEquipmentPenaltyDebug(
+            ServerPlayer player) {
+
+        if (!isAllowed(player)) {
+            return false;
+        }
+
+        EquipmentPenaltyProfile profile =
+                EquipmentPenaltyService
+                        .resolve(player);
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "=== JLF Equipment Penalty Debug ==="));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Main-Hand: "
+                                + (profile
+                                .mainHandNonProficient()
+                                ? "NOT PROFICIENT ["
+                                + profile
+                                .mainHandWeaponType()
+                                .name()
+                                + "]"
+                                : "NO PENALTY")));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Off-Hand: "
+                                + (profile
+                                .offHandNonProficient()
+                                ? "NOT PROFICIENT ["
+                                + profile
+                                .offHandWeaponType()
+                                .name()
+                                + "]"
+                                : "NO PENALTY")));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Highest Non-Proficient Armor: "
+                                + (profile
+                                .highestNonProficientArmor()
+                                == null
+                                ? "NONE"
+                                : profile
+                                .highestNonProficientArmor()
+                                .name())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Non-Proficient Shield: "
+                                + (profile
+                                .nonProficientShield()
+                                ? "YES"
+                                : "NO")));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "--- Resolved Penalties ---"));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Attack Damage: -"
+                                + percent(
+                                profile
+                                        .attackDamageReduction())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Attack Speed: -"
+                                + percent(
+                                profile
+                                        .attackSpeedReduction())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Movement Speed: -"
+                                + percent(
+                                profile
+                                        .movementSpeedReduction())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Projectile Damage: -"
+                                + percent(
+                                profile
+                                        .projectileDamageReduction())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Draw Speed: -"
+                                + percent(
+                                profile
+                                        .drawSpeedReduction())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Cast Time: +"
+                                + percent(
+                                profile
+                                        .castTimeIncrease())));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Mana Cost: +"
+                                + percent(
+                                profile
+                                        .manaCostIncrease())));
+
+        return true;
+    }
+
+    private static String percent(
+            double value) {
+
+        return String.format(
+                Locale.ROOT,
+                "%.0f%%",
+                value * 100.0D);
     }
 }

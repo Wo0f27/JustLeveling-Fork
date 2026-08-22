@@ -80,4 +80,11 @@ public final class CharacterAdminClientRequests {
     public static void requestAccessRefresh() {
         accessRefreshSender.run();
     }
+
+    public static void requestPenaltyDebug() {
+
+        actionSender.accept(
+                CharacterAdminRequest
+                        .debugEquipmentPenalties());
+    }
 }

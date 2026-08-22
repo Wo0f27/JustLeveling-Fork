@@ -18,7 +18,7 @@ import net.minecraft.resources.ResourceLocation;
 public class CharacterAdminScreen extends Screen {
 
     private static final int WIDTH = 240;
-    private static final int HEIGHT = 218;
+    private static final int HEIGHT = 240;
 
     private static final int FONT_COLOR = 0x3E3E3E;
     private static final int WHITE = 0xF0F0F0;
@@ -289,7 +289,19 @@ public class CharacterAdminScreen extends Screen {
         renderButton(
                 graphics,
                 left + 16,
-                top + 187,
+                top + 184,
+                208,
+                16,
+                "Penalty Debug",
+                progress != null,
+                mouseX,
+                mouseY);
+
+
+        renderButton(
+                graphics,
+                left + 16,
+                top + 207,
                 100,
                 16,
                 "Reset Character",
@@ -488,6 +500,21 @@ public class CharacterAdminScreen extends Screen {
             return true;
         }
 
+        if (progress != null
+                && isMouseWithin(
+                left + 16,
+                top + 184,
+                mouseX,
+                mouseY,
+                208,
+                16)) {
+
+            CharacterAdminClientRequests
+                    .requestPenaltyDebug();
+
+            return true;
+        }
+
         if (isMouseWithin(
                 left + 16,
                 top + 82,
@@ -599,7 +626,22 @@ public class CharacterAdminScreen extends Screen {
         if (progress != null
                 && isMouseWithin(
                 left + 16,
-                top + 187,
+                top + 184,
+                mouseX,
+                mouseY,
+                208,
+                16)) {
+
+            CharacterAdminClientRequests
+                    .requestPenaltyDebug();
+
+            return true;
+        }
+
+        if (progress != null
+                && isMouseWithin(
+                left + 16,
+                top + 207,
                 mouseX,
                 mouseY,
                 100,

@@ -107,6 +107,11 @@ public class ForgeCharacterAdminActionPacket {
                         CharacterAdminService
                                 .addXpToNextLevel(
                                         player);
+
+                case DEBUG_EQUIPMENT_PENALTIES ->
+                        CharacterAdminService
+                                .sendEquipmentPenaltyDebug(
+                                        player);
             }
         });
 

@@ -56,4 +56,14 @@ public record CharacterAdminRequest(
                 "",
                 0L);
     }
+
+    public static CharacterAdminRequest
+    debugEquipmentPenalties() {
+
+        return new CharacterAdminRequest(
+                CharacterAdminAction
+                        .DEBUG_EQUIPMENT_PENALTIES,
+                "",
+                0L);
+    }
 }
