@@ -38,12 +38,13 @@ import com.seniors.justlevelingfork.network.packet.client.ForgeAbilityScoresSync
 import com.seniors.justlevelingfork.common.player.CharacterAdminClientRequests;
 import com.seniors.justlevelingfork.network.packet.client.ForgeCharacterAdminAccessSyncPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeCharacterAdminAccessRequestPacket;
+import com.seniors.justlevelingfork.network.packet.common.ForgeCharacterAdminActionPacket;
 
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "10";
+    private static final String PROTOCOL_VERSION = "11";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -137,6 +138,14 @@ public final class ForgeServerNetworking {
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
         channel.registerMessage(
                 packetId++,
+                ForgeCharacterAdminActionPacket.class,
+                ForgeCharacterAdminActionPacket::toBytes,
+                ForgeCharacterAdminActionPacket::new,
+                ForgeCharacterAdminActionPacket::handle,
+                Optional.of(
+                        NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
                 ForgeAptitudeLevelUpPacket.class,
                 ForgeAptitudeLevelUpPacket::toBytes,
                 ForgeAptitudeLevelUpPacket::new,
@@ -210,6 +219,8 @@ public final class ForgeServerNetworking {
                 sendToServer(new ForgeClassLevelUpPacket(classId)));
         CharacterAdminClientRequests.setAccessRefreshSender(() ->
                 sendToServer(new ForgeCharacterAdminAccessRequestPacket()));
+        CharacterAdminClientRequests.setActionSender(request ->
+                sendToServer(new ForgeCharacterAdminActionPacket(request)));
         AptitudeWarningService.setSender(ForgeServerNetworking::sendAptitudeWarning);
         SkillMessageService.setSender(ForgeServerNetworking::sendSkillMessage);
         TitleUnlockService.setSender(ForgeServerNetworking::sendTitleUnlock);
