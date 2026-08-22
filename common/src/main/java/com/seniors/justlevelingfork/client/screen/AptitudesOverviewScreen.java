@@ -36,6 +36,8 @@ import com.seniors.justlevelingfork.common.player.CharacterExperienceService;
 import com.seniors.justlevelingfork.common.player.ClassProgressionService;
 import com.seniors.justlevelingfork.client.screen.FeatSelectionScreen;
 import com.seniors.justlevelingfork.common.player.AbilityScoreClientState;
+import com.seniors.justlevelingfork.common.player.CharacterAdminClientRequests;
+import com.seniors.justlevelingfork.common.player.CharacterAdminClientState;
 
 public class AptitudesOverviewScreen extends Screen {
     private static final int WIDTH = 176;
@@ -79,6 +81,7 @@ public class AptitudesOverviewScreen extends Screen {
         titleSearch.setValue(titleSearchValue);
         addRenderableWidget(titleSearch);
         updateTitleSearchVisibility();
+        CharacterAdminClientRequests.requestAccessRefresh();
         super.init();
     }
 
@@ -106,7 +109,85 @@ public class AptitudesOverviewScreen extends Screen {
         }
 
         ClientTabs.render(graphics, this, mouseX, mouseY, WIDTH, HEIGHT);
+        renderAdminButton(graphics, left, top, mouseX, mouseY);
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderAdminButton(
+            GuiGraphics graphics,
+            int left,
+            int top,
+            int mouseX,
+            int mouseY) {
+
+        if (!CharacterAdminClientState
+                .isAllowed()) {
+            return;
+        }
+
+        int x =
+                left + WIDTH + 5;
+
+        int y =
+                top + 8;
+
+        int buttonWidth = 36;
+        int buttonHeight = 16;
+
+        boolean hover =
+                isMouseWithin(
+                        x,
+                        y,
+                        mouseX,
+                        mouseY,
+                        buttonWidth,
+                        buttonHeight);
+
+        graphics.fill(
+                x,
+                y,
+                x + buttonWidth,
+                y + buttonHeight,
+                hover
+                        ? 0xFF777777
+                        : 0xFF555555);
+
+        graphics.fill(
+                x + 1,
+                y + 1,
+                x + buttonWidth - 1,
+                y + buttonHeight - 1,
+                hover
+                        ? 0xFF484848
+                        : 0xFF353535);
+
+        Component text =
+                Component.literal("DEV")
+                        .withStyle(
+                                ChatFormatting.BOLD);
+
+        graphics.drawString(
+                font,
+                text,
+                x + buttonWidth / 2
+                        - font.width(text) / 2,
+                y + 4,
+                hover
+                        ? 0xFFFFFFFF
+                        : 0xFFCCCCCC,
+                false);
+
+        if (hover) {
+
+            graphics.renderTooltip(
+                    font,
+                    Component.literal(
+                                    "Character Admin Tools")
+                            .withStyle(
+                                    ChatFormatting.GOLD),
+                    mouseX,
+                    mouseY);
+        }
     }
 
     private void renderAptitudes(
@@ -871,12 +952,29 @@ public class AptitudesOverviewScreen extends Screen {
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
+        int left = left();
+        int top = top();
+
+        if (CharacterAdminClientState
+                .isAllowed()
+                && isMouseWithin(
+                left + WIDTH + 5,
+                top + 8,
+                mouseX,
+                mouseY,
+                36,
+                16)) {
+
+            minecraft.setScreen(
+                    new CharacterAdminScreen(this));
+
+            return true;
+        }
         PlayerProgress progress = PlayerProgressClientState.get().orElse(null);
         if (progress == null) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
-        int left = left();
-        int top = top();
+
         if (page == PAGE_APTITUDES && handleAptitudeClick(progress, left, top, mouseX, mouseY)) {
             return true;
         }

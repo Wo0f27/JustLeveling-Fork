@@ -35,12 +35,15 @@ import com.seniors.justlevelingfork.network.packet.client.ForgeFeatDefinitionsSy
 import com.seniors.justlevelingfork.network.packet.common.ForgeFeatSelectionPacket;
 import com.seniors.justlevelingfork.network.AbilityScoresSyncPayload;
 import com.seniors.justlevelingfork.network.packet.client.ForgeAbilityScoresSyncPacket;
+import com.seniors.justlevelingfork.common.player.CharacterAdminClientRequests;
+import com.seniors.justlevelingfork.network.packet.client.ForgeCharacterAdminAccessSyncPacket;
+import com.seniors.justlevelingfork.network.packet.common.ForgeCharacterAdminAccessRequestPacket;
 
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "9";
+    private static final String PROTOCOL_VERSION = "10";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -55,6 +58,13 @@ public final class ForgeServerNetworking {
                 .serverAcceptedVersions(PROTOCOL_VERSION::equals)
                 .simpleChannel();
 
+        channel.registerMessage(
+                packetId++,
+                ForgeCharacterAdminAccessSyncPacket.class,
+                ForgeCharacterAdminAccessSyncPacket::toBytes,
+                ForgeCharacterAdminAccessSyncPacket::new,
+                ForgeCharacterAdminAccessSyncPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
                 ForgePlayerProgressSyncPacket.class,
@@ -118,6 +128,13 @@ public final class ForgeServerNetworking {
                 ForgeTitleDefinitionsSyncPacket::new,
                 ForgeTitleDefinitionsSyncPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeCharacterAdminAccessRequestPacket.class,
+                ForgeCharacterAdminAccessRequestPacket::toBytes,
+                ForgeCharacterAdminAccessRequestPacket::new,
+                ForgeCharacterAdminAccessRequestPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_SERVER));
         channel.registerMessage(
                 packetId++,
                 ForgeAptitudeLevelUpPacket.class,
@@ -191,6 +208,8 @@ public final class ForgeServerNetworking {
                 sendToServer(new ForgeOpenEnderChestPacket()));
         PlayerProgressClientRequests.setClassLevelUpSender(classId ->
                 sendToServer(new ForgeClassLevelUpPacket(classId)));
+        CharacterAdminClientRequests.setAccessRefreshSender(() ->
+                sendToServer(new ForgeCharacterAdminAccessRequestPacket()));
         AptitudeWarningService.setSender(ForgeServerNetworking::sendAptitudeWarning);
         SkillMessageService.setSender(ForgeServerNetworking::sendSkillMessage);
         TitleUnlockService.setSender(ForgeServerNetworking::sendTitleUnlock);
@@ -223,6 +242,12 @@ public final class ForgeServerNetworking {
         channel.send(
                 PacketDistributor.PLAYER.with(() -> player),
                 new ForgeTitleDefinitionsSyncPacket(TitleDefinitionsSyncPayload.current()));
+    }
+
+    public static void syncCharacterAdminAccess(ServerPlayer player, boolean allowed) {
+        if (player == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player),
+                new ForgeCharacterAdminAccessSyncPacket(allowed));
     }
 
     private static void sendSkillMessage(ServerPlayer player, SkillMessage message) {

@@ -20,6 +20,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
+import com.seniors.justlevelingfork.common.player.CharacterAdminClientState;
 
 public final class ForgeClientEvents {
     private ForgeClientEvents() {
@@ -73,6 +74,7 @@ public final class ForgeClientEvents {
     @SubscribeEvent
     public static void onClientLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         RegistryTitles.clearClientTitleModels();
+        CharacterAdminClientState.clear();
     }
 
     private static final class ForgeConfigSaver implements CommonConfigScreen.ConfigSaver {
