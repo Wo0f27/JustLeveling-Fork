@@ -1,6 +1,5 @@
 package com.seniors.justlevelingfork.common.player;
 
-import com.seniors.justlevelingfork.handler.HandlerAptitude;
 import com.seniors.justlevelingfork.registry.RegistryAttributes;
 import com.seniors.justlevelingfork.registry.RegistryEffects;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
@@ -38,26 +37,10 @@ public final class PlayerTickEffects {
                     .refresh(player);
         }
 
-        dropLockedHeldItem(player, player.getMainHandItem());
-        dropLockedHeldItem(player, player.getOffhandItem());
-        dropLockedArmor(player);
         PlayerProgressService.tickCounterAttack(player);
         applySkillAttributes(player);
         clampHealth(player);
         applySkillEffects(player);
-    }
-
-    private static void dropLockedHeldItem(ServerPlayer player, ItemStack stack) {
-        if (stack.isEmpty() || !HandlerAptitude.shouldDropLockedItem(player, stack)) {
-            return;
-        }
-
-        player.drop(stack.copy(), false);
-        stack.setCount(0);
-    }
-
-    private static void dropLockedArmor(ServerPlayer player) {
-        player.getInventory().armor.forEach(stack -> dropLockedHeldItem(player, stack));
     }
 
     private static void applySkillAttributes(ServerPlayer player) {

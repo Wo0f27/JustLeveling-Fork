@@ -4,7 +4,6 @@ import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.common.player.ForgePlayerProgressProvider;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
-import com.seniors.justlevelingfork.config.ForgeLockItemStore;
 import com.seniors.justlevelingfork.network.ForgeServerNetworking;
 import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
@@ -71,7 +70,6 @@ public final class ForgeRegistryCapabilities {
             PlayerProgressService.refreshPassiveModifiers(serverPlayer);
             ForgeServerNetworking.syncTitleDefinitions(serverPlayer);
             PlayerProgressService.sync(serverPlayer);
-            ForgeServerNetworking.syncLockItems(serverPlayer, ForgeLockItemStore.instance().lockItems());
             ForgeServerNetworking.syncCommonConfig(serverPlayer);
         }
     }

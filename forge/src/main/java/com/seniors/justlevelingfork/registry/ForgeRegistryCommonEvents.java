@@ -1,15 +1,12 @@
 package com.seniors.justlevelingfork.registry;
 
-import com.seniors.justlevelingfork.common.command.RegisterItemCommand;
 import com.seniors.justlevelingfork.common.command.ConfigLimitCommands;
 import com.seniors.justlevelingfork.common.command.AptitudeLevelCommand;
-import com.seniors.justlevelingfork.common.command.AptitudesReloadCommand;
 import com.seniors.justlevelingfork.common.command.TitleCommand;
 import com.seniors.justlevelingfork.common.command.TitleConfigReloadCommand;
 import com.seniors.justlevelingfork.common.event.BlockBreakSkillEffects;
 import com.seniors.justlevelingfork.common.event.InteractionRestrictions;
 import com.seniors.justlevelingfork.common.player.PlayerTickEffects;
-import com.seniors.justlevelingfork.config.ForgeLockItemStore;
 import com.seniors.justlevelingfork.config.ForgeCommonConfig;
 import com.seniors.justlevelingfork.config.ForgeTitleModelStore;
 import com.seniors.justlevelingfork.integration.ForgeCuriosIntegration;
@@ -43,15 +40,6 @@ public final class ForgeRegistryCommonEvents {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        RegisterItemCommand.register(
-                event.getDispatcher(),
-                ForgeLockItemStore.instance(),
-                source -> source.getServer().getPlayerList().getPlayers().forEach(player ->
-                        ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems())));
-        AptitudesReloadCommand.register(
-                event.getDispatcher(),
-                ForgeLockItemStore.instance()::reload,
-                player -> ForgeServerNetworking.syncLockItems(player, ForgeLockItemStore.instance().lockItems()));
         AptitudeLevelCommand.register(event.getDispatcher());
         CharacterCommand.register(event.getDispatcher());
         TitleCommand.register(event.getDispatcher());

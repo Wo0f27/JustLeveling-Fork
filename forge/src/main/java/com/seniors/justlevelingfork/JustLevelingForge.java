@@ -1,7 +1,6 @@
 package com.seniors.justlevelingfork;
 
 import com.seniors.justlevelingfork.config.ForgeCommonConfig;
-import com.seniors.justlevelingfork.config.ForgeLockItemStore;
 import com.seniors.justlevelingfork.config.ForgePassiveConfigStore;
 import com.seniors.justlevelingfork.config.ForgeSkillConfigStore;
 import com.seniors.justlevelingfork.config.ForgeTitleModelStore;
@@ -39,7 +38,6 @@ public class JustLevelingForge {
         ForgePassiveConfigStore.load();
         ForgeSkillConfigStore.load();
         ForgeTitleModelStore.load();
-        ForgeLockItemStore.load();
         var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ForgeRegistryAptitudes.load(modEventBus);
         ForgeRegistryPassives.load(modEventBus);

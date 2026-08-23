@@ -13,39 +13,64 @@ public final class InteractionRestrictions {
     private InteractionRestrictions() {
     }
 
-    public static boolean canUseItem(Player player, ItemStack stack) {
-        return !(player instanceof ServerPlayer serverPlayer)
-                || serverPlayer.isCreative()
-                || HandlerAptitude.canUseItem(serverPlayer, stack);
+    public static boolean canUseItem(
+            Player player,
+            ItemStack stack) {
+
+        return true;
     }
 
-    public static boolean canUseBlock(Player player, Block block, ItemStack stack) {
+    public static boolean canUseBlock(
+            Player player,
+            Block block,
+            ItemStack stack) {
+
         return !(player instanceof ServerPlayer serverPlayer)
                 || serverPlayer.isCreative()
-                || (HandlerAptitude.canUseBlock(serverPlayer, block)
-                        && HandlerAptitude.canUseItem(serverPlayer, stack));
+                || HandlerAptitude.canUseBlock(
+                serverPlayer,
+                block);
     }
 
     public static boolean canAttackBlock(Player player, Block block, ItemStack stack) {
         return canUseBlock(player, block, stack);
     }
 
-    public static boolean canUseEntity(Player player, Entity entity, ItemStack stack) {
-        if (!(player instanceof ServerPlayer serverPlayer) || serverPlayer.isCreative()) {
+    public static boolean canUseEntity(
+            Player player,
+            Entity entity,
+            ItemStack stack) {
+
+        if (!(player instanceof ServerPlayer serverPlayer)
+                || serverPlayer.isCreative()) {
+
             return true;
         }
 
-        if (!HandlerAptitude.canUseEntity(serverPlayer, entity) || !HandlerAptitude.canUseItem(serverPlayer, stack)) {
+        if (!HandlerAptitude.canUseEntity(
+                serverPlayer,
+                entity)) {
+
             return false;
         }
 
-        return !(entity instanceof AbstractHorse horse) || HorseEquipmentRestrictions.canEquip(player, horse, stack);
+        return !(entity instanceof AbstractHorse horse)
+                || HorseEquipmentRestrictions
+                .canEquip(
+                        player,
+                        horse,
+                        stack);
     }
 
-    public static boolean canAttackEntity(Player player, Entity entity, ItemStack stack) {
+    public static boolean canAttackEntity(
+            Player player,
+            Entity entity,
+            ItemStack stack) {
+
         return !(player instanceof ServerPlayer serverPlayer)
                 || serverPlayer.isCreative()
-                || (HandlerAptitude.canUseEntity(serverPlayer, entity)
-                        && HandlerAptitude.canUseItem(serverPlayer, stack));
+                || HandlerAptitude.canUseEntity(
+                serverPlayer,
+                entity);
     }
 }
