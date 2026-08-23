@@ -366,6 +366,19 @@ public final class CharacterAdminService {
                                                 "draw_speed",
                                                 0.0D))));
 
+        player.sendSystemMessage(
+                Component.literal(
+                        "Cast Time Reduction: "
+                                + String.format(
+                                Locale.ROOT,
+                                "%.3f",
+                                ExternalAttributeService
+                                        .getValue(
+                                                player,
+                                                "irons_spellbooks",
+                                                "cast_time_reduction",
+                                                1.0D))));
+
         return true;
     }
 

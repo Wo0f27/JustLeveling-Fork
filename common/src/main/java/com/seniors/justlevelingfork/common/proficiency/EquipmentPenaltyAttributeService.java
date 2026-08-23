@@ -38,6 +38,10 @@ public final class EquipmentPenaltyAttributeService {
             UUID.fromString(
                     "b3fba0d3-8192-4fb5-a90a-fb6389a6a105");
 
+    private static final UUID CAST_TIME_REDUCTION_ID =
+            UUID.fromString(
+                    "b3fba0d3-8192-4fb5-a90a-fb6389a6a106");
+
     private EquipmentPenaltyAttributeService() {
     }
 
@@ -86,6 +90,13 @@ public final class EquipmentPenaltyAttributeService {
                 "draw_speed",
                 DRAW_SPEED_ID,
                 profile.drawSpeedReduction());
+
+        applyExternalAdditionPenalty(
+                player,
+                "irons_spellbooks",
+                "cast_time_reduction",
+                CAST_TIME_REDUCTION_ID,
+                profile.castTimeIncrease());
     }
 
     public static void clear(
@@ -126,6 +137,15 @@ public final class EquipmentPenaltyAttributeService {
                         "draw_speed",
                         0.0D,
                         DRAW_SPEED_ID,
+                        false);
+
+        ExternalAttributeService
+                .applyTransientAddition(
+                        player,
+                        "irons_spellbooks",
+                        "cast_time_reduction",
+                        0.0D,
+                        CAST_TIME_REDUCTION_ID,
                         false);
     }
 
@@ -254,5 +274,29 @@ public final class EquipmentPenaltyAttributeService {
                         -safeReduction,
                         uuid,
                         safeReduction > 0.0D);
+    }
+
+    private static void applyExternalAdditionPenalty(
+            ServerPlayer player,
+            String namespace,
+            String path,
+            UUID uuid,
+            double penalty) {
+
+        double safePenalty =
+                Math.max(
+                        0.0D,
+                        Math.min(
+                                penalty,
+                                0.95D));
+
+        ExternalAttributeService
+                .applyTransientAddition(
+                        player,
+                        namespace,
+                        path,
+                        -safePenalty,
+                        uuid,
+                        safePenalty > 0.0D);
     }
 }

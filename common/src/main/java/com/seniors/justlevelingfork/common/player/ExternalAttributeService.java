@@ -174,4 +174,89 @@ public final class ExternalAttributeService {
                 })
                 .orElse(fallback);
     }
+    public static void applyTransientAddition(
+            Player player,
+            String namespace,
+            String path,
+            double amount,
+            UUID uuid,
+            boolean enabled) {
+
+        if (player == null
+                || namespace == null
+                || path == null
+                || uuid == null) {
+
+            return;
+        }
+
+        ResourceLocation id =
+                new ResourceLocation(
+                        namespace,
+                        path);
+
+        BuiltInRegistries.ATTRIBUTE
+                .getOptional(id)
+                .ifPresent(attribute -> {
+
+                    AttributeInstance instance =
+                            player.getAttribute(
+                                    attribute);
+
+                    if (instance == null) {
+                        return;
+                    }
+
+                    AttributeModifier existing =
+                            instance.getModifier(
+                                    uuid);
+
+                    /*
+                     * Penalty is no longer active.
+                     */
+                    if (!enabled) {
+
+                        if (existing != null) {
+
+                            instance.removeModifier(
+                                    existing);
+                        }
+
+                        return;
+                    }
+
+                    /*
+                     * Avoid replacing an unchanged modifier
+                     * every five ticks.
+                     */
+                    if (existing != null
+                            && Double.compare(
+                            existing.getAmount(),
+                            amount) == 0
+                            && existing.getOperation()
+                            == AttributeModifier.Operation
+                            .ADDITION) {
+
+                        return;
+                    }
+
+                    if (existing != null) {
+
+                        instance.removeModifier(
+                                existing);
+                    }
+
+                    instance.addTransientModifier(
+                            new AttributeModifier(
+                                    uuid,
+                                    Constants.MOD_ID
+                                            + ":external_"
+                                            + namespace
+                                            + "_"
+                                            + path,
+                                    amount,
+                                    AttributeModifier.Operation
+                                            .ADDITION));
+                });
+    }
 }
