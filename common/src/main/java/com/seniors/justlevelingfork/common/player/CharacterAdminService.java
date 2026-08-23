@@ -314,6 +314,13 @@ public final class CharacterAdminService {
 
         player.sendSystemMessage(
                 Component.literal(
+                        "Spell Cooldown: +"
+                                + percent(
+                                profile
+                                        .spellCooldownIncrease())));
+
+        player.sendSystemMessage(
+                Component.literal(
                         "--- Live Attributes ---"));
 
         player.sendSystemMessage(

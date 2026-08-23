@@ -19,35 +19,42 @@ public final class EquipmentPenaltyService {
     private static final double MELEE_ATTACK_SPEED = 0.10D;
     private static final double MELEE_CAST_TIME = 0.20D;
     private static final double MELEE_MANA_COST = 0.20D;
+    private static final double MELEE_SPELL_COOLDOWN = 0.25D;
 
     private static final double RANGED_PROJECTILE_DAMAGE = 0.15D;
     private static final double RANGED_DRAW_SPEED = 0.10D;
     private static final double RANGED_CAST_TIME = 0.20D;
     private static final double RANGED_MANA_COST = 0.20D;
+    private static final double RANGED_SPELL_COOLDOWN = 0.25D;
 
     private static final double CASTING_STAFF_ATTACK_DAMAGE = 0.10D;
     private static final double CASTING_STAFF_ATTACK_SPEED = 0.05D;
     private static final double CASTING_STAFF_CAST_TIME = 0.25D;
     private static final double CASTING_STAFF_MANA_COST = 0.25D;
+    private static final double CASTING_STAFF_SPELL_COOLDOWN = 0.30D;
 
     private static final double LIGHT_ATTACK_SPEED = 0.05D;
     private static final double LIGHT_MOVEMENT_SPEED = 0.05D;
     private static final double LIGHT_CAST_TIME = 0.10D;
     private static final double LIGHT_MANA_COST = 0.10D;
+    private static final double LIGHT_SPELL_COOLDOWN = 0.15D;
 
     private static final double MEDIUM_ATTACK_SPEED = 0.10D;
     private static final double MEDIUM_MOVEMENT_SPEED = 0.10D;
     private static final double MEDIUM_CAST_TIME = 0.20D;
     private static final double MEDIUM_MANA_COST = 0.20D;
+    private static final double MEDIUM_SPELL_COOLDOWN = 0.25D;
 
     private static final double HEAVY_ATTACK_SPEED = 0.15D;
     private static final double HEAVY_MOVEMENT_SPEED = 0.15D;
     private static final double HEAVY_CAST_TIME = 0.30D;
     private static final double HEAVY_MANA_COST = 0.30D;
+    private static final double HEAVY_SPELL_COOLDOWN = 0.40D;
 
     private static final double SHIELD_ATTACK_SPEED = 0.05D;
     private static final double SHIELD_CAST_TIME = 0.10D;
     private static final double SHIELD_MANA_COST = 0.10D;
+    private static final double SHIELD_SPELL_COOLDOWN = 0.15D;
 
     /*
      * Pure ranged weapon families.
@@ -83,6 +90,7 @@ public final class EquipmentPenaltyService {
                     WeaponPenaltyType.NONE,
                     null,
                     false,
+                    0.0D,
                     0.0D,
                     0.0D,
                     0.0D,
@@ -168,6 +176,11 @@ public final class EquipmentPenaltyService {
                     strongest(
                             penalties.manaCostIncrease,
                             SHIELD_MANA_COST);
+
+            penalties.spellCooldownIncrease =
+                    strongest(
+                            penalties.spellCooldownIncrease,
+                            SHIELD_SPELL_COOLDOWN);
         }
 
         return new EquipmentPenaltyProfile(
@@ -183,7 +196,8 @@ public final class EquipmentPenaltyService {
                 penalties.projectileDamageReduction,
                 penalties.drawSpeedReduction,
                 penalties.castTimeIncrease,
-                penalties.manaCostIncrease);
+                penalties.manaCostIncrease,
+                penalties.spellCooldownIncrease);
     }
 
     public static WeaponPenaltyType classifyWeapon(
@@ -260,6 +274,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 MELEE_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                MELEE_SPELL_COOLDOWN);
             }
 
             case RANGED -> {
@@ -283,6 +302,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 RANGED_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                RANGED_SPELL_COOLDOWN);
             }
 
             case CASTING_STAFF -> {
@@ -306,6 +330,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 CASTING_STAFF_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                CASTING_STAFF_SPELL_COOLDOWN);
             }
 
             case NONE -> {
@@ -346,6 +375,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 LIGHT_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                LIGHT_SPELL_COOLDOWN);
             }
 
             case MEDIUM -> {
@@ -369,6 +403,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 MEDIUM_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                MEDIUM_SPELL_COOLDOWN);
             }
 
             case HEAVY -> {
@@ -392,6 +431,11 @@ public final class EquipmentPenaltyService {
                         strongest(
                                 penalties.manaCostIncrease,
                                 HEAVY_MANA_COST);
+
+                penalties.spellCooldownIncrease =
+                        strongest(
+                                penalties.spellCooldownIncrease,
+                                HEAVY_SPELL_COOLDOWN);
             }
 
             case GARB, SHIELD -> {
@@ -456,5 +500,6 @@ public final class EquipmentPenaltyService {
 
         private double castTimeIncrease;
         private double manaCostIncrease;
+        private double spellCooldownIncrease;
     }
 }

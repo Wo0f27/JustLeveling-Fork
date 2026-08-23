@@ -19,7 +19,8 @@ public record EquipmentPenaltyProfile(
         double drawSpeedReduction,
 
         double castTimeIncrease,
-        double manaCostIncrease
+        double manaCostIncrease,
+        double spellCooldownIncrease
 ) {
 
     public EquipmentPenaltyProfile {
@@ -54,6 +55,9 @@ public record EquipmentPenaltyProfile(
 
         manaCostIncrease =
                 clamp(manaCostIncrease);
+
+        spellCooldownIncrease =
+                clamp(spellCooldownIncrease);
     }
 
     public boolean hasAnyPenalty() {

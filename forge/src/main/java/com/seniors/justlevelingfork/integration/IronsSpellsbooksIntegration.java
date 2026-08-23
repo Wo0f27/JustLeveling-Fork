@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import io.redspace.ironsspellbooks.api.events.SpellCooldownAddedEvent;
 
 public class IronsSpellsbooksIntegration {
 
@@ -134,6 +135,8 @@ public class IronsSpellsbooksIntegration {
         }
     }
 
+
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onSpellOnCast(
             SpellOnCastEvent event) {
@@ -231,5 +234,83 @@ public class IronsSpellsbooksIntegration {
         }
 
         return (int) result;
+    }
+
+    private static int adjustedCooldown(
+            int baseCooldown,
+            double penalty) {
+
+        if (baseCooldown <= 0) {
+
+            return Math.max(
+                    0,
+                    baseCooldown);
+        }
+
+        double safePenalty =
+                Math.max(
+                        0.0D,
+                        Math.min(
+                                penalty,
+                                0.95D));
+
+        double result =
+                Math.ceil(
+                        baseCooldown
+                                * (1.0D
+                                + safePenalty));
+
+        if (result
+                >= Integer.MAX_VALUE) {
+
+            return Integer.MAX_VALUE;
+        }
+
+        return (int) result;
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onSpellCooldownAdded(
+            SpellCooldownAddedEvent.Pre event) {
+
+        if (!(event.getEntity()
+                instanceof ServerPlayer player)) {
+
+            return;
+        }
+
+        EquipmentPenaltyProfile profile =
+                EquipmentPenaltyService
+                        .resolve(player);
+
+        double cooldownPenalty =
+                profile.spellCooldownIncrease();
+
+        if (cooldownPenalty <= 0.0D) {
+            return;
+        }
+
+        int originalCooldown =
+                event.getEffectiveCooldown();
+
+        int adjustedCooldown =
+                adjustedCooldown(
+                        originalCooldown,
+                        cooldownPenalty);
+
+        event.setEffectiveCooldown(
+                adjustedCooldown);
+
+        if (ForgeIntegrationConfig.logSpellIds()) {
+
+            player.sendSystemMessage(
+                    Component.literal(
+                            String.format(
+                                    "[JLFork] >> Spell Cooldown: %d -> %d ticks (+%.0f%%)",
+                                    originalCooldown,
+                                    adjustedCooldown,
+                                    cooldownPenalty
+                                            * 100.0D)));
+        }
     }
 }
