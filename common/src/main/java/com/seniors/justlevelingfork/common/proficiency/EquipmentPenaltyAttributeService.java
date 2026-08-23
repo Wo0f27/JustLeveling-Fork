@@ -7,6 +7,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import com.seniors.justlevelingfork.common.player.ExternalAttributeService;
 
 public final class EquipmentPenaltyAttributeService {
 
@@ -28,6 +29,14 @@ public final class EquipmentPenaltyAttributeService {
     private static final UUID MOVEMENT_SPEED_ID =
             UUID.fromString(
                     "b3fba0d3-8192-4fb5-a90a-fb6389a6a103");
+
+    private static final UUID PROJECTILE_DAMAGE_ID =
+            UUID.fromString(
+                    "b3fba0d3-8192-4fb5-a90a-fb6389a6a104");
+
+    private static final UUID DRAW_SPEED_ID =
+            UUID.fromString(
+                    "b3fba0d3-8192-4fb5-a90a-fb6389a6a105");
 
     private EquipmentPenaltyAttributeService() {
     }
@@ -63,6 +72,20 @@ public final class EquipmentPenaltyAttributeService {
                 MOVEMENT_SPEED_ID,
                 "equipment_penalty_movement_speed",
                 profile.movementSpeedReduction());
+
+        applyExternalReduction(
+                player,
+                "attributeslib",
+                "arrow_damage",
+                PROJECTILE_DAMAGE_ID,
+                profile.projectileDamageReduction());
+
+        applyExternalReduction(
+                player,
+                "attributeslib",
+                "draw_speed",
+                DRAW_SPEED_ID,
+                profile.drawSpeedReduction());
     }
 
     public static void clear(
@@ -86,6 +109,24 @@ public final class EquipmentPenaltyAttributeService {
                 player,
                 Attributes.MOVEMENT_SPEED,
                 MOVEMENT_SPEED_ID);
+
+        ExternalAttributeService
+                .applyTransientMultiplier(
+                        player,
+                        "attributeslib",
+                        "arrow_damage",
+                        0.0D,
+                        PROJECTILE_DAMAGE_ID,
+                        false);
+
+        ExternalAttributeService
+                .applyTransientMultiplier(
+                        player,
+                        "attributeslib",
+                        "draw_speed",
+                        0.0D,
+                        DRAW_SPEED_ID,
+                        false);
     }
 
     private static void applyReduction(
@@ -189,5 +230,29 @@ public final class EquipmentPenaltyAttributeService {
             instance.removeModifier(
                     modifier);
         }
+    }
+
+    private static void applyExternalReduction(
+            ServerPlayer player,
+            String namespace,
+            String path,
+            UUID uuid,
+            double reduction) {
+
+        double safeReduction =
+                Math.max(
+                        0.0D,
+                        Math.min(
+                                reduction,
+                                0.95D));
+
+        ExternalAttributeService
+                .applyTransientMultiplier(
+                        player,
+                        namespace,
+                        path,
+                        -safeReduction,
+                        uuid,
+                        safeReduction > 0.0D);
     }
 }

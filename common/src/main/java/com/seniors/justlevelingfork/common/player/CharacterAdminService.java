@@ -10,6 +10,7 @@ import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyService;
 import java.util.Locale;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import com.seniors.justlevelingfork.common.player.ExternalAttributeService;
 
 public final class CharacterAdminService {
 
@@ -338,6 +339,32 @@ public final class CharacterAdminService {
                                 player,
                                 Attributes.MOVEMENT_SPEED,
                                 4)));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Arrow Damage: "
+                                + String.format(
+                                Locale.ROOT,
+                                "%.3f",
+                                ExternalAttributeService
+                                        .getValue(
+                                                player,
+                                                "attributeslib",
+                                                "arrow_damage",
+                                                0.0D))));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Draw Speed: "
+                                + String.format(
+                                Locale.ROOT,
+                                "%.3f",
+                                ExternalAttributeService
+                                        .getValue(
+                                                player,
+                                                "attributeslib",
+                                                "draw_speed",
+                                                0.0D))));
 
         return true;
     }

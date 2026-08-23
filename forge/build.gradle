@@ -67,6 +67,7 @@ dependencies {
     compileOnly "curse.maven:scorched-guns-802940:${scorched_guns_version}"
     modCompileOnly "io.redspace:irons_spellbooks:${irons_spellbooks_version}"
     compileOnly "maven.modrinth:better-combat:${better_combat_version}"
+    modRuntimeOnly "maven.modrinth:better-combat:${better_combat_version}"
     // ============================================================
     // Apothic Attributes
     // ============================================================
