@@ -6,6 +6,13 @@
     "minecraft:iron_sword",
     "minecraft:golden_sword",
     "minecraft:diamond_sword",
-    "minecraft:netherite_sword"
+    "minecraft:netherite_sword",
+
+    "irons_spellbooks:magehunter",
+    "irons_spellbooks:spellbreaker",
+    "irons_spellbooks:amethyst_rapier",
+    "irons_spellbooks:boreal_blade",
+    "irons_spellbooks:keeper_flamberge",
+    "irons_spellbooks:legionnaire_flamberge"
   ]
 }

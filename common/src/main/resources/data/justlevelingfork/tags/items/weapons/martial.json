@@ -17,6 +17,15 @@
 
     "minecraft:bow",
     "minecraft:crossbow",
-    "minecraft:trident"
+    "minecraft:trident",
+    "irons_spellbooks:magehunter",
+    "irons_spellbooks:spellbreaker",
+    "irons_spellbooks:amethyst_rapier",
+    "irons_spellbooks:boreal_blade",
+    "irons_spellbooks:keeper_flamberge",
+    "irons_spellbooks:legionnaire_flamberge",
+    "irons_spellbooks:decrepit_scythe",
+    "irons_spellbooks:hellrazor",
+    "irons_spellbooks:autoloader_crossbow"
   ]
 }

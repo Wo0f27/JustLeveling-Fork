@@ -10,6 +10,12 @@
 
     "minecraft:bow",
     "minecraft:crossbow",
-    "minecraft:diamond_pickaxe"
+    "irons_spellbooks:blood_staff",
+    "irons_spellbooks:graybeard_staff",
+    "irons_spellbooks:ice_staff",
+    "irons_spellbooks:artificer_cane",
+    "irons_spellbooks:lightning_rod",
+    "irons_spellbooks:pyrium_staff",
+    "irons_spellbooks:twilight_gale"
   ]
 }

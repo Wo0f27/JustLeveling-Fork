@@ -9,6 +9,7 @@ import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyProfile;
 import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyService;
 import java.util.Locale;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public final class CharacterAdminService {
 
@@ -310,6 +311,34 @@ public final class CharacterAdminService {
                                 profile
                                         .manaCostIncrease())));
 
+        player.sendSystemMessage(
+                Component.literal(
+                        "--- Live Attributes ---"));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Attack Damage: "
+                                + attributeValue(
+                                player,
+                                Attributes.ATTACK_DAMAGE,
+                                2)));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Attack Speed: "
+                                + attributeValue(
+                                player,
+                                Attributes.ATTACK_SPEED,
+                                2)));
+
+        player.sendSystemMessage(
+                Component.literal(
+                        "Movement Speed: "
+                                + attributeValue(
+                                player,
+                                Attributes.MOVEMENT_SPEED,
+                                4)));
+
         return true;
     }
 
@@ -320,5 +349,24 @@ public final class CharacterAdminService {
                 Locale.ROOT,
                 "%.0f%%",
                 value * 100.0D);
+    }
+
+    private static String attributeValue(
+            ServerPlayer player,
+            net.minecraft.world.entity.ai.attributes.Attribute attribute,
+            int decimals) {
+
+        double value =
+                player.getAttributeValue(
+                        attribute);
+
+        return String.format(
+                Locale.ROOT,
+                "%."
+                        + Math.max(
+                        0,
+                        decimals)
+                        + "f",
+                value);
     }
 }

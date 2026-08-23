@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
+import com.seniors.justlevelingfork.common.proficiency.EquipmentPenaltyAttributeService;
 
 public final class PlayerTickEffects {
     private static final UUID ONE_HANDED_ATTACK_DAMAGE_ID =
@@ -25,10 +26,16 @@ public final class PlayerTickEffects {
         }
 
         if (player.tickCount % 5 == 0) {
-            PlayerProgressService.get(player).ifPresent(progress ->
-                    ExternalAbilityBonusService.refreshDerivedAttributesIfChanged(
-                            player,
-                            progress));
+
+            PlayerProgressService.get(player)
+                    .ifPresent(progress ->
+                            ExternalAbilityBonusService
+                                    .refreshDerivedAttributesIfChanged(
+                                            player,
+                                            progress));
+
+            EquipmentPenaltyAttributeService
+                    .refresh(player);
         }
 
         dropLockedHeldItem(player, player.getMainHandItem());
