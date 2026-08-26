@@ -1,7 +1,6 @@
 package com.seniors.justlevelingfork.common.event;
 
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
-import com.seniors.justlevelingfork.registry.RegistryAttributes;
 import com.seniors.justlevelingfork.registry.RegistryEffects;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +19,8 @@ public final class ProjectileSkillEffects {
             return baseDamage;
         }
 
-        double adjustedDamage = baseDamage + player.getAttributeValue(RegistryAttributes.PROJECTILE_DAMAGE) / 5.0D;
+        double adjustedDamage =
+                baseDamage;
         if (player instanceof ServerPlayer serverPlayer
                 && player.isShiftKeyDown()
                 && PlayerProgressService.isSkillEnabled(serverPlayer, RegistrySkills.STEALTH_MASTERY)) {

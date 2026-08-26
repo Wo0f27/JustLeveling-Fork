@@ -1,7 +1,7 @@
 package com.seniors.justlevelingfork.registry;
 
 import com.seniors.justlevelingfork.Constants;
-import com.seniors.justlevelingfork.common.platform.ReachAttributeBridge;
+import com.seniors.justlevelingfork.common.player.PassiveAttributeService;
 import com.seniors.justlevelingfork.registry.passive.Passive;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -76,14 +76,15 @@ public final class RegistryAttributes {
         return passive.getValue() / maxLevel * Math.min(passiveLevel, maxLevel);
     }
 
-    public static void applyPassiveModifier(Player player, Passive passive, int passiveLevel) {
-        applyPermanentAddition(
+    public static void applyPassiveModifier(
+            Player player,
+            Passive passive,
+            int passiveLevel) {
+
+        PassiveAttributeService.apply(
                 player,
-                passive.attribute,
-                passiveModifierAmount(passive, passiveLevel),
-                UUID.fromString(passive.attributeUuid),
-                passiveLevel > 0);
-        ReachAttributeBridge.apply(player, passive, passiveLevel);
+                passive,
+                passiveLevel);
     }
 
     public static void applyPermanentAddition(Player player, Attribute attribute, double amount, UUID uuid, boolean enabled) {
@@ -126,13 +127,8 @@ public final class RegistryAttributes {
             return;
         }
 
-        put("break_speed", BREAK_SPEED);
-        put("critical_damage", CRITICAL_DAMAGE);
-        put("projectile_damage", PROJECTILE_DAMAGE);
         put("beneficial_effect", BENEFICIAL_EFFECT);
         put("magic_resist", MAGIC_RESIST);
-        put("entity_reach", ENTITY_REACH);
-        put("block_reach", BLOCK_REACH);
         put("ability_bonus_strength", ABILITY_BONUS_STRENGTH);
         put("ability_bonus_dexterity", ABILITY_BONUS_DEXTERITY);
         put("ability_bonus_constitution", ABILITY_BONUS_CONSTITUTION);

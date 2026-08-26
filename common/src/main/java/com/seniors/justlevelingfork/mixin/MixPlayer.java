@@ -2,7 +2,6 @@ package com.seniors.justlevelingfork.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.seniors.justlevelingfork.common.event.MiningSkillEffects;
 import com.seniors.justlevelingfork.common.event.CombatSkillEffects;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
@@ -13,11 +12,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Player.class)
 public abstract class MixPlayer extends LivingEntity {
@@ -33,12 +29,6 @@ public abstract class MixPlayer extends LivingEntity {
             return (int) (300.0D * RegistrySkills.ATHLETICS.getValue()[0]);
         }
         return 300;
-    }
-
-    @Inject(method = "getDestroySpeed", at = @At("RETURN"), cancellable = true)
-    private void justlevelingfork$getDestroySpeed(BlockState state, CallbackInfoReturnable<Float> callbackInfo) {
-        callbackInfo.setReturnValue(MiningSkillEffects.adjustDestroySpeed(
-                (Player) (Object) this, state, callbackInfo.getReturnValue()));
     }
 
     @WrapOperation(

@@ -238,7 +238,7 @@
  "passive.justlevelingfork.attack_speed.description" : "Controls the length of the cooldown time for the hand.",
  "passive.justlevelingfork.entity_reach.description" : "Distance between the player and the other entity for the attack.",
  "passive.justlevelingfork.block_reach.description" : "Distance between the player and the block.",
- "passive.justlevelingfork.break_speed.description" : "Speed to break a block with tools. (only affects the pickaxe, axe and shovel)",
+  "passive.justlevelingfork.break_speed.description" : "Increases the speed at which you break blocks.",
  "passive.justlevelingfork.beneficial_effect.description" : "Time of potions that benefit the player.",
  "passive.justlevelingfork.magic_resist.description" : "Nullifies a lesser portion of magic damage caused by: Harming potions, Evoker fangs, Wither skulls, Thorns enchantments, Guardian beams, etc.",
  "passive.justlevelingfork.luck.description" : "Increases the probability of finding high-quality loot from fishing or naturally-generated chests.",

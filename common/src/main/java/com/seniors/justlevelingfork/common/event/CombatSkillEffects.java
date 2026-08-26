@@ -2,7 +2,7 @@ package com.seniors.justlevelingfork.common.event;
 
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
 import com.seniors.justlevelingfork.common.player.SkillMessageService;
-import com.seniors.justlevelingfork.registry.RegistryAttributes;
+import com.seniors.justlevelingfork.common.player.ExternalAttributeService;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,13 +30,23 @@ public final class CombatSkillEffects {
             return adjustedDamage;
         }
 
-        float criticalDamage = (float) player.getAttributeValue(RegistryAttributes.CRITICAL_DAMAGE);
-        if (criticalDamage > 0.0F) {
-            adjustedDamage *= vanillaCritical ? (1.5F + criticalDamage) / 1.5F : 1.0F + criticalDamage;
-        }
 
-        if (berserkerCritical && (player.onGround() || player.isInWater()) && !vanillaCritical) {
-            adjustedDamage *= 1.5F;
+        if (berserkerCritical
+                && (player.onGround()
+                || player.isInWater())
+                && !vanillaCritical) {
+
+            double criticalMultiplier =
+                    ExternalAttributeService.getValue(
+                            player,
+                            "attributeslib",
+                            "crit_damage",
+                            1.5D);
+
+            adjustedDamage *=
+                    (float) Math.max(
+                            1.0D,
+                            criticalMultiplier);
         }
 
         if (player instanceof ServerPlayer serverPlayer
