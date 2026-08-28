@@ -1,5 +1,6 @@
 package com.seniors.justlevelingfork.network;
 
+import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
 import com.seniors.justlevelingfork.common.player.PlayerProgressClientRequests;
 import com.seniors.justlevelingfork.common.player.AptitudeWarningService;
@@ -39,15 +40,24 @@ import com.seniors.justlevelingfork.common.player.CharacterAdminClientRequests;
 import com.seniors.justlevelingfork.network.packet.client.ForgeCharacterAdminAccessSyncPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeCharacterAdminAccessRequestPacket;
 import com.seniors.justlevelingfork.network.packet.common.ForgeCharacterAdminActionPacket;
+import com.seniors.justlevelingfork.network.ProficiencySyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeProficiencySyncPacket;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 
 public final class ForgeServerNetworking {
     // Version 2 adds the server-authoritative title-definition packet. Keeping
     // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "12";
+    private static final String PROTOCOL_VERSION = "13";
 
     private static int packetId;
     private static SimpleChannel channel;
+    private static final Map<
+            ServerPlayer,
+            ProficiencySyncPayload>
+            LAST_PROFICIENCY_SNAPSHOTS =
+            new WeakHashMap<>();
 
     private ForgeServerNetworking() {
     }
@@ -200,6 +210,14 @@ public final class ForgeServerNetworking {
                 ForgeClassLevelUpPacket::new,
                 ForgeClassLevelUpPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        channel.registerMessage(
+                packetId++,
+                ForgeProficiencySyncPacket.class,
+                ForgeProficiencySyncPacket::toBytes,
+                ForgeProficiencySyncPacket::new,
+                ForgeProficiencySyncPacket::handle,
+                Optional.of(
+                        NetworkDirection.PLAY_TO_CLIENT));
 
         PlayerProgressClientRequests.setAptitudeLevelUpSender(aptitudeName ->
                 sendToServer(new ForgeAptitudeLevelUpPacket(aptitudeName)));
@@ -235,9 +253,8 @@ public final class ForgeServerNetworking {
     public static void syncAbilityScores(ServerPlayer player, PlayerProgress progress) {if (player == null || progress == null) {return;}
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeAbilityScoresSyncPacket(AbilityScoresSyncPayload.current(player, progress)));}
 
-    public static void syncPlayerProgress(ServerPlayer player, PlayerProgress progress) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));syncAbilityScores(player, progress);}
-
+    public static void syncPlayerProgress(ServerPlayer player, PlayerProgress progress) {if (player == null || progress == null) {return;}
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgePlayerProgressSyncPacket(progress));syncAbilityScores(player, progress);syncProficienciesIfChanged(player);}
     public static void syncFeatDefinitions(ServerPlayer player) {if (player == null) {return;}
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeFeatDefinitionsSyncPacket(FeatDefinitionsSyncPayload.current()));}
 
@@ -271,5 +288,40 @@ public final class ForgeServerNetworking {
 
     private static void sendTitleUnlock(ServerPlayer player, String titleName) {
         channel.send(PacketDistributor.PLAYER.with(() -> player), new ForgeTitleUnlockPacket(titleName));
+    }
+
+    public static void syncProficienciesIfChanged(
+            ServerPlayer player) {
+
+        if (player == null) {
+            return;
+        }
+
+        ProficiencySyncPayload current =
+                ProficiencySyncPayload
+                        .current(player);
+
+        ProficiencySyncPayload previous =
+                LAST_PROFICIENCY_SNAPSHOTS
+                        .put(
+                                player,
+                                current);
+
+        if (current.equals(previous)) {
+            return;
+        }
+
+        Constants.LOG.info(
+                "SERVER sending effective proficiency snapshot to {}. "
+                        + "Weapons: {}, Armor: {}",
+                player.getGameProfile().getName(),
+                current.weaponProficiencies(),
+                current.armorProficiencies());
+
+        channel.send(
+                PacketDistributor.PLAYER
+                        .with(() -> player),
+                new ForgeProficiencySyncPacket(
+                        current));
     }
 }

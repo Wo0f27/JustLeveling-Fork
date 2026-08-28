@@ -69,11 +69,41 @@ public final class ForgeRegistryCommonEvents {
     public static void onAddReloadListeners(AddReloadListenerEvent event) {event.addListener(FeatManager.INSTANCE);}
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer serverPlayer) {
-            PlayerTickEffects.apply(serverPlayer);
-            if (ModList.get().isLoaded("curios")) {
-                ForgeCuriosIntegration.dropLockedAccessories(serverPlayer);
+    public static void onPlayerTick(
+            TickEvent.PlayerTickEvent event) {
+
+        if (event.phase == TickEvent.Phase.END
+                && event.player
+                instanceof ServerPlayer serverPlayer) {
+
+            PlayerTickEffects.apply(
+                    serverPlayer);
+
+            /*
+             * Provider-driven proficiency may change without
+             * touching JLF PlayerProgress.
+             *
+             * Examples:
+             * ancestry state
+             * temporary feature
+             * future subclass state
+             *
+             * Poll at the same five-tick cadence already used
+             * for JLF's external ability-derived state.
+             */
+            if (serverPlayer.tickCount % 5 == 0) {
+
+                ForgeServerNetworking
+                        .syncProficienciesIfChanged(
+                                serverPlayer);
+            }
+
+            if (ModList.get()
+                    .isLoaded("curios")) {
+
+                ForgeCuriosIntegration
+                        .dropLockedAccessories(
+                                serverPlayer);
             }
         }
     }
