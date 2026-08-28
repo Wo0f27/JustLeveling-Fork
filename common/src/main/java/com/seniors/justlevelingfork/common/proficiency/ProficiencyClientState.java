@@ -14,6 +14,8 @@ public final class ProficiencyClientState {
     private static Set<ArmorCategory> armorProficiencies =
             Set.of();
 
+    private static boolean synchronizedState;
+
     private ProficiencyClientState() {
     }
 
@@ -59,6 +61,8 @@ public final class ProficiencyClientState {
                         ? Set.of()
                         : Collections.unmodifiableSet(
                         updatedArmor);
+
+        synchronizedState = true;
     }
 
     public static Set<ResourceLocation> weaponProficiencies() {
@@ -90,5 +94,10 @@ public final class ProficiencyClientState {
 
         armorProficiencies =
                 Set.of();
+
+        synchronizedState = false;
+    }
+    public static boolean isSynchronized() {
+        return synchronizedState;
     }
 }

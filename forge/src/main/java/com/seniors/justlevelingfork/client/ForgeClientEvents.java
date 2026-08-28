@@ -22,6 +22,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import com.seniors.justlevelingfork.common.player.CharacterAdminClientState;
 import com.seniors.justlevelingfork.common.proficiency.ProficiencyClientState;
+import com.seniors.justlevelingfork.client.EquipmentProficiencyTooltip;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 
 public final class ForgeClientEvents {
     private ForgeClientEvents() {
@@ -79,6 +81,15 @@ public final class ForgeClientEvents {
         RegistryTitles.clearClientTitleModels();
         CharacterAdminClientState.clear();
         ProficiencyClientState.clear();
+    }
+
+    @SubscribeEvent
+    public static void onItemTooltip(
+            ItemTooltipEvent event) {
+
+        EquipmentProficiencyTooltip.append(
+                event.getItemStack(),
+                event.getToolTip());
     }
 
     private static final class ForgeConfigSaver implements CommonConfigScreen.ConfigSaver {

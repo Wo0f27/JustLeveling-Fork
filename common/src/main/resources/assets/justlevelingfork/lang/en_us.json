@@ -377,5 +377,11 @@
  "title.justlevelingfork.rider_strider.description" : "Travel 10k by Strider.",
  "title.justlevelingfork.traveler_nether.description" : "Travel to the Nether.",
  "title.justlevelingfork.traveler_end.description" : "Travel to the End.",
- "title.justlevelingfork.administrator.description" : "Be a server Admin."
-}
+ "title.justlevelingfork.administrator.description" : "Be a server Admin.",
+
+  "tooltip.justlevelingfork.weapon_type": "Weapon Type:",
+  "tooltip.justlevelingfork.armor_type": "Armor Type:",
+  "tooltip.justlevelingfork.proficiency": "Proficiency:",
+  "tooltip.justlevelingfork.proficient": "Proficient",
+  "tooltip.justlevelingfork.not_proficient": "Not Proficient"
+ }
