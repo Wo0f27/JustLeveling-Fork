@@ -81,6 +81,10 @@ dependencies {
     modRuntimeOnly "io.redspace:irons_lib:${irons_lib_version}"
     modRuntimeOnly "io.redspace:irons_spellbooks:${irons_spellbooks_version}"
 
+    compileOnly "io.redspace:irons_spellbooks:${irons_spellbooks_version}"
+    compileOnly "io.redspace:irons_lib:${irons_lib_version}"
+
+
     modRuntimeOnly "software.bernie.geckolib:geckolib-forge-1.20.1:${geckolib_version}"
     modRuntimeOnly "top.theillusivec4.curios:curios-forge:${curios_version}"
     modRuntimeOnly "dev.kosmx.player-anim:player-animation-lib-forge:1.0.2-rc1+1.20"
@@ -105,6 +109,19 @@ dependencies {
     modRuntimeOnly "curse.maven:fzzy-config-1005914:${fzzy_config_file}"
     modRuntimeOnly "curse.maven:simply-tooltips-1475755:${simply_tooltips_file}"
     modRuntimeOnly "curse.maven:simply-bows-1475770:${simply_bows_file}"
+
+    // ============================================================
+    // Martial Spells
+    // ============================================================
+    modCompileOnly "com.w0of26:martial_spells:${martial_spells_version}"
+    modRuntimeOnly "com.w0of26:martial_spells:${martial_spells_version}"
+
+    // Martial Spells required runtime dependencies
+    modRuntimeOnly "curse.maven:turtlebois-core-library-1086765:${turtlecore_file}"
+
+    modRuntimeOnly "maven.modrinth:mk0Htq87:${runiclib_version}-forge,${minecraft_version}"
+
+    modRuntimeOnly "curse.maven:mob-player-animator-1058791:${mob_player_animator_file}"
 
 }
 
