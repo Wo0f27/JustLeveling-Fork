@@ -29,6 +29,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.common.MinecraftForge;
+import com.seniors.justlevelingfork.integration.AthleteFeatIntegration;
 
 @Mod(Constants.MOD_ID)
 public class JustLevelingForge {
@@ -49,6 +50,7 @@ public class JustLevelingForge {
         modEventBus.addListener(ForgeRegistryAttributes::addEntityAttributes);
         ForgeRegistryCapabilities.load();
         ForgeRegistryCommonEvents.load();
+        AthleteFeatIntegration.load();
         if (ModList.get().isLoaded("curios")) {
             MinecraftForge.EVENT_BUS.register(new ForgeCuriosIntegration());
         }

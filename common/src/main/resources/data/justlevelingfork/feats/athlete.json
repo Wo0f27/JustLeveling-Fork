@@ -1,0 +1,16 @@
+{
+  "name": "Athlete",
+  "description": "Increase Strength or Dexterity by 1. Your jumps carry you 50% farther horizontally, and you recover from Prone twice as quickly.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "effect": {
+    "type": "justlevelingfork:ability_score_improvement",
+    "points": 1,
+    "max_score": 20,
+    "allowed_abilities": [
+      "strength",
+      "dexterity"
+    ]
+  }
+}
