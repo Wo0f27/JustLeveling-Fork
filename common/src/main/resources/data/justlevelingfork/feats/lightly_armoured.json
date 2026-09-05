@@ -1,0 +1,24 @@
+{
+  "name": "Lightly Armoured",
+  "description": "Increase your Strength or Dexterity by 1, to a maximum of 20, and gain Light Armour proficiency.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "effects": [
+    {
+      "type": "justlevelingfork:ability_score_improvement",
+      "points": 1,
+      "max_score": 20,
+      "allowed_abilities": [
+        "strength",
+        "dexterity"
+      ]
+    },
+    {
+      "type": "justlevelingfork:grant_armor_proficiency",
+      "categories": [
+        "light"
+      ]
+    }
+  ]
+}

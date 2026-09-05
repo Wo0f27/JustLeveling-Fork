@@ -16,6 +16,9 @@ public final class FeatEffectRegistry {
     public static final ResourceLocation ABILITY_SCORE_IMPROVEMENT =
             id("ability_score_improvement");
 
+    public static final ResourceLocation GRANT_ARMOR_PROFICIENCY =
+            id("grant_armor_proficiency");
+
     static {
         register(
                 ABILITY_SCORE_IMPROVEMENT,
@@ -24,6 +27,10 @@ public final class FeatEffectRegistry {
         register(
                 ATTRIBUTE_MODIFIER,
                 AttributeModifierFeatEffect.INSTANCE);
+
+        register(
+                GRANT_ARMOR_PROFICIENCY,
+                GrantArmorProficiencyFeatEffect.INSTANCE);
     }
 
     private FeatEffectRegistry() {
@@ -70,6 +77,4 @@ public final class FeatEffectRegistry {
                 Constants.MOD_ID,
                 path);
     }
-
-
 }
