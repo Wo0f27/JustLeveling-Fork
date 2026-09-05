@@ -2,6 +2,7 @@ package com.seniors.justlevelingfork.common.feat;
 
 import com.seniors.justlevelingfork.common.player.AbilityScoreBonusService;
 import com.seniors.justlevelingfork.common.player.PlayerProgress;
+import com.seniors.justlevelingfork.common.proficiency.ArmorProficiencyService;
 import com.seniors.justlevelingfork.registry.RegistryAptitudes;
 import com.seniors.justlevelingfork.registry.aptitude.Aptitude;
 import java.util.Map;
@@ -29,7 +30,8 @@ public final class FeatPrerequisiteService {
                 feat.getPrerequisites();
 
         if (progress.getCharacterLevel()
-                < requirements.minimumCharacterLevel()) {
+                < requirements
+                .minimumCharacterLevel()) {
 
             return false;
         }
@@ -49,8 +51,15 @@ public final class FeatPrerequisiteService {
             return false;
         }
 
-        return meetsFeatRequirements(
+        if (!meetsFeatRequirements(
                 progress,
+                requirements)) {
+
+            return false;
+        }
+
+        return meetsArmorProficiencyRequirements(
+                player,
                 requirements);
     }
 
@@ -60,11 +69,14 @@ public final class FeatPrerequisiteService {
             FeatPrerequisites requirements) {
 
         for (Map.Entry<String, Integer> entry
-                : requirements.abilities().entrySet()) {
+                : requirements
+                .abilities()
+                .entrySet()) {
 
             Aptitude aptitude =
-                    RegistryAptitudes.getAptitude(
-                            entry.getKey());
+                    RegistryAptitudes
+                            .getAptitude(
+                                    entry.getKey());
 
             if (aptitude == null) {
                 return false;
@@ -92,7 +104,9 @@ public final class FeatPrerequisiteService {
             FeatPrerequisites requirements) {
 
         for (Map.Entry<ResourceLocation, Integer> entry
-                : requirements.classes().entrySet()) {
+                : requirements
+                .classes()
+                .entrySet()) {
 
             int actualLevel =
                     progress.getClassLevel(
@@ -114,7 +128,9 @@ public final class FeatPrerequisiteService {
             FeatPrerequisites requirements) {
 
         for (Map.Entry<ResourceLocation, Integer> entry
-                : requirements.feats().entrySet()) {
+                : requirements
+                .feats()
+                .entrySet()) {
 
             int actualRank =
                     progress.getFeatRank(
@@ -129,5 +145,24 @@ public final class FeatPrerequisiteService {
         }
 
         return true;
+    }
+
+    private static boolean
+    meetsArmorProficiencyRequirements(
+            ServerPlayer player,
+            FeatPrerequisites requirements) {
+
+        if (requirements
+                .armorProficiencies()
+                .isEmpty()) {
+
+            return true;
+        }
+
+        return ArmorProficiencyService
+                .getProficiencies(player)
+                .containsAll(
+                        requirements
+                                .armorProficiencies());
     }
 }

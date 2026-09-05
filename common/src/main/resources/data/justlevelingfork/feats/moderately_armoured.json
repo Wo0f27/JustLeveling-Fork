@@ -1,0 +1,31 @@
+{
+  "name": "Moderately Armoured",
+  "description": "Increase your Strength or Dexterity by 1, to a maximum of 20, and gain Medium Armour and Shield proficiency.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "prerequisites": {
+    "armor_proficiencies": [
+      "light"
+    ]
+  },
+
+  "effects": [
+    {
+      "type": "justlevelingfork:ability_score_improvement",
+      "points": 1,
+      "max_score": 20,
+      "allowed_abilities": [
+        "strength",
+        "dexterity"
+      ]
+    },
+    {
+      "type": "justlevelingfork:grant_armor_proficiency",
+      "categories": [
+        "medium",
+        "shield"
+      ]
+    }
+  ]
+}

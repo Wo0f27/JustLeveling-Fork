@@ -16,6 +16,8 @@ import net.minecraft.resources.ResourceLocation;
 import com.seniors.justlevelingfork.common.player.AbilityScoreClientState;
 import java.util.Locale;
 import java.util.Map;
+import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
+import com.seniors.justlevelingfork.common.proficiency.ProficiencyClientState;
 
 public class FeatSelectionScreen extends Screen {
 
@@ -342,7 +344,8 @@ public class FeatSelectionScreen extends Screen {
                 feat.minimumCharacterLevel() > 1
                         || !feat.abilityRequirements().isEmpty()
                         || !feat.classRequirements().isEmpty()
-                        || !feat.featRequirements().isEmpty();
+                        || !feat.featRequirements().isEmpty()
+                        || !feat.armorProficiencies().isEmpty();
 
         if (!hasPrerequisites) {
             return;
@@ -472,6 +475,37 @@ public class FeatSelectionScreen extends Screen {
                                     + " (requires "
                                     + requirement.getValue()
                                     + ")"));
+        }
+
+        /*
+         * Armor proficiencies
+         */
+        for (ArmorCategory category
+                : feat.armorProficiencies()) {
+
+            String requirementName =
+                    displayArmorProficiencyName(
+                            category);
+
+            if (!ProficiencyClientState
+                    .isSynchronized()) {
+
+                tooltip.add(
+                        Component.literal(
+                                        "[?] "
+                                                + requirementName)
+                                .withStyle(
+                                        ChatFormatting.YELLOW));
+
+                continue;
+            }
+
+            tooltip.add(
+                    requirementLine(
+                            ProficiencyClientState
+                                    .hasArmorProficiency(
+                                            category),
+                            requirementName));
         }
     }
 
@@ -749,6 +783,28 @@ public class FeatSelectionScreen extends Screen {
             }
         }
 
+        /*
+         * Proficiency state is synchronized separately.
+         *
+         * If that snapshot has not arrived yet, don't
+         * falsely lock the feat. The server remains
+         * authoritative.
+         */
+        if (ProficiencyClientState
+                .isSynchronized()) {
+
+            for (ArmorCategory category
+                    : feat.armorProficiencies()) {
+
+                if (!ProficiencyClientState
+                        .hasArmorProficiency(
+                                category)) {
+
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -931,5 +987,31 @@ public class FeatSelectionScreen extends Screen {
                 && mouseX <= x + width
                 && mouseY >= y
                 && mouseY <= y + height;
+    }
+
+    private static String displayArmorProficiencyName(
+            ArmorCategory category) {
+
+        if (category == null) {
+            return "Unknown armour proficiency";
+        }
+
+        return switch (category) {
+
+            case GARB ->
+                    "Garb proficiency";
+
+            case LIGHT ->
+                    "Light Armour proficiency";
+
+            case MEDIUM ->
+                    "Medium Armour proficiency";
+
+            case HEAVY ->
+                    "Heavy Armour proficiency";
+
+            case SHIELD ->
+                    "Shield proficiency";
+        };
     }
 }

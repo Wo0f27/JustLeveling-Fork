@@ -19,6 +19,9 @@ import java.util.Locale;
 import com.google.gson.JsonArray;
 import java.util.ArrayList;
 import java.util.List;
+import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
+import java.util.EnumSet;
+import java.util.Set;
 
 public final class FeatManager
         extends SimpleJsonResourceReloadListener {
@@ -304,11 +307,17 @@ public final class FeatManager
                         prerequisites,
                         "feats");
 
+        Set<ArmorCategory> armorProficiencies =
+                parseArmorProficiencyRequirements(
+                        featId,
+                        prerequisites);
+
         return new FeatPrerequisites(
                 minimumCharacterLevel,
                 abilities,
                 classes,
-                feats);
+                feats,
+                armorProficiencies);
     }
 
     private Map<String, Integer> parseAbilityRequirements(
@@ -421,6 +430,84 @@ public final class FeatManager
         });
 
         return result;
+    }
+
+    private Set<ArmorCategory>
+    parseArmorProficiencyRequirements(
+            ResourceLocation featId,
+            JsonObject prerequisites) {
+
+        if (!prerequisites.has(
+                "armor_proficiencies")) {
+
+            return Set.of();
+        }
+
+        JsonElement element =
+                prerequisites.get(
+                        "armor_proficiencies");
+
+        if (element == null
+                || !element.isJsonArray()) {
+
+            throw new IllegalArgumentException(
+                    "'armor_proficiencies' must be an array in feat "
+                            + featId);
+        }
+
+        JsonArray array =
+                element.getAsJsonArray();
+
+        if (array.isEmpty()) {
+            return Set.of();
+        }
+
+        EnumSet<ArmorCategory> result =
+                EnumSet.noneOf(
+                        ArmorCategory.class);
+
+        for (JsonElement categoryElement
+                : array) {
+
+            if (categoryElement == null
+                    || !categoryElement
+                    .isJsonPrimitive()) {
+
+                throw new IllegalArgumentException(
+                        "Invalid armor proficiency requirement in feat "
+                                + featId);
+            }
+
+            String categoryName =
+                    categoryElement
+                            .getAsString()
+                            .trim()
+                            .toUpperCase(
+                                    Locale.ROOT);
+
+            ArmorCategory category;
+
+            try {
+
+                category =
+                        ArmorCategory.valueOf(
+                                categoryName);
+
+            } catch (IllegalArgumentException exception) {
+
+                throw new IllegalArgumentException(
+                        "Unknown armor proficiency '"
+                                + categoryElement.getAsString()
+                                + "' in feat "
+                                + featId);
+            }
+
+            result.add(category);
+        }
+
+        return result.isEmpty()
+                ? Set.of()
+                : Set.copyOf(result);
     }
 
     public FeatDefinition get(ResourceLocation id) {

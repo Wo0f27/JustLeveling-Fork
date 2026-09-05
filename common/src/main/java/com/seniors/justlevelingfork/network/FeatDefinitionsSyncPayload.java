@@ -15,6 +15,8 @@ import com.google.gson.JsonObject;
 import com.seniors.justlevelingfork.common.feat.effect.FeatEffectRegistry;
 import java.util.Locale;
 import net.minecraft.util.GsonHelper;
+import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
+import java.util.Set;
 
 public record FeatDefinitionsSyncPayload(
         List<Definition> definitions) {
@@ -75,7 +77,9 @@ public record FeatDefinitionsSyncPayload(
                             abilityScoreChoice,
                             feat.getPrerequisites().abilities(),
                             feat.getPrerequisites().classes(),
-                            feat.getPrerequisites().feats()));
+                            feat.getPrerequisites().feats(),
+                            feat.getPrerequisites()
+                                    .armorProficiencies()));
 
             if (result.size() >= MAX_DEFINITIONS) {
                 break;
@@ -222,6 +226,9 @@ public record FeatDefinitionsSyncPayload(
             writeResourceRequirements(
                     buffer,
                     definition.featRequirements());
+            writeArmorRequirements(
+                    buffer,
+                    definition.armorProficiencies());
         }
     }
 
@@ -303,6 +310,53 @@ public record FeatDefinitionsSyncPayload(
         });
     }
 
+    private static Set<ArmorCategory> readArmorRequirements(
+            FriendlyByteBuf buffer) {
+
+        int count =
+                buffer.readVarInt();
+
+        if (count < 0
+                || count
+                > ArmorCategory.values().length) {
+
+            throw new IllegalArgumentException(
+                    "Invalid armor proficiency prerequisite count: "
+                            + count);
+        }
+
+        ArmorCategory[] categories =
+                ArmorCategory.values();
+
+        java.util.EnumSet<ArmorCategory> result =
+                java.util.EnumSet.noneOf(
+                        ArmorCategory.class);
+
+        for (int i = 0;
+             i < count;
+             i++) {
+
+            int ordinal =
+                    buffer.readVarInt();
+
+            if (ordinal < 0
+                    || ordinal
+                    >= categories.length) {
+
+                throw new IllegalArgumentException(
+                        "Invalid armor proficiency prerequisite ordinal: "
+                                + ordinal);
+            }
+
+            result.add(
+                    categories[ordinal]);
+        }
+
+        return result.isEmpty()
+                ? Set.of()
+                : Set.copyOf(result);
+    }
+
     public static FeatDefinitionsSyncPayload read(
             FriendlyByteBuf buffer) {
 
@@ -366,6 +420,10 @@ public record FeatDefinitionsSyncPayload(
                     readResourceRequirements(
                             buffer);
 
+            Set<ArmorCategory> armorProficiencies =
+                    readArmorRequirements(
+                            buffer);
+
             if (id == null) {
 
                 throw new IllegalArgumentException(
@@ -384,7 +442,8 @@ public record FeatDefinitionsSyncPayload(
                             abilityScoreChoice,
                             abilityRequirements,
                             classRequirements,
-                            featRequirements));
+                            featRequirements,
+                            armorProficiencies));
         }
 
         return new FeatDefinitionsSyncPayload(
@@ -581,7 +640,8 @@ public record FeatDefinitionsSyncPayload(
             AbilityScoreChoice abilityScoreChoice,
             Map<String, Integer> abilityRequirements,
             Map<ResourceLocation, Integer> classRequirements,
-            Map<ResourceLocation, Integer> featRequirements) {
+            Map<ResourceLocation, Integer> featRequirements,
+            Set<ArmorCategory> armorProficiencies) {
 
         public Definition {
 
@@ -608,6 +668,12 @@ public record FeatDefinitionsSyncPayload(
                             featRequirements == null
                                     ? Map.of()
                                     : featRequirements);
+
+            armorProficiencies =
+                    Set.copyOf(
+                            armorProficiencies == null
+                                    ? Set.of()
+                                    : armorProficiencies);
         }
     }
     public record AbilityScoreChoice(
@@ -632,6 +698,21 @@ public record FeatDefinitionsSyncPayload(
                             allowedAbilities == null
                                     ? List.of()
                                     : allowedAbilities);
+        }
+    }
+
+    private static void writeArmorRequirements(
+            FriendlyByteBuf buffer,
+            Set<ArmorCategory> requirements) {
+
+        buffer.writeVarInt(
+                requirements.size());
+
+        for (ArmorCategory category
+                : requirements) {
+
+            buffer.writeVarInt(
+                    category.ordinal());
         }
     }
 }
