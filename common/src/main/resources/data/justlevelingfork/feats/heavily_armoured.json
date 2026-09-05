@@ -1,0 +1,29 @@
+{
+  "name": "Heavily Armoured",
+  "description": "Increase your Strength by 1, to a maximum of 20, and gain Heavy Armour proficiency.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "prerequisites": {
+    "armor_proficiencies": [
+      "medium"
+    ]
+  },
+
+  "effects": [
+    {
+      "type": "justlevelingfork:ability_score_improvement",
+      "points": 1,
+      "max_score": 20,
+      "allowed_abilities": [
+        "strength"
+      ]
+    },
+    {
+      "type": "justlevelingfork:grant_armor_proficiency",
+      "categories": [
+        "heavy"
+      ]
+    }
+  ]
+}
