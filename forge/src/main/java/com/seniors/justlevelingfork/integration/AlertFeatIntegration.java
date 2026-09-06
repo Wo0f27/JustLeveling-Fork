@@ -1,6 +1,7 @@
 package com.seniors.justlevelingfork.integration;
 
 import com.seniors.justlevelingfork.Constants;
+import com.seniors.justlevelingfork.common.feat.FeatCooldownService;
 import com.seniors.justlevelingfork.common.feat.FeatProgressionService;
 import com.seniors.justlevelingfork.network.ForgeServerNetworking;
 import com.seniors.justlevelingfork.registry.ForgeRegistryMobEffects;
@@ -43,14 +44,6 @@ public final class AlertFeatIntegration {
     private static final Map<ServerPlayer, Set<UUID>> SEEN_HOSTILES =
             new WeakHashMap<>();
 
-    /*
-     * Checkpoint 2 keeps this cooldown runtime-only. Persistence across relog
-     * will be moved into generic player progression storage in the next
-     * checkpoint so the mechanic can be reused by future feats.
-     */
-    private static final Map<ServerPlayer, Long> REACTION_READY_AT =
-            new WeakHashMap<>();
-
     private AlertFeatIntegration() {
     }
 
@@ -71,7 +64,7 @@ public final class AlertFeatIntegration {
 
         if (!FeatProgressionService.hasFeat(player, ALERT)) {
             SEEN_HOSTILES.remove(player);
-            REACTION_READY_AT.remove(player);
+            FeatCooldownService.clear(player, ALERT);
             return;
         }
 
@@ -108,10 +101,10 @@ public final class AlertFeatIntegration {
     }
 
     private static void tryTriggerReaction(ServerPlayer player) {
-        long now = player.serverLevel().getGameTime();
-        long readyAt = REACTION_READY_AT.getOrDefault(player, Long.MIN_VALUE);
-
-        if (now < readyAt) {
+        if (!FeatCooldownService.tryStart(
+                player,
+                ALERT,
+                REACTION_COOLDOWN_TICKS)) {
             return;
         }
 
@@ -122,11 +115,6 @@ public final class AlertFeatIntegration {
                 false,
                 false,
                 false));
-
-        // Cooldown starts when the reaction burst activates, not when it ends.
-        REACTION_READY_AT.put(
-                player,
-                now + REACTION_COOLDOWN_TICKS);
     }
 
     private static boolean isHostileToPlayer(
