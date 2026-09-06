@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.seniors.justlevelingfork.common.config.CommonConfigService;
+import com.seniors.justlevelingfork.common.feat.FeatChoiceCodec;
 import com.seniors.justlevelingfork.common.feat.FeatDefinition;
 import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 import com.seniors.justlevelingfork.common.player.AbilityScoreBonusService;
@@ -38,10 +39,17 @@ public final class AbilityScoreImprovementFeatEffect
         if (player == null
                 || progress == null
                 || feat == null
-                || effect == null
-                || choice == null
-                || choice.isBlank()) {
+                || effect == null) {
 
+            return false;
+        }
+
+        String abilityChoice =
+                FeatChoiceCodec.extract(
+                        choice,
+                        "ability");
+
+        if (abilityChoice.isBlank()) {
             return false;
         }
 
@@ -55,7 +63,7 @@ public final class AbilityScoreImprovementFeatEffect
         Map<Aptitude, Integer> allocation =
                 parseAllocation(
                         effect,
-                        choice,
+                        abilityChoice,
                         points);
 
         if (allocation.isEmpty()) {
@@ -138,10 +146,17 @@ public final class AbilityScoreImprovementFeatEffect
             String choice) {
 
         if (progress == null
-                || effect == null
-                || choice == null
-                || choice.isBlank()) {
+                || effect == null) {
 
+            return;
+        }
+
+        String abilityChoice =
+                FeatChoiceCodec.extract(
+                        choice,
+                        "ability");
+
+        if (abilityChoice.isBlank()) {
             return;
         }
 
@@ -151,7 +166,7 @@ public final class AbilityScoreImprovementFeatEffect
         Map<Aptitude, Integer> allocation =
                 parseAllocation(
                         effect,
-                        choice,
+                        abilityChoice,
                         points);
 
         allocation.forEach(
