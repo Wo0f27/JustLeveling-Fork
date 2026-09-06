@@ -44,6 +44,11 @@ public class PlayerProgress {
     public final Map<String, String> subclasses = new HashMap<>();
     // Feat ID -> rank. A map allows repeatable feats such as ASI.
     public final Map<String, Integer> feats = new HashMap<>();
+    // Feat ID -> submitted persistent choice.
+    //
+    // Most feats do not need this after being applied. Choice-driven
+    // derived effects such as Weapon Master do.
+    public final Map<String, String> featChoices = new HashMap<>();
     public double betterCombatEntityRange = 0.0D;
     public int counterAttackTimer = 0;
     public float counterAttackDamage = 0.0F;
@@ -220,6 +225,27 @@ public class PlayerProgress {
         feats.put(featId, rank);
     }
 
+    public String getFeatChoice(String featId) {
+        if (featId == null || featId.isBlank()) {
+            return "";
+        }
+
+        return featChoices.getOrDefault(featId, "");
+    }
+
+    public void setFeatChoice(String featId, String choice) {
+        if (featId == null || featId.isBlank()) {
+            return;
+        }
+
+        if (choice == null || choice.isBlank()) {
+            featChoices.remove(featId);
+            return;
+        }
+
+        featChoices.put(featId, choice.trim());
+    }
+
     public int getSpentAptitudeExperience(IntUnaryOperator requiredPoints) {
         int spentExperience = 0;
         for (int aptitudeLevel : aptitudeLevel.values()) {
@@ -302,6 +328,10 @@ public class PlayerProgress {
         CompoundTag featsTag = new CompoundTag();
         feats.forEach(featsTag::putInt);
         tag.put("feats", featsTag);
+
+        CompoundTag featChoicesTag = new CompoundTag();
+        featChoices.forEach(featChoicesTag::putString);
+        tag.put("featChoices", featChoicesTag);
         return tag;
     }
 
@@ -388,6 +418,14 @@ public class PlayerProgress {
             }
         });
 
+        CompoundTag featChoicesTag = tag.getCompound("featChoices");
+        featChoicesTag.getAllKeys().forEach(featId -> {
+            String choice = featChoicesTag.getString(featId);
+            if (!choice.isBlank()) {
+                featChoices.put(featId, choice);
+            }
+        });
+
         RegistryAptitudes.values().forEach(aptitude -> aptitudeLevel.put(
                 aptitude.getName(),
                 clamp(
@@ -438,6 +476,9 @@ public class PlayerProgress {
 
         feats.clear();
         feats.putAll(source.feats);
+
+        featChoices.clear();
+        featChoices.putAll(source.featChoices);
         clearTransientState();
     }
 
@@ -451,6 +492,7 @@ public class PlayerProgress {
         classLevels.clear();
         subclasses.clear();
         feats.clear();
+        featChoices.clear();
     }
 
     private void resetMaps() {
