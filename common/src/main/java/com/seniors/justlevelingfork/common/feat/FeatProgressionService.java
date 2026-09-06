@@ -182,6 +182,17 @@ public final class FeatProgressionService {
                     }
 
                     /*
+                     * Preserve the submitted choice for effects whose
+                     * behaviour must be derived from that decision later.
+                     *
+                     * Existing one-shot effects such as ASI do not need
+                     * the stored value, but retaining it is harmless.
+                     */
+                    updated.setFeatChoice(
+                            featId.toString(),
+                            safeChoice);
+
+                    /*
                      * Record ownership/rank.
                      */
                     updated.setFeatRank(
