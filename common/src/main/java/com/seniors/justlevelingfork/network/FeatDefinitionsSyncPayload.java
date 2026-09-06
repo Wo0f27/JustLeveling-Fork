@@ -1,22 +1,24 @@
 package com.seniors.justlevelingfork.network;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.seniors.justlevelingfork.common.feat.FeatClientState;
 import com.seniors.justlevelingfork.common.feat.FeatDefinition;
 import com.seniors.justlevelingfork.common.feat.FeatEffectDefinition;
 import com.seniors.justlevelingfork.common.feat.FeatManager;
+import com.seniors.justlevelingfork.common.feat.effect.FeatEffectRegistry;
+import com.seniors.justlevelingfork.common.feat.effect.GrantWeaponProficiencyFeatEffect;
+import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.seniors.justlevelingfork.common.feat.effect.FeatEffectRegistry;
-import java.util.Locale;
 import net.minecraft.util.GsonHelper;
-import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
-import java.util.Set;
 
 public record FeatDefinitionsSyncPayload(
         List<Definition> definitions) {
@@ -28,6 +30,8 @@ public record FeatDefinitionsSyncPayload(
     private static final int MAX_DESCRIPTION_LENGTH = 1024;
     private static final int MAX_EFFECTS = 32;
     private static final int MAX_REQUIREMENTS = 64;
+    private static final int MAX_WEAPON_CHOICES = 512;
+    private static final int MAX_CHOICE_KEY_LENGTH = 64;
 
     public FeatDefinitionsSyncPayload {
 
@@ -61,6 +65,10 @@ public record FeatDefinitionsSyncPayload(
                     findAbilityScoreChoice(
                             feat);
 
+            WeaponProficiencyChoice weaponProficiencyChoice =
+                    findWeaponProficiencyChoice(
+                            feat);
+
             result.add(
                     new Definition(
                             feat.getId(),
@@ -75,6 +83,7 @@ public record FeatDefinitionsSyncPayload(
                                             FeatEffectDefinition::getType)
                                     .toList(),
                             abilityScoreChoice,
+                            weaponProficiencyChoice,
                             feat.getPrerequisites().abilities(),
                             feat.getPrerequisites().classes(),
                             feat.getPrerequisites().feats(),
@@ -175,6 +184,47 @@ public record FeatDefinitionsSyncPayload(
         return null;
     }
 
+    private static WeaponProficiencyChoice
+    findWeaponProficiencyChoice(
+            FeatDefinition feat) {
+
+        for (FeatEffectDefinition effect
+                : feat.getEffects()) {
+
+            if (!FeatEffectRegistry
+                    .GRANT_WEAPON_PROFICIENCY
+                    .equals(effect.getType())) {
+
+                continue;
+            }
+
+            GrantWeaponProficiencyFeatEffect.ParsedConfig config =
+                    GrantWeaponProficiencyFeatEffect
+                            .parseConfig(effect);
+
+            if (config == null
+                    || config.choicesRequired() <= 0) {
+
+                continue;
+            }
+
+            List<ResourceLocation> allowed =
+                    config.allowedProficiencies()
+                            .stream()
+                            .sorted(
+                                    Comparator.comparing(
+                                            ResourceLocation::toString))
+                            .toList();
+
+            return new WeaponProficiencyChoice(
+                    config.choiceKey(),
+                    config.choicesRequired(),
+                    allowed);
+        }
+
+        return null;
+    }
+
     public void write(
             FriendlyByteBuf buffer) {
 
@@ -215,6 +265,10 @@ public record FeatDefinitionsSyncPayload(
                     buffer,
                     definition.abilityScoreChoice());
 
+            writeWeaponProficiencyChoice(
+                    buffer,
+                    definition.weaponProficiencyChoice());
+
             writeStringRequirements(
                     buffer,
                     definition.abilityRequirements());
@@ -226,6 +280,7 @@ public record FeatDefinitionsSyncPayload(
             writeResourceRequirements(
                     buffer,
                     definition.featRequirements());
+
             writeArmorRequirements(
                     buffer,
                     definition.armorProficiencies());
@@ -258,6 +313,34 @@ public record FeatDefinitionsSyncPayload(
             buffer.writeUtf(
                     ability,
                     32);
+        }
+    }
+
+    private static void writeWeaponProficiencyChoice(
+            FriendlyByteBuf buffer,
+            WeaponProficiencyChoice choice) {
+
+        buffer.writeBoolean(
+                choice != null);
+
+        if (choice == null) {
+            return;
+        }
+
+        buffer.writeUtf(
+                choice.choiceKey(),
+                MAX_CHOICE_KEY_LENGTH);
+
+        buffer.writeVarInt(
+                choice.choicesRequired());
+
+        buffer.writeVarInt(
+                choice.allowedProficiencies().size());
+
+        for (ResourceLocation id
+                : choice.allowedProficiencies()) {
+
+            buffer.writeResourceLocation(id);
         }
     }
 
@@ -374,8 +457,6 @@ public record FeatDefinitionsSyncPayload(
         List<Definition> definitions =
                 new ArrayList<>(count);
 
-
-
         for (int i = 0; i < count; i++) {
 
             ResourceLocation id =
@@ -406,6 +487,10 @@ public record FeatDefinitionsSyncPayload(
 
             AbilityScoreChoice abilityScoreChoice =
                     readAbilityScoreChoice(
+                            buffer);
+
+            WeaponProficiencyChoice weaponProficiencyChoice =
+                    readWeaponProficiencyChoice(
                             buffer);
 
             Map<String, Integer> abilityRequirements =
@@ -440,6 +525,7 @@ public record FeatDefinitionsSyncPayload(
                             maxRank,
                             effectTypes,
                             abilityScoreChoice,
+                            weaponProficiencyChoice,
                             abilityRequirements,
                             classRequirements,
                             featRequirements,
@@ -493,6 +579,54 @@ public record FeatDefinitionsSyncPayload(
         return new AbilityScoreChoice(
                 points,
                 maxScore,
+                allowed);
+    }
+
+    private static WeaponProficiencyChoice
+    readWeaponProficiencyChoice(
+            FriendlyByteBuf buffer) {
+
+        boolean present =
+                buffer.readBoolean();
+
+        if (!present) {
+            return null;
+        }
+
+        String choiceKey =
+                buffer.readUtf(
+                        MAX_CHOICE_KEY_LENGTH);
+
+        int choicesRequired =
+                buffer.readVarInt();
+
+        int allowedCount =
+                buffer.readVarInt();
+
+        if (choiceKey.isBlank()
+                || choicesRequired <= 0
+                || choicesRequired > MAX_WEAPON_CHOICES
+                || allowedCount < choicesRequired
+                || allowedCount > MAX_WEAPON_CHOICES) {
+
+            throw new IllegalArgumentException(
+                    "Invalid synced weapon proficiency choice.");
+        }
+
+        List<ResourceLocation> allowed =
+                new ArrayList<>(allowedCount);
+
+        for (int i = 0;
+             i < allowedCount;
+             i++) {
+
+            allowed.add(
+                    buffer.readResourceLocation());
+        }
+
+        return new WeaponProficiencyChoice(
+                choiceKey,
+                choicesRequired,
                 allowed);
     }
 
@@ -638,6 +772,7 @@ public record FeatDefinitionsSyncPayload(
             int maxRank,
             List<ResourceLocation> effectTypes,
             AbilityScoreChoice abilityScoreChoice,
+            WeaponProficiencyChoice weaponProficiencyChoice,
             Map<String, Integer> abilityRequirements,
             Map<ResourceLocation, Integer> classRequirements,
             Map<ResourceLocation, Integer> featRequirements,
@@ -676,6 +811,7 @@ public record FeatDefinitionsSyncPayload(
                                     : armorProficiencies);
         }
     }
+
     public record AbilityScoreChoice(
             int points,
             int maxScore,
@@ -698,6 +834,31 @@ public record FeatDefinitionsSyncPayload(
                             allowedAbilities == null
                                     ? List.of()
                                     : allowedAbilities);
+        }
+    }
+
+    public record WeaponProficiencyChoice(
+            String choiceKey,
+            int choicesRequired,
+            List<ResourceLocation> allowedProficiencies) {
+
+        public WeaponProficiencyChoice {
+
+            choiceKey =
+                    choiceKey == null
+                            ? ""
+                            : choiceKey;
+
+            choicesRequired =
+                    Math.max(
+                            1,
+                            choicesRequired);
+
+            allowedProficiencies =
+                    List.copyOf(
+                            allowedProficiencies == null
+                                    ? List.of()
+                                    : allowedProficiencies);
         }
     }
 
