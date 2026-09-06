@@ -9,6 +9,7 @@ import com.seniors.justlevelingfork.common.player.SkillMessageService.SkillMessa
 import com.seniors.justlevelingfork.common.player.TitleUnlockService;
 import com.seniors.justlevelingfork.config.models.LockItem;
 import com.seniors.justlevelingfork.network.CommonConfigSyncPayload;
+import com.seniors.justlevelingfork.network.packet.client.ForgeAlertWarningPacket;
 import com.seniors.justlevelingfork.network.packet.client.ForgeAptitudeWarningPacket;
 import com.seniors.justlevelingfork.network.packet.client.ForgeCommonConfigSyncPacket;
 import com.seniors.justlevelingfork.network.packet.client.ForgeLockItemSyncPacket;
@@ -47,9 +48,9 @@ import java.util.WeakHashMap;
 
 
 public final class ForgeServerNetworking {
-    // Version 2 adds the server-authoritative title-definition packet. Keeping
-    // the old version would let 1.2.5 clients connect with incompatible packet ids.
-    private static final String PROTOCOL_VERSION = "13";
+    // Bump whenever packet registration/order changes so incompatible clients
+    // cannot connect with mismatched packet ids.
+    private static final String PROTOCOL_VERSION = "14";
 
     private static int packetId;
     private static SimpleChannel channel;
@@ -110,6 +111,13 @@ public final class ForgeServerNetworking {
                 ForgeAptitudeWarningPacket::toBytes,
                 ForgeAptitudeWarningPacket::new,
                 ForgeAptitudeWarningPacket::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        channel.registerMessage(
+                packetId++,
+                ForgeAlertWarningPacket.class,
+                ForgeAlertWarningPacket::toBytes,
+                ForgeAlertWarningPacket::new,
+                ForgeAlertWarningPacket::handle,
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         channel.registerMessage(
                 packetId++,
@@ -276,6 +284,16 @@ public final class ForgeServerNetworking {
         if (player == null) {return;}
         channel.send(PacketDistributor.PLAYER.with(() -> player),
                 new ForgeCharacterAdminAccessSyncPacket(allowed));
+    }
+
+    public static void sendAlertWarning(ServerPlayer player, int hostileCount) {
+        if (player == null || hostileCount <= 0) {
+            return;
+        }
+
+        channel.send(
+                PacketDistributor.PLAYER.with(() -> player),
+                new ForgeAlertWarningPacket(hostileCount));
     }
 
     private static void sendSkillMessage(ServerPlayer player, SkillMessage message) {
