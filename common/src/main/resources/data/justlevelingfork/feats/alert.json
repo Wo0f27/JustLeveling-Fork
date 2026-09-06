@@ -1,6 +1,6 @@
 {
   "name": "Alert",
-  "description": "Your heightened awareness warns you when a hostile creature enters within 6 blocks.",
+  "description": "Your heightened awareness warns you when a hostile creature enters within 6 blocks. The first warning while your reaction is ready grants +20% movement speed for 4 seconds, with a 60-second cooldown on the movement bonus only.",
   "repeatable": false,
   "max_rank": 1,
   "effects": [
