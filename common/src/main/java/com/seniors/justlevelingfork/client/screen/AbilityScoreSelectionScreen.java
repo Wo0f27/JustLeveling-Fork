@@ -407,6 +407,24 @@ public class AbilityScoreSelectionScreen extends Screen {
                 return true;
             }
 
+            /*
+             * Multi-stage feat choices keep the ability selection
+             * in this screen, then pass it to the weapon picker.
+             *
+             * Returning from the weapon picker restores this same
+             * screen instance, so the chosen ability remains intact.
+             */
+            if (feat.weaponProficiencyChoice() != null) {
+
+                minecraft.setScreen(
+                        new WeaponProficiencySelectionScreen(
+                                this,
+                                feat,
+                                allocation));
+
+                return true;
+            }
+
             PlayerProgressClientRequests
                     .requestFeatSelection(
                             feat.id(),
