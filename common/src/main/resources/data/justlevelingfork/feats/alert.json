@@ -1,0 +1,11 @@
+{
+  "name": "Alert",
+  "description": "Your heightened awareness warns you when a hostile creature enters within 6 blocks.",
+  "repeatable": false,
+  "max_rank": 1,
+  "effects": [
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}
