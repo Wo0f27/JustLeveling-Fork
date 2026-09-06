@@ -1,0 +1,11 @@
+{
+  "name": "Charger",
+  "description": "Build Momentum while sprinting on foot. Momentum rises after 4, 8, and 12 blocks of movement and empowers your charge impact.",
+  "repeatable": false,
+  "max_rank": 1,
+  "effects": [
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}
