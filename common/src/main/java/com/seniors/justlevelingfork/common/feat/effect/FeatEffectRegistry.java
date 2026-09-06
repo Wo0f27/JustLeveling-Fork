@@ -22,6 +22,9 @@ public final class FeatEffectRegistry {
     public static final ResourceLocation GRANT_WEAPON_PROFICIENCY =
             id("grant_weapon_proficiency");
 
+    public static final ResourceLocation PASSIVE =
+            id("passive");
+
     static {
         register(
                 ABILITY_SCORE_IMPROVEMENT,
@@ -38,6 +41,10 @@ public final class FeatEffectRegistry {
         register(
                 GRANT_WEAPON_PROFICIENCY,
                 GrantWeaponProficiencyFeatEffect.INSTANCE);
+
+        register(
+                PASSIVE,
+                PassiveFeatEffect.INSTANCE);
     }
 
     private FeatEffectRegistry() {
