@@ -49,6 +49,11 @@ public class PlayerProgress {
     // Most feats do not need this after being applied. Choice-driven
     // derived effects such as Weapon Master do.
     public final Map<String, String> featChoices = new HashMap<>();
+    // Feat ID -> server game tick when the feat becomes ready again.
+    //
+    // This is persistent character state so relogging cannot bypass a feat
+    // cooldown. The generic storage is shared by all future cooldown feats.
+    public final Map<String, Long> featCooldownReadyAt = new HashMap<>();
     public double betterCombatEntityRange = 0.0D;
     public int counterAttackTimer = 0;
     public float counterAttackDamage = 0.0F;
@@ -246,6 +251,28 @@ public class PlayerProgress {
         featChoices.put(featId, choice.trim());
     }
 
+    public long getFeatCooldownReadyAt(String featId) {
+        if (featId == null || featId.isBlank()) {
+            return 0L;
+        }
+
+        return Math.max(0L, featCooldownReadyAt.getOrDefault(featId, 0L));
+    }
+
+    public void setFeatCooldownReadyAt(String featId, long readyAt) {
+        if (featId == null || featId.isBlank()) {
+            return;
+        }
+
+        ResourceLocation id = ResourceLocation.tryParse(featId);
+        if (id == null || readyAt <= 0L) {
+            featCooldownReadyAt.remove(featId);
+            return;
+        }
+
+        featCooldownReadyAt.put(id.toString(), readyAt);
+    }
+
     public int getSpentAptitudeExperience(IntUnaryOperator requiredPoints) {
         int spentExperience = 0;
         for (int aptitudeLevel : aptitudeLevel.values()) {
@@ -332,6 +359,14 @@ public class PlayerProgress {
         CompoundTag featChoicesTag = new CompoundTag();
         featChoices.forEach(featChoicesTag::putString);
         tag.put("featChoices", featChoicesTag);
+
+        CompoundTag featCooldownsTag = new CompoundTag();
+        featCooldownReadyAt.forEach((featId, readyAt) -> {
+            if (readyAt != null && readyAt > 0L) {
+                featCooldownsTag.putLong(featId, readyAt);
+            }
+        });
+        tag.put("featCooldowns", featCooldownsTag);
         return tag;
     }
 
@@ -426,6 +461,15 @@ public class PlayerProgress {
             }
         });
 
+        CompoundTag featCooldownsTag = tag.getCompound("featCooldowns");
+        featCooldownsTag.getAllKeys().forEach(featId -> {
+            ResourceLocation id = ResourceLocation.tryParse(featId);
+            long readyAt = Math.max(0L, featCooldownsTag.getLong(featId));
+            if (id != null && readyAt > 0L) {
+                featCooldownReadyAt.put(id.toString(), readyAt);
+            }
+        });
+
         RegistryAptitudes.values().forEach(aptitude -> aptitudeLevel.put(
                 aptitude.getName(),
                 clamp(
@@ -479,6 +523,9 @@ public class PlayerProgress {
 
         featChoices.clear();
         featChoices.putAll(source.featChoices);
+
+        featCooldownReadyAt.clear();
+        featCooldownReadyAt.putAll(source.featCooldownReadyAt);
         clearTransientState();
     }
 
@@ -493,6 +540,7 @@ public class PlayerProgress {
         subclasses.clear();
         feats.clear();
         featChoices.clear();
+        featCooldownReadyAt.clear();
     }
 
     private void resetMaps() {
