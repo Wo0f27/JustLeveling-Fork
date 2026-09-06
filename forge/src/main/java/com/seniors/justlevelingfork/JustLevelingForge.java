@@ -32,6 +32,7 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.common.MinecraftForge;
 import com.seniors.justlevelingfork.integration.AthleteFeatIntegration;
 import com.seniors.justlevelingfork.integration.AlertFeatIntegration;
+import com.seniors.justlevelingfork.integration.ChargerFeatIntegration;
 
 @Mod(Constants.MOD_ID)
 public class JustLevelingForge {
@@ -55,6 +56,7 @@ public class JustLevelingForge {
         ForgeRegistryCommonEvents.load();
         AthleteFeatIntegration.load();
         AlertFeatIntegration.load();
+        ChargerFeatIntegration.load();
         if (ModList.get().isLoaded("curios")) {
             MinecraftForge.EVENT_BUS.register(new ForgeCuriosIntegration());
         }
