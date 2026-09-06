@@ -3,6 +3,7 @@ package com.seniors.justlevelingfork.integration;
 import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.common.feat.FeatProgressionService;
 import com.seniors.justlevelingfork.network.ForgeServerNetworking;
+import com.seniors.justlevelingfork.registry.ForgeRegistryMobEffects;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
@@ -35,7 +37,18 @@ public final class AlertFeatIntegration {
             DETECTION_RADIUS * DETECTION_RADIUS;
     private static final int SCAN_INTERVAL_TICKS = 5;
 
+    private static final int REACTION_DURATION_TICKS = 4 * 20;
+    private static final int REACTION_COOLDOWN_TICKS = 60 * 20;
+
     private static final Map<ServerPlayer, Set<UUID>> SEEN_HOSTILES =
+            new WeakHashMap<>();
+
+    /*
+     * Checkpoint 2 keeps this cooldown runtime-only. Persistence across relog
+     * will be moved into generic player progression storage in the next
+     * checkpoint so the mechanic can be reused by future feats.
+     */
+    private static final Map<ServerPlayer, Long> REACTION_READY_AT =
             new WeakHashMap<>();
 
     private AlertFeatIntegration() {
@@ -58,6 +71,7 @@ public final class AlertFeatIntegration {
 
         if (!FeatProgressionService.hasFeat(player, ALERT)) {
             SEEN_HOSTILES.remove(player);
+            REACTION_READY_AT.remove(player);
             return;
         }
 
@@ -81,11 +95,38 @@ public final class AlertFeatIntegration {
             }
         }
 
-        if (newlyDetected > 0) {
-            ForgeServerNetworking.sendAlertWarning(
-                    player,
-                    newlyDetected);
+        if (newlyDetected <= 0) {
+            return;
         }
+
+        // Threat awareness itself never has a cooldown.
+        ForgeServerNetworking.sendAlertWarning(
+                player,
+                newlyDetected);
+
+        tryTriggerReaction(player);
+    }
+
+    private static void tryTriggerReaction(ServerPlayer player) {
+        long now = player.serverLevel().getGameTime();
+        long readyAt = REACTION_READY_AT.getOrDefault(player, Long.MIN_VALUE);
+
+        if (now < readyAt) {
+            return;
+        }
+
+        player.addEffect(new MobEffectInstance(
+                ForgeRegistryMobEffects.ALERT_REACTION.get(),
+                REACTION_DURATION_TICKS,
+                0,
+                false,
+                false,
+                false));
+
+        // Cooldown starts when the reaction burst activates, not when it ends.
+        REACTION_READY_AT.put(
+                player,
+                now + REACTION_COOLDOWN_TICKS);
     }
 
     private static boolean isHostileToPlayer(
