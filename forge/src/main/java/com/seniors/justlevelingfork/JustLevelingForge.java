@@ -20,6 +20,7 @@ import com.seniors.justlevelingfork.registry.ForgeRegistryAptitudes;
 import com.seniors.justlevelingfork.registry.ForgeRegistryCapabilities;
 import com.seniors.justlevelingfork.registry.ForgeRegistryCommonEvents;
 import com.seniors.justlevelingfork.registry.ForgeRegistryItems;
+import com.seniors.justlevelingfork.registry.ForgeRegistryMobEffects;
 import com.seniors.justlevelingfork.registry.ForgeRegistryPassives;
 import com.seniors.justlevelingfork.registry.ForgeRegistrySkills;
 import com.seniors.justlevelingfork.registry.ForgeRegistryTitles;
@@ -48,6 +49,7 @@ public class JustLevelingForge {
         ForgeRegistryItems.load(modEventBus);
         ForgeRegistrySounds.load(modEventBus);
         ForgeRegistryAttributes.load(modEventBus);
+        ForgeRegistryMobEffects.load(modEventBus);
         modEventBus.addListener(ForgeRegistryAttributes::addEntityAttributes);
         ForgeRegistryCapabilities.load();
         ForgeRegistryCommonEvents.load();
