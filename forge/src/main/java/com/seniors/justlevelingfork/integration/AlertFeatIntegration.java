@@ -114,7 +114,7 @@ public final class AlertFeatIntegration {
                 0,
                 false,
                 false,
-                false));
+                true));
     }
 
     private static boolean isHostileToPlayer(
