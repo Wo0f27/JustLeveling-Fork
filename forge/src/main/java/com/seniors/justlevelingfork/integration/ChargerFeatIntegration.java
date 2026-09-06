@@ -37,9 +37,10 @@ public final class ChargerFeatIntegration {
     private static final double MAX_HORIZONTAL_DELTA_PER_TICK = 4.0D;
 
     /**
-     * Small grace window for stairs, collisions and brief sprint-state hiccups.
+     * After sprinting stops, Momentum holds for two seconds before dropping
+     * one tier. Further tiers decay at the same interval: III -> II -> I -> 0.
      */
-    private static final int SPRINT_INTERRUPTION_GRACE_TICKS = 6;
+    private static final int MOMENTUM_DECAY_INTERVAL_TICKS = 40;
 
     /**
      * The effect is only an indicator and is refreshed before this expires.
@@ -80,8 +81,8 @@ public final class ChargerFeatIntegration {
         double horizontalDelta = Math.sqrt(
                 deltaX * deltaX + deltaZ * deltaZ);
 
-        // Always advance the sample position so pauses/grace time cannot later
-        // be counted as sprint distance when sprinting resumes.
+        // Always advance the sample position so idle time cannot later be
+        // counted as sprint distance when sprinting resumes.
         state.lastX = currentX;
         state.lastZ = currentZ;
 
@@ -91,18 +92,18 @@ public final class ChargerFeatIntegration {
         }
 
         if (!player.isSprinting()) {
-            state.interruptionTicks++;
+            state.decayTicks++;
 
-            if (state.interruptionTicks > SPRINT_INTERRUPTION_GRACE_TICKS) {
-                resetMomentum(player, state);
-            } else {
-                syncMomentumEffect(player, getMomentumLevel(state.distance));
+            if (state.decayTicks >= MOMENTUM_DECAY_INTERVAL_TICKS) {
+                decayMomentum(state);
+                state.decayTicks = 0;
             }
 
+            syncMomentumEffect(player, getMomentumLevel(state.distance));
             return;
         }
 
-        state.interruptionTicks = 0;
+        state.decayTicks = 0;
 
         if (horizontalDelta > MAX_HORIZONTAL_DELTA_PER_TICK) {
             resetMomentum(player, state);
@@ -145,6 +146,18 @@ public final class ChargerFeatIntegration {
         return 0;
     }
 
+    private static void decayMomentum(ChargeState state) {
+        int momentumLevel = getMomentumLevel(state.distance);
+
+        if (momentumLevel >= 3) {
+            state.distance = MOMENTUM_II_DISTANCE;
+        } else if (momentumLevel == 2) {
+            state.distance = MOMENTUM_I_DISTANCE;
+        } else {
+            state.distance = 0.0D;
+        }
+    }
+
     private static void syncMomentumEffect(
             ServerPlayer player,
             int momentumLevel) {
@@ -179,7 +192,7 @@ public final class ChargerFeatIntegration {
             ChargeState state) {
 
         state.distance = 0.0D;
-        state.interruptionTicks = 0;
+        state.decayTicks = 0;
         player.removeEffect(ForgeRegistryMobEffects.MOMENTUM.get());
     }
 
@@ -211,7 +224,7 @@ public final class ChargerFeatIntegration {
         private double lastX;
         private double lastZ;
         private double distance;
-        private int interruptionTicks;
+        private int decayTicks;
 
         private ChargeState(double lastX, double lastZ) {
             this.lastX = lastX;
