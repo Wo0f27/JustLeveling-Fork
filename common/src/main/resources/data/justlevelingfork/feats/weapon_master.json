@@ -1,0 +1,62 @@
+{
+  "name": "Weapon Master",
+  "description": "Increase your Strength or Dexterity by 1, to a maximum of 20, and gain proficiency with four simple or martial weapons of your choice.",
+  "repeatable": false,
+  "max_rank": 1,
+
+  "effects": [
+    {
+      "type": "justlevelingfork:ability_score_improvement",
+      "points": 1,
+      "max_score": 20,
+      "allowed_abilities": [
+        "strength",
+        "dexterity"
+      ]
+    },
+    {
+      "type": "justlevelingfork:grant_weapon_proficiency",
+      "choice_key": "weapons",
+      "choices_required": 4,
+      "allowed_proficiencies": [
+        "justlevelingfork:weapons/types/club",
+        "justlevelingfork:weapons/types/dagger",
+        "justlevelingfork:weapons/types/greatclub",
+        "justlevelingfork:weapons/types/handaxe",
+        "justlevelingfork:weapons/types/javelin",
+        "justlevelingfork:weapons/types/light_hammer",
+        "justlevelingfork:weapons/types/mace",
+        "justlevelingfork:weapons/types/quarterstaff",
+        "justlevelingfork:weapons/types/sickle",
+        "justlevelingfork:weapons/types/spear",
+        "justlevelingfork:weapons/types/light_crossbow",
+        "justlevelingfork:weapons/types/dart",
+        "justlevelingfork:weapons/types/shortbow",
+        "justlevelingfork:weapons/types/sling",
+        "justlevelingfork:weapons/types/battleaxe",
+        "justlevelingfork:weapons/types/flail",
+        "justlevelingfork:weapons/types/glaive",
+        "justlevelingfork:weapons/types/greataxe",
+        "justlevelingfork:weapons/types/greatsword",
+        "justlevelingfork:weapons/types/halberd",
+        "justlevelingfork:weapons/types/lance",
+        "justlevelingfork:weapons/types/longsword",
+        "justlevelingfork:weapons/types/maul",
+        "justlevelingfork:weapons/types/morningstar",
+        "justlevelingfork:weapons/types/pike",
+        "justlevelingfork:weapons/types/rapier",
+        "justlevelingfork:weapons/types/scimitar",
+        "justlevelingfork:weapons/types/shortsword",
+        "justlevelingfork:weapons/types/trident",
+        "justlevelingfork:weapons/types/war_pick",
+        "justlevelingfork:weapons/types/warhammer",
+        "justlevelingfork:weapons/types/whip",
+        "justlevelingfork:weapons/types/blowgun",
+        "justlevelingfork:weapons/types/hand_crossbow",
+        "justlevelingfork:weapons/types/heavy_crossbow",
+        "justlevelingfork:weapons/types/longbow",
+        "justlevelingfork:weapons/types/net"
+      ]
+    }
+  ]
+}
