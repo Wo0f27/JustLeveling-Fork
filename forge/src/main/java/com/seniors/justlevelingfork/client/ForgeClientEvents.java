@@ -1,6 +1,7 @@
 package com.seniors.justlevelingfork.client;
 
 import com.seniors.justlevelingfork.client.ClientKeyMappings;
+import com.seniors.justlevelingfork.client.gui.AlertClientOverlayState;
 import com.seniors.justlevelingfork.client.gui.ClientOverlayState;
 import com.seniors.justlevelingfork.client.gui.ClientTabs;
 import com.seniors.justlevelingfork.client.screen.CommonConfigScreen;
@@ -11,6 +12,7 @@ import com.seniors.justlevelingfork.registry.RegistryTitles;
 import dev.xkmc.l2tabs.tabs.core.TabRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -67,9 +69,15 @@ public final class ForgeClientEvents {
     }
 
     @SubscribeEvent
+    public static void onGuiRender(RenderGuiEvent.Post event) {
+        AlertClientOverlayState.render(event.getGuiGraphics());
+    }
+
+    @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ClientOverlayState.tick();
+            AlertClientOverlayState.tick();
             ClientKeyMappings.handleClientTick(net.minecraft.client.Minecraft.getInstance());
         }
     }
@@ -81,6 +89,7 @@ public final class ForgeClientEvents {
         RegistryTitles.clearClientTitleModels();
         CharacterAdminClientState.clear();
         ProficiencyClientState.clear();
+        AlertClientOverlayState.clear();
     }
 
     @SubscribeEvent
