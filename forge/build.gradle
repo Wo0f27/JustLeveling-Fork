@@ -38,6 +38,16 @@ legacyForge {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+repositories {
+    maven {
+        name = 'Local RangedWeaponAPI'
+        url = uri(rootProject.file("${rpg_ports_root}/RangedWeaponAPI-Forge/mcmodsrepo"))
+        content {
+            includeGroup 'net.fabric_extras'
+        }
+    }
+}
+
 configurations {
     l2LibraryDeobf
 }
@@ -117,6 +127,7 @@ dependencies {
     modRuntimeOnly "com.w0of26:martial_spells:${martial_spells_version}"
 
     // Martial Spells required runtime dependencies
+    modRuntimeOnly "net.fabric_extras:RangedWeaponAPI-Forge:${ranged_weapon_api_version}:slim"
     modRuntimeOnly "curse.maven:turtlebois-core-library-1086765:${turtlecore_file}"
 
     modRuntimeOnly "maven.modrinth:mk0Htq87:${runiclib_version}-forge,${minecraft_version}"
