@@ -380,6 +380,8 @@
  "title.justlevelingfork.administrator.description" : "Be a server Admin.",
 
   "tooltip.justlevelingfork.weapon_type": "Weapon Type:",
+  "tooltip.justlevelingfork.properties": "Properties:",
+  "tooltip.justlevelingfork.weapon_property.finesse": "Finesse",
   "tooltip.justlevelingfork.armor_type": "Armor Type:",
   "tooltip.justlevelingfork.proficiency": "Proficiency:",
   "tooltip.justlevelingfork.proficient": "Proficient",

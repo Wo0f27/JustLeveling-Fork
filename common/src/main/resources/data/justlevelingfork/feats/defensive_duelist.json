@@ -1,0 +1,16 @@
+{
+  "name": "Defensive Duelist",
+  "description": "Requires Dexterity 13. While wielding a finesse weapon, reduce the damage of an incoming melee hit by 30%. This defense has a 10-second cooldown.",
+  "repeatable": false,
+  "max_rank": 1,
+  "prerequisites": {
+    "abilities": {
+      "dexterity": 13
+    }
+  },
+  "effects": [
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}

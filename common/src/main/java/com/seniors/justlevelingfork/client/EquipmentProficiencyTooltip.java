@@ -1,5 +1,6 @@
 package com.seniors.justlevelingfork.client;
 
+import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.common.proficiency.ArmorCategory;
 import com.seniors.justlevelingfork.common.proficiency.ArmorClassificationService;
 import com.seniors.justlevelingfork.common.proficiency.ProficiencyClientState;
@@ -20,6 +21,13 @@ public final class EquipmentProficiencyTooltip {
     private static final String WEAPON_TYPE_PREFIX =
             "weapons/types/";
 
+    private static final List<WeaponProperty> WEAPON_PROPERTIES =
+            List.of(new WeaponProperty(
+                    new ResourceLocation(
+                            Constants.MOD_ID,
+                            "weapons/properties/finesse"),
+                    "tooltip.justlevelingfork.weapon_property.finesse"));
+
     private EquipmentProficiencyTooltip() {
     }
 
@@ -37,12 +45,15 @@ public final class EquipmentProficiencyTooltip {
         Set<ResourceLocation> weaponClassifications =
                 WeaponClassificationService
                         .getClassifications(stack);
+        List<WeaponProperty> weaponProperties =
+                matchingWeaponProperties(stack);
 
         if (!weaponClassifications.isEmpty()) {
 
             appendWeaponTooltip(
                     stack,
                     weaponClassifications,
+                    weaponProperties,
                     tooltip);
 
             return;
@@ -57,12 +68,21 @@ public final class EquipmentProficiencyTooltip {
             appendArmorTooltip(
                     armorCategories,
                     tooltip);
+
+            return;
         }
+
+        // A datapack can mark a modded weapon as finesse without also
+        // assigning one of JLF's built-in proficiency classifications.
+        appendWeaponPropertyLine(
+                weaponProperties,
+                tooltip);
     }
 
     private static void appendWeaponTooltip(
             ItemStack stack,
             Set<ResourceLocation> classifications,
+            List<WeaponProperty> properties,
             List<Component> tooltip) {
 
         List<ResourceLocation> displayTypes =
@@ -118,6 +138,10 @@ public final class EquipmentProficiencyTooltip {
                 "tooltip.justlevelingfork.weapon_type",
                 typeNames.toString());
 
+        appendWeaponPropertyLine(
+                properties,
+                tooltip);
+
         if (!ProficiencyClientState
                 .isSynchronized()) {
 
@@ -130,6 +154,47 @@ public final class EquipmentProficiencyTooltip {
         appendProficiencyLine(
                 tooltip,
                 proficient);
+    }
+
+    private static List<WeaponProperty> matchingWeaponProperties(
+            ItemStack stack) {
+
+        List<WeaponProperty> matching =
+                new ArrayList<>();
+
+        for (WeaponProperty property : WEAPON_PROPERTIES) {
+            if (WeaponClassificationService.matches(
+                    stack,
+                    property.tagId())) {
+                matching.add(property);
+            }
+        }
+
+        return matching;
+    }
+
+    private static void appendWeaponPropertyLine(
+            List<WeaponProperty> properties,
+            List<Component> tooltip) {
+
+        if (properties.isEmpty()) {
+            return;
+        }
+
+        MutableComponent line =
+                Component.translatable(
+                                "tooltip.justlevelingfork.properties")
+                        .withStyle(ChatFormatting.GRAY);
+
+        for (int index = 0; index < properties.size(); index++) {
+            line.append(Component.literal(
+                    index == 0 ? " " : ", "));
+            line.append(Component.translatable(
+                            properties.get(index).translationKey())
+                    .withStyle(ChatFormatting.WHITE));
+        }
+
+        tooltip.add(line);
     }
 
     private static void appendArmorTooltip(
@@ -306,5 +371,10 @@ public final class EquipmentProficiencyTooltip {
         }
 
         return result.toString();
+    }
+
+    private record WeaponProperty(
+            ResourceLocation tagId,
+            String translationKey) {
     }
 }
