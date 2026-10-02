@@ -46,6 +46,17 @@ public final class ForgeRegistryMobEffects {
                                     0.15D,
                                     AttributeModifier.Operation.MULTIPLY_TOTAL));
 
+    /** Amplifiers 0/1/2 are Hinder I/II/III: -20/-40/-60 percent. */
+    public static final RegistryObject<MobEffect> SENTINEL_HINDER =
+            REGISTER.register(
+                    "sentinel_hinder",
+                    () -> new MobEffect(MobEffectCategory.HARMFUL, 0x79918A) {}
+                            .addAttributeModifier(
+                                    Attributes.MOVEMENT_SPEED,
+                                    "f35a29bf-5747-48d3-9ab7-4fc7a7420059",
+                                    -0.20D,
+                                    AttributeModifier.Operation.MULTIPLY_TOTAL));
+
     /**
      * Charger buildup indicator.
      *

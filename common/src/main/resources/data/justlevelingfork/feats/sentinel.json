@@ -1,0 +1,11 @@
+{
+  "name": "Sentinel",
+  "description": "Direct melee hits briefly root enemies, then hinder their movement. When a nearby enemy damages an ally, automatically apply stronger control; Guardian has a short cooldown.",
+  "repeatable": false,
+  "max_rank": 1,
+  "effects": [
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}

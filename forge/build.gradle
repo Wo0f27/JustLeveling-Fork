@@ -95,6 +95,7 @@ dependencies {
     compileOnly "io.redspace:irons_lib:${irons_lib_version}"
 
 
+    modCompileOnly "software.bernie.geckolib:geckolib-forge-1.20.1:${geckolib_version}"
     modRuntimeOnly "software.bernie.geckolib:geckolib-forge-1.20.1:${geckolib_version}"
     modRuntimeOnly "top.theillusivec4.curios:curios-forge:${curios_version}"
     modRuntimeOnly "dev.kosmx.player-anim:player-animation-lib-forge:1.0.2-rc1+1.20"

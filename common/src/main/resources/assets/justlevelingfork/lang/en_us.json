@@ -11,6 +11,7 @@
  "item.justlevelingfork.leveling_book" : "Leveling Book",
  "item.justlevelingfork.skill_reset_crystal" : "Skill Reset Crystal",
  "effect.justlevelingfork.mobile_reposition" : "Mobile Reposition",
+ "effect.justlevelingfork.sentinel_hinder" : "Sentinel Hinder",
  "justlevelingfork.config.title" : "Just Leveling Configuration",
  "justlevelingfork.config.restart_notice" : "Some server-side settings apply after reconnecting or restarting the world.",
  "justlevelingfork.config.reset_scroll" : "Return to the top of the config list.",
