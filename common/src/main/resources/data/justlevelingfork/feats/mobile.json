@@ -1,0 +1,17 @@
+{
+  "name": "Mobile",
+  "description": "Move 10% faster. Move across soul terrain and through water as though you had at least Soul Speed II or Depth Strider II. Lava also becomes much easier to cross, but remains dangerous.",
+  "repeatable": false,
+  "max_rank": 1,
+  "effects": [
+    {
+      "type": "justlevelingfork:attribute_modifier",
+      "attribute": "minecraft:generic.movement_speed",
+      "operation": "multiply_total",
+      "amount": 0.10
+    },
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}

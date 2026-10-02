@@ -11,6 +11,8 @@
     "MixHorseInventoryMenu",
     "MixItemStack",
     "MixLivingEntity",
+    "MixMobileLivingEntity",
+    "MixMobilePlayer",
     "MixPlayer",
     "MixPowderSnowBlock",
     "MixResultSlot",
