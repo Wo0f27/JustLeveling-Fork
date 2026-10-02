@@ -3,21 +3,28 @@ package com.seniors.justlevelingfork.integration;
 import com.seniors.justlevelingfork.Constants;
 import com.seniors.justlevelingfork.common.feat.FeatProgressionService;
 import com.seniors.justlevelingfork.common.player.PlayerProgressClientState;
+import com.seniors.justlevelingfork.registry.ForgeRegistryMobEffects;
 import java.util.UUID;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-/** Server-owned Soul Speed floor; local movement hooks mirror synced feat ownership. */
+/** Mobile's server-owned terrain and melee burst behavior; fluid movement mirrors synced ownership. */
 public final class MobileFeatIntegration {
 
     public static final ResourceLocation MOBILE =
@@ -26,6 +33,7 @@ public final class MobileFeatIntegration {
     private static final UUID SOUL_SPEED_ID =
             UUID.fromString("d5bf2b49-1231-4cf8-9e6f-c354a0de8a25");
     private static final float SOUL_SPEED_II_AMOUNT = soulSpeedAmount(2);
+    private static final int REPOSITION_DURATION_TICKS = 40;
 
     private MobileFeatIntegration() {
     }
@@ -74,6 +82,46 @@ public final class MobileFeatIntegration {
                     missingSoulSpeed,
                     AttributeModifier.Operation.ADDITION));
         }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onLivingDamage(LivingDamageEvent event) {
+        if (event.getAmount() <= 0.0F
+                || !(event.getSource().getEntity() instanceof ServerPlayer player)
+                || player.isSpectator()
+                || !isDirectMeleeHit(event.getSource(), player)
+                || !isValidRepositionTarget(player, event.getEntity())
+                || !FeatProgressionService.hasFeat(player, MOBILE)) {
+            return;
+        }
+
+        player.addEffect(new MobEffectInstance(
+                ForgeRegistryMobEffects.MOBILE_REPOSITION.get(),
+                REPOSITION_DURATION_TICKS,
+                0,
+                false,
+                false,
+                false));
+    }
+
+    private static boolean isDirectMeleeHit(DamageSource source, ServerPlayer player) {
+        return source.getDirectEntity() == player
+                && source.is(DamageTypes.PLAYER_ATTACK);
+    }
+
+    private static boolean isValidRepositionTarget(ServerPlayer player, LivingEntity target) {
+        if (target == player
+                || !target.isAlive()
+                || target.isRemoved()
+                || player.isAlliedTo(target)
+                || target.isAlliedTo(player)) {
+            return false;
+        }
+
+        return !(target instanceof Player otherPlayer)
+                || (!otherPlayer.isCreative()
+                && !otherPlayer.isSpectator()
+                && player.canHarmPlayer(otherPlayer));
     }
 
     private static float soulSpeedAmount(int level) {

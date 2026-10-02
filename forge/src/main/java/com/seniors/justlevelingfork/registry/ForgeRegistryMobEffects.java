@@ -35,6 +35,17 @@ public final class ForgeRegistryMobEffects {
                                     0.20D,
                                     AttributeModifier.Operation.MULTIPLY_TOTAL));
 
+    /** A separate hit-and-run burst, refreshed by Mobile's qualifying melee hits. */
+    public static final RegistryObject<MobEffect> MOBILE_REPOSITION =
+            REGISTER.register(
+                    "mobile_reposition",
+                    () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0x62CDAA) {}
+                            .addAttributeModifier(
+                                    Attributes.MOVEMENT_SPEED,
+                                    "21ab251c-8ac0-4e4e-9c8b-fb403e77212f",
+                                    0.15D,
+                                    AttributeModifier.Operation.MULTIPLY_TOTAL));
+
     /**
      * Charger buildup indicator.
      *
