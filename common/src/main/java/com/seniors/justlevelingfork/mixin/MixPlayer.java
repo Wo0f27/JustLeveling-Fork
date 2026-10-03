@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.seniors.justlevelingfork.common.event.CombatSkillEffects;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
+import com.seniors.justlevelingfork.integration.crit.CritHitContext;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -14,11 +15,23 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Player.class)
 public abstract class MixPlayer extends LivingEntity {
     protected MixPlayer(EntityType<? extends LivingEntity> entityType, Level level) {
         super(entityType, level);
+    }
+
+    @Inject(method = "attack", at = @At("HEAD"))
+    private void justlevelingfork$enterMeleeCritTarget(Entity target, CallbackInfo callback) {
+        CritHitContext.push(target);
+    }
+
+    @Inject(method = "attack", at = @At("RETURN"))
+    private void justlevelingfork$exitMeleeCritTarget(Entity target, CallbackInfo callback) {
+        CritHitContext.pop();
     }
 
     @Override

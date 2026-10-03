@@ -1,6 +1,7 @@
 package com.seniors.justlevelingfork.mixin;
 
 import com.seniors.justlevelingfork.common.event.ProjectileSkillEffects;
+import com.seniors.justlevelingfork.integration.crit.CritHitContext;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +20,7 @@ public abstract class MixAbstractArrow {
 
     @Inject(method = "onHitEntity", at = @At("HEAD"))
     private void justlevelingfork$beforeArrowEntityHit(EntityHitResult hitResult, CallbackInfo callbackInfo) {
+        CritHitContext.push(hitResult.getEntity());
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         this.justlevelingfork$previousBaseDamage = arrow.getBaseDamage();
         this.justlevelingfork$hasPreviousBaseDamage = true;
@@ -28,6 +30,7 @@ public abstract class MixAbstractArrow {
 
     @Inject(method = "onHitEntity", at = @At("RETURN"))
     private void justlevelingfork$afterArrowEntityHit(EntityHitResult hitResult, CallbackInfo callbackInfo) {
+        CritHitContext.pop();
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         ProjectileSkillEffects.afterArrowEntityHit(arrow, hitResult);
         if (this.justlevelingfork$hasPreviousBaseDamage) {

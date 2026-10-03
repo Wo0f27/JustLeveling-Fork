@@ -4,6 +4,7 @@ import com.seniors.justlevelingfork.common.event.KillSkillEffects;
 import com.seniors.justlevelingfork.common.event.CombatSkillEffects;
 import com.seniors.justlevelingfork.common.event.PotionSkillEffects;
 import com.seniors.justlevelingfork.common.player.PlayerProgressService;
+import com.seniors.justlevelingfork.integration.crit.CritHandledDamageSource;
 import com.seniors.justlevelingfork.registry.RegistryAttributes;
 import com.seniors.justlevelingfork.registry.RegistrySkills;
 import java.util.ArrayList;
@@ -77,6 +78,7 @@ public abstract class MixLivingEntity {
             DamageSource source, float damage, CallbackInfoReturnable<Boolean> callbackInfo) {
         CombatSkillEffects.afterLivingHurt(
                 justlevelingfork$livingEntity(), source, callbackInfo.getReturnValue());
+        ((CritHandledDamageSource) source).justlevelingfork$clearCritHandled();
     }
 
     @Unique

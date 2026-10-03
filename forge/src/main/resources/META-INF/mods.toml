@@ -157,3 +157,9 @@ mandatory=true
 versionRange="[1.20.1-0.1.0,)"
 ordering="AFTER"
 side="BOTH"
+[[dependencies."${mod_id}"]]
+modId="critical_strike"
+mandatory=false
+versionRange="[1.0.4,)"
+ordering="AFTER"
+side="BOTH"

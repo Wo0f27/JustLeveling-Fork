@@ -13,6 +13,7 @@
     "MixAbstractArrow",
     "MixBlockBehaviour",
     "MixCraftingMenu",
+    "MixCritDamageSource",
     "MixHorseInventoryMenu",
     "MixItemStack",
     "MixLivingEntity",

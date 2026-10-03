@@ -36,6 +36,11 @@ legacyForge {
     }
 }
 
+// ModDevGradle needs an explicit dev-run mixin config; the jar manifest covers production.
+mixin {
+    config 'justlevelingfork.forge.mixins.json'
+}
+
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
 repositories {
@@ -83,6 +88,8 @@ dependencies {
     // ============================================================
     modRuntimeOnly "dev.shadowsoffire:Placebo:1.20.1-${placebo_version}"
     modRuntimeOnly "dev.shadowsoffire:ApothicAttributes:1.20.1-1.3.7"
+    // Official Critical Strike Forge 1.20.1; JLF's bridge is inactive when the mod is absent.
+    modCompileOnly "maven.modrinth:ilvNBzFn:${critical_strike_version}"
 
     // ============================================================
     // Iron's Spells 'n Spellbooks
@@ -136,6 +143,82 @@ dependencies {
     modRuntimeOnly "curse.maven:mob-player-animator-1058791:${mob_player_animator_file}"
 
 }
+
+// Critical Strike's production mixin selectors are SRG strings, but its config has no refmap.
+// Supply an empty refmap only to named development runs; release jars still use the official mod.
+def criticalStrikeDevJar = layout.buildDirectory.file(
+        "critical-strike-dev/critical-strike-${critical_strike_version}-dev.jar")
+def criticalStrikeNamedJar = providers.provider {
+    def matches = tasks.named('compileJava').get().classpath.files.findAll {
+        it.name == "ilvNBzFn-${critical_strike_version}.jar"
+    }
+    if (matches.size() != 1) {
+        throw new GradleException("Expected one remapped Critical Strike compile jar, found ${matches.size()}: ${matches}")
+    }
+    matches.first()
+}
+
+def prepareCriticalStrikeDevJar = tasks.register('prepareCriticalStrikeDevJar') {
+    inputs.file(criticalStrikeNamedJar)
+    outputs.file(criticalStrikeDevJar)
+
+    doLast {
+        def outputFile = criticalStrikeDevJar.get().asFile
+        outputFile.parentFile.mkdirs()
+        def sourceJar = new java.util.zip.ZipFile(criticalStrikeNamedJar.get())
+        try {
+            def output = new java.util.zip.ZipOutputStream(new FileOutputStream(outputFile))
+            try {
+                def entries = sourceJar.entries()
+                boolean foundMixinConfig = false
+                while (entries.hasMoreElements()) {
+                    def entry = entries.nextElement()
+                    if (entry.name == 'critical_strike.mixins.json') {
+                        foundMixinConfig = true
+                        def configEntry = new java.util.zip.ZipEntry(entry.name)
+                        configEntry.time = entry.time
+                        output.putNextEntry(configEntry)
+                        def config = sourceJar.getInputStream(entry).withCloseable { input ->
+                            new groovy.json.JsonSlurper().parse(input)
+                        }
+                        if (config.containsKey('refmap')) {
+                            throw new GradleException('Critical Strike already supplies a refmap; review the dev shim')
+                        }
+                        config.refmap = 'critical_strike.dev.refmap.json'
+                        output.write(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(config))
+                                .getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                    } else {
+                        output.putNextEntry(new java.util.zip.ZipEntry(entry))
+                        if (!entry.directory) {
+                            sourceJar.getInputStream(entry).withCloseable { input -> input.transferTo(output) }
+                        }
+                    }
+                    output.closeEntry()
+                }
+                if (!foundMixinConfig) {
+                    throw new GradleException('Critical Strike mixin config is missing from the remapped jar')
+                }
+                def refmapEntry = new java.util.zip.ZipEntry('critical_strike.dev.refmap.json')
+                refmapEntry.time = 315532800000L // Fixed ZIP timestamp: 1980-01-01 UTC.
+                output.putNextEntry(refmapEntry)
+                output.write('{"mappings":{},"data":{}}'.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                output.closeEntry()
+            } finally {
+                output.close()
+            }
+        } finally {
+            sourceJar.close()
+        }
+    }
+}
+
+dependencies {
+    // Named dev jar is already remapped; load it as the Forge mod, not a legacy library.
+    runtimeOnly files(prepareCriticalStrikeDevJar)
+}
+
+tasks.named('runClient') { dependsOn prepareCriticalStrikeDevJar }
+tasks.named('runServer') { dependsOn prepareCriticalStrikeDevJar }
 
 compileJava {
     dependsOn project(":common").tasks.named("compileQuestlogStubJava")
