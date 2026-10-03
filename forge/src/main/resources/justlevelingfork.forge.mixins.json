@@ -6,8 +6,10 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "MixAbstractArrow",
+    "MixBowItemRangedShot",
     "MixBlockBehaviour",
     "MixCraftingMenu",
+    "MixCrossbowItemRangedShot",
     "MixHorseInventoryMenu",
     "MixItemStack",
     "MixLivingEntity",

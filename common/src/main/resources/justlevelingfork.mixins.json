@@ -11,8 +11,10 @@
   ],
   "mixins": [
     "MixAbstractArrow",
+    "MixBowItemRangedShot",
     "MixBlockBehaviour",
     "MixCraftingMenu",
+    "MixCrossbowItemRangedShot",
     "MixCritDamageSource",
     "MixHorseInventoryMenu",
     "MixItemStack",

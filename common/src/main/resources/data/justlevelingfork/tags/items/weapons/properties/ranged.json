@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "#justlevelingfork:weapons/types/shortbow",
+    "#justlevelingfork:weapons/types/longbow",
+    "#justlevelingfork:weapons/types/light_crossbow",
+    "#justlevelingfork:weapons/types/heavy_crossbow",
+    "#justlevelingfork:weapons/types/hand_crossbow"
+  ]
+}

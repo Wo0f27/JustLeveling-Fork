@@ -36,6 +36,7 @@ import com.seniors.justlevelingfork.integration.ChargerFeatIntegration;
 import com.seniors.justlevelingfork.integration.DefensiveDuelistFeatIntegration;
 import com.seniors.justlevelingfork.integration.MobileFeatIntegration;
 import com.seniors.justlevelingfork.integration.SentinelFeatIntegration;
+import com.seniors.justlevelingfork.integration.SharpshooterFeatIntegration;
 
 @Mod(Constants.MOD_ID)
 public class JustLevelingForge {
@@ -63,6 +64,7 @@ public class JustLevelingForge {
         DefensiveDuelistFeatIntegration.load();
         MobileFeatIntegration.load();
         SentinelFeatIntegration.load();
+        SharpshooterFeatIntegration.load();
         if (ModList.get().isLoaded("curios")) {
             MinecraftForge.EVENT_BUS.register(new ForgeCuriosIntegration());
         }

@@ -1,0 +1,11 @@
+{
+  "name": "Sharpshooter",
+  "description": "Physical bow and crossbow arrows deal more damage the farther they travel before hitting a target, up to 20% more at 48 blocks or beyond.",
+  "repeatable": false,
+  "max_rank": 1,
+  "effects": [
+    {
+      "type": "justlevelingfork:passive"
+    }
+  ]
+}
