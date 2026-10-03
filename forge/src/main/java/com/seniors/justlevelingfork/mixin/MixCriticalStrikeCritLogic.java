@@ -2,6 +2,7 @@ package com.seniors.justlevelingfork.mixin;
 
 import com.seniors.justlevelingfork.integration.crit.CritHandledDamageSource;
 import com.seniors.justlevelingfork.integration.crit.CritIntegrationService;
+import com.seniors.justlevelingfork.integration.crit.SharpshooterCritIntegration;
 import net.critical_strike.api.CriticalDamageSource;
 import net.critical_strike.internal.CritLogic;
 import net.critical_strike.internal.CriticalStriker;
@@ -26,8 +27,8 @@ public abstract class MixCriticalStrikeCritLogic {
             return;
         }
 
-        CritIntegrationService.Context context = CritIntegrationService.context(attacker, source);
-        if (!(context.target() instanceof LivingEntity livingTarget)) {
+        CritIntegrationService.Context baseContext = CritIntegrationService.context(attacker, source);
+        if (!(baseContext.target() instanceof LivingEntity livingTarget)) {
             // Apothic's LivingHurtEvent does not process non-living targets.
             // Leave those hits to Critical Strike's original path.
             return;
@@ -35,7 +36,8 @@ public abstract class MixCriticalStrikeCritLogic {
 
         // Mark before rolling: a failed Critical Strike roll must not become a second Apothic roll.
         ((CritHandledDamageSource) source).justlevelingfork$markCritHandled(livingTarget);
-        float multiplier = CritIntegrationService.rollMultiplier(context, livingTarget);
+        CritIntegrationService.Context effectiveContext = SharpshooterCritIntegration.apply(baseContext);
+        float multiplier = CritIntegrationService.rollMultiplier(effectiveContext, livingTarget);
         ((CriticalDamageSource) source).rng_setCriticalDamageMultiplier(multiplier > 1.0F ? multiplier : 0.0F);
         callback.setReturnValue(multiplier > 1.0F
                 ? new CritLogic.Result(source, amount * multiplier)

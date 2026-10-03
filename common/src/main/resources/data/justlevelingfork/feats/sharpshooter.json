@@ -1,6 +1,6 @@
 {
   "name": "Sharpshooter",
-  "description": "Physical bow and crossbow arrows deal more damage the farther they travel before hitting a target, up to 20% more at 48 blocks or beyond.",
+  "description": "Physical bow and crossbow arrows deal more damage the farther they travel, up to 20% more at 48 blocks. They also gain distance-based critical chance and critical damage.",
   "repeatable": false,
   "max_rank": 1,
   "effects": [
